@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "mysql": {
+      "type": "local",
+      "command": [
+        "C:\\Program Files\\nodejs\\npx.cmd",
+        "-y",
+        "@berthojoris/mcp-mysql-server",
+        "mysql://ai_dev:PasswordAI2026!@127.0.0.1:3306/bank"
+      ]
+    }
+  }
+}
