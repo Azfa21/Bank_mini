@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AuditLogService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,14 +12,38 @@ class EnsureRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (in_array('nasabah', $roles) && Auth::guard('nasabah')->check()) {
-            return $next($request);
+        if (Auth::guard('nasabah')->check()) {
+            $nasabah = Auth::guard('nasabah')->user();
+
+            if ($roles === ['nasabah'] && $nasabah->status === 'active') {
+                return $next($request);
+            }
+
+            AuditLogService::record('access_denied', 'customer', $nasabah->id, [
+                'path' => $request->path(),
+                'roles' => $roles,
+                'student_number' => $nasabah->student_number,
+            ]);
+
+            return redirect()->route('login')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        if (Auth::guard('web')->check() && in_array(Auth::guard('web')->user()->role, $roles)) {
-            return $next($request);
+        if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+
+            if ($user->status === 'active' && in_array($user->role, $roles)) {
+                return $next($request);
+            }
+
+            AuditLogService::record('access_denied', 'user', $user->id, [
+                'path' => $request->path(),
+                'roles' => $roles,
+                'role' => $user->role,
+            ], $user->id);
+
+            return redirect()->route('login')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        return redirect()->route('login');
+        return redirect()->route('login')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
     }
 }

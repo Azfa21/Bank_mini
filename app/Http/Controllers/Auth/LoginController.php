@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,31 +18,67 @@ class LoginController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
+        $identifier = $request->input('identifier', '');
+        $secret = $request->input('secret', '');
+
+        $secretRules = ['required', 'string'];
+        if (preg_match('/^\d+$/', $identifier)) {
+            $secretRules[] = 'digits:6';
+        }
+
+        $request->validate([
             'identifier' => ['required', 'string'],
-            'secret' => ['required', 'string'],
+            'secret' => $secretRules,
         ]);
 
-        $identifier = $credentials['identifier'];
-        $secret = $credentials['secret'];
-
         if (Auth::guard('web')->attempt(['username' => $identifier, 'password' => $secret])) {
-            $request->session()->regenerate();
+            $user = Auth::guard('web')->user();
 
-            return $this->redirectByRole(Auth::guard('web')->user()->role);
+            if ($user->status !== 'active') {
+                Auth::guard('web')->logout();
+                AuditLogService::record('login_blocked', 'user', $user->id, ['username' => $user->username]);
+
+                return back()->withErrors(['identifier' => 'Akun Anda diblokir.']);
+            }
+
+            $request->session()->regenerate();
+            AuditLogService::record('login_success', 'user', $user->id, ['role' => $user->role], $user->id);
+
+            return $this->redirectByRole($user->role);
         }
 
         if (Auth::guard('nasabah')->attempt(['student_number' => $identifier, 'password' => $secret])) {
+            $nasabah = Auth::guard('nasabah')->user();
+
+            if ($nasabah->status !== 'active') {
+                Auth::guard('nasabah')->logout();
+                AuditLogService::record('login_blocked', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
+
+                return back()->withErrors(['identifier' => 'Akun Anda diblokir.']);
+            }
+
             $request->session()->regenerate();
+            AuditLogService::record('login_success', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
             return redirect()->route('nasabah.dashboard');
         }
+
+        AuditLogService::record('login_failed', null, null, ['identifier' => $identifier]);
 
         return back()->withErrors(['identifier' => 'Kredensial tidak valid.']);
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        $staffId = Auth::guard('web')->id();
+        $nasabah = Auth::guard('nasabah')->user();
+
+        if ($staffId !== null) {
+            AuditLogService::record('logout', 'user', $staffId, [], $staffId);
+        } elseif ($nasabah !== null) {
+            AuditLogService::record('logout', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
+        }
+
         Auth::guard('web')->logout();
         Auth::guard('nasabah')->logout();
 
