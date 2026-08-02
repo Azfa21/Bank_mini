@@ -1,0 +1,71 @@
+FASE 1 — Autentikasi, RBAC, dan Keamanan Akses
+- [x] Buat halaman login untuk pengguna internal dan nasabah.
+- [x] Buat endpoint autentikasi yang memvalidasi kredensial, status akun, dan role pengguna.
+- [x] Implementasikan password hashing dan verifikasi password tanpa menyimpan password asli.
+- [x] Implementasikan pembuatan, validasi, kedaluwarsa, dan penghapusan session atau token.
+- [x] Buat middleware untuk memeriksa session atau token sebelum mengakses endpoint terlindungi.
+- [x] Implementasikan middleware pembatasan akses berdasarkan role Administrator, Teller, Supervisor, dan Nasabah.
+- [x] Buat halaman dashboard dan pengalihan otomatis berdasarkan role pengguna.
+- [x] Implementasikan validasi PIN nasabah tepat 6 digit menggunakan nilai hash.
+- [x] Tambahkan penolakan akses untuk URL atau endpoint yang tidak sesuai role dan tampilkan pesan error yang sesuai.
+- [x] Buat endpoint logout yang membatalkan session atau token aktif.
+- [x] Implementasikan pencatatan audit untuk login, logout, autentikasi gagal, dan akses yang ditolak.
+- [x] Implementasikan Security Headers middleware dan pembatasan cache browser.
+- [x] Tambahkan baris navigasi (menu) per role pada navbar halaman layout.
+FASE 2 — Manajemen Pengguna dan Rekening Nasabah
+- [x] Buat halaman daftar akun Administrator, Teller, dan Supervisor dengan filter status dan role.
+- [x] Buat form tambah dan ubah akun internal dengan field full_name, username, password, role, dan status.
+- [x] Buat endpoint CRUD akun internal yang hanya dapat dipanggil oleh Administrator.
+- [x] Tambahkan validasi username unik, role valid, password wajib, dan status akun.
+- [x] Implementasikan aksi blokir, aktifkan kembali, dan hapus akun dengan konfirmasi pengguna.
+- [x] Buat halaman daftar dan form profil nasabah dengan field student_number, full_name, class_name, phone_number, qr_code_value, dan status.
+- [x] Buat endpoint CRUD profil nasabah dengan validasi nomor siswa dan QR Code unik.
+- [x] Implementasikan generator nomor rekening berdasarkan tahun ajaran dan nomor urut siswa.
+- [x] Buat halaman detail rekening yang menampilkan saldo awal, saldo berjalan, saldo minimum, dan status rekening.
+- [x] Buat endpoint konfigurasi saldo minimum dan QR Code yang hanya dapat diakses Administrator.
+- [x] Tambahkan validasi rekening aktif sebelum rekening digunakan untuk transaksi.
+- [x] Perbarui daftar, detail, status akun, dan status rekening setelah setiap aksi berhasil atau gagal.
+FASE 3 — Operasional Transaksi Teller
+- [x] Buat halaman pencarian nasabah melalui nomor rekening.
+- [x] Buat komponen pemindaian QR Code melalui kamera atau webcam dan tampilkan hasil pemindaian.
+- [x] Buat endpoint pencarian profil nasabah berdasarkan nomor rekening atau nilai QR Code.
+- [x] Tambahkan validasi agar hanya Teller yang dapat mengakses proses transaksi loket.
+- [x] Buat halaman transaksi setoran dengan field slip_number, slip_amount, dan physical_cash_amount.
+- [x] Implementasikan validasi slip setoran lengkap, nominal positif, rekening aktif, dan kecocokan uang fisik.
+- [x] Buat endpoint transaksi setoran yang memperbarui saldo, menyimpan transaksi, dan membuat jurnal secara atomik.
+- [x] Buat halaman transaksi penarikan dengan field slip_number, amount, dan input PIN nasabah.
+- [x] Implementasikan validasi saldo mencukupi, saldo setelah penarikan minimal Rp10.000, nominal positif, dan PIN 6 digit.
+- [x] Buat endpoint transaksi penarikan dengan pengurangan saldo, penyimpanan transaksi, dan pembuatan jurnal secara atomik.
+- [x] Tambahkan rollback ketika penyimpanan transaksi, pembaruan saldo, atau pembuatan jurnal mengalami kegagalan.
+- [x] Buat halaman hasil transaksi dan endpoint pencetakan struk yang menampilkan nomor transaksi, jenis transaksi, nominal, dan saldo akhir.
+- [x] Kunci transaksi berstatus final agar Teller tidak dapat mengubah atau menghapusnya.
+- [x] Perbarui saldo, status transaksi, pesan validasi, dan riwayat transaksi setelah transaksi berhasil atau ditolak.
+FASE 4 — Penutupan Kas dan Approval Supervisor
+- [x] Buat halaman penutupan kas Teller berdasarkan tanggal kerja.
+- [x] Buat endpoint rekap transaksi harian berdasarkan Teller, tanggal, dan status transaksi final.
+- [x] Implementasikan perhitungan total setoran, total penarikan, dan saldo akhir kas.
+- [x] Buat form input uang fisik di laci Teller dengan validasi nominal non-negatif.
+- [x] Implementasikan perhitungan cash_difference antara saldo akhir sistem dan uang fisik.
+- [x] Tampilkan status sesuai atau selisih secara langsung setelah Teller mengirim jumlah uang fisik.
+- [x] Kunci tombol cetak laporan final jika terdapat selisih kas.
+- [x] Buat endpoint pembuatan dan pencetakan draf Laporan Harian Teller jika rekonsiliasi sesuai.
+- [x] Buat halaman Supervisor untuk melihat detail laporan, transaksi, saldo sistem, uang fisik, dan selisih kas.
+- [x] Buat endpoint approval laporan yang hanya dapat dipanggil Supervisor dan bukan Teller pembuat laporan.
+- [x] Implementasikan pencatatan catatan approval, waktu approval, dan identitas Supervisor.
+- [x] Buat endpoint pemindahan tanggung jawab kas dari laci Teller ke brankas utama setelah laporan disetujui.
+- [x] Buat halaman penyelesaian selisih yang menampilkan transaksi terkait dan audit log.
+- [x] Perbarui status laporan, status pemindahan kas, dan tampilan riwayat setelah approval atau penolakan.
+FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
+- Buat halaman dashboard Nasabah yang menampilkan saldo rekening miliknya.
+- Buat endpoint saldo rekening yang membatasi hasil berdasarkan identitas Nasabah yang sedang login.
+- Buat halaman riwayat mutasi dengan informasi tanggal, jenis transaksi, nominal, dan saldo akhir.
+- Buat endpoint riwayat mutasi dengan pagination dan filter tanggal atau jenis transaksi.
+- Tambahkan validasi agar Nasabah tidak dapat mengakses rekening, profil, atau mutasi nasabah lain.
+- Buat endpoint dan service pencatatan dua baris jurnal untuk setiap transaksi yang berhasil.
+- Implementasikan aturan akun Kas 101 dan Tabungan 201 untuk transaksi setoran dan penarikan.
+- Tambahkan validasi bahwa total debit dan kredit setiap transaksi harus seimbang.
+- Buat halaman audit jurnal untuk Administrator dan Supervisor dengan filter transaksi dan tanggal.
+- Buat endpoint audit jurnal yang menolak akses Teller dan Nasabah.
+- Gabungkan penyimpanan transaksi, pembaruan saldo, dan pembuatan jurnal dalam satu database transaction (tergantung: endpoint transaksi FASE 3).
+- Implementasikan rollback dan pesan error ketika transaksi akuntansi gagal.
+- Perbarui saldo, riwayat mutasi, dan status jurnal setelah proses transaksi berhasil.
