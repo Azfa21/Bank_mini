@@ -14,7 +14,27 @@ class NavigationTest extends TellerTestCase
             ->assertSee('Dashboard')
             ->assertSee('Kelola Pengguna')
             ->assertSee('Kelola Nasabah')
-            ->assertSee('Konfigurasi');
+            ->assertSee('Konfigurasi')
+            ->assertSee('Audit Jurnal');
+    }
+
+    public function test_supervisor_dashboard_shows_role_menu(): void
+    {
+        $this->actingAs($this->supervisor, 'web')
+            ->get(route('supervisor.dashboard'))
+            ->assertOk()
+            ->assertSee('Dashboard')
+            ->assertSee('Laporan Harian')
+            ->assertSee('Audit Jurnal');
+    }
+
+    public function test_nasabah_dashboard_shows_role_menu(): void
+    {
+        $this->actingAs($this->nasabah, 'nasabah')
+            ->get(route('nasabah.dashboard'))
+            ->assertOk()
+            ->assertSee('Dashboard')
+            ->assertSee('Riwayat Mutasi');
     }
 
     public function test_admin_submenu_shows_dashboard_link_in_navbar(): void

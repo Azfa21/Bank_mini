@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\SystemConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
+use App\Http\Controllers\Nasabah\MutasiController;
 use App\Http\Controllers\Supervisor\ReportController;
 use App\Http\Controllers\Teller\ClosingController;
 use App\Http\Controllers\Teller\CustomerSearchController;
@@ -27,6 +30,8 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
 
     Route::get('config', [SystemConfigController::class, 'edit'])->name('config.edit');
     Route::put('config', [SystemConfigController::class, 'update'])->name('config.update');
+
+    Route::get('journals', [JournalController::class, 'index'])->name('journals.index');
 });
 
 Route::middleware(['role:teller'])->prefix('teller')->as('teller.')->group(function () {
@@ -56,8 +61,11 @@ Route::middleware(['role:supervisor'])->prefix('supervisor')->group(function () 
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('supervisor.reports.show');
     Route::post('/reports/{report}/approve', [ReportController::class, 'approve'])->name('supervisor.reports.approve');
     Route::post('/reports/{report}/reject', [ReportController::class, 'reject'])->name('supervisor.reports.reject');
+
+    Route::get('/journals', [JournalController::class, 'index'])->name('supervisor.journals.index');
 });
 
 Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {
-    Route::get('/dashboard', fn () => view('nasabah.dashboard'))->name('nasabah.dashboard');
+    Route::get('/dashboard', [NasabahDashboardController::class, 'index'])->name('nasabah.dashboard');
+    Route::get('/mutasi', [MutasiController::class, 'index'])->name('nasabah.mutasi');
 });

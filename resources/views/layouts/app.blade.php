@@ -33,6 +33,7 @@
                 $menuItems[] = ['label' => 'Kelola Pengguna', 'url' => route('admin.users.index'), 'active' => request()->routeIs('admin.users.*')];
                 $menuItems[] = ['label' => 'Kelola Nasabah', 'url' => route('admin.customers.index'), 'active' => request()->routeIs('admin.customers.*', 'admin.accounts.*')];
                 $menuItems[] = ['label' => 'Konfigurasi', 'url' => route('admin.config.edit'), 'active' => request()->routeIs('admin.config.*')];
+                $menuItems[] = ['label' => 'Audit Jurnal', 'url' => route('admin.journals.index'), 'active' => request()->routeIs('admin.journals.*')];
             } elseif ($role === 'teller') {
                 $menuItems[] = [
                     'label' => 'Pencarian Nasabah',
@@ -49,6 +50,17 @@
                     'label' => 'Laporan Harian',
                     'url' => route('supervisor.reports.index'),
                     'active' => request()->routeIs('supervisor.reports.*'),
+                ];
+                $menuItems[] = [
+                    'label' => 'Audit Jurnal',
+                    'url' => route('supervisor.journals.index'),
+                    'active' => request()->routeIs('supervisor.journals.*'),
+                ];
+            } elseif ($role === 'nasabah') {
+                $menuItems[] = [
+                    'label' => 'Riwayat Mutasi',
+                    'url' => route('nasabah.mutasi'),
+                    'active' => request()->routeIs('nasabah.mutasi'),
                 ];
             }
         }
