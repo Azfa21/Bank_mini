@@ -10,20 +10,30 @@ class Account extends Model
 {
     protected $table = 'accounts';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'account_number',
         'customer_id',
         'balance',
+        'opening_balance',
+        'minimum_balance',
+        'academic_year',
         'status',
         'opened_at',
+        'closed_at',
     ];
 
     protected $casts = [
         'balance' => 'integer',
+        'opening_balance' => 'integer',
+        'minimum_balance' => 'integer',
         'opened_at' => 'datetime',
+        'closed_at' => 'datetime',
     ];
+
+    public function getCurrentBalanceAttribute(): int
+    {
+        return (int) $this->attributes['balance'];
+    }
 
     public function customer(): BelongsTo
     {

@@ -15,8 +15,10 @@ class Customer extends Authenticatable
     protected $fillable = [
         'student_number',
         'full_name',
+        'class_name',
+        'phone_number',
         'pin_hash',
-        'qr_token',
+        'qr_code_value',
         'created_by',
         'status',
     ];
@@ -26,6 +28,7 @@ class Customer extends Authenticatable
     ];
 
     protected $casts = [
+        'pin_hash' => 'hashed',
         'created_at' => 'datetime',
     ];
 
