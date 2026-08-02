@@ -261,7 +261,7 @@ Field Wajib
 - approval_notes
 FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
 Status
-Direncanakan
+Selesai
 Sub-Fitur
 - Dasbor saldo nasabah
 - Riwayat mutasi rekening

@@ -56,16 +56,16 @@ FASE 4 — Penutupan Kas dan Approval Supervisor
 - [x] Buat halaman penyelesaian selisih yang menampilkan transaksi terkait dan audit log.
 - [x] Perbarui status laporan, status pemindahan kas, dan tampilan riwayat setelah approval atau penolakan.
 FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
-- Buat halaman dashboard Nasabah yang menampilkan saldo rekening miliknya.
-- Buat endpoint saldo rekening yang membatasi hasil berdasarkan identitas Nasabah yang sedang login.
-- Buat halaman riwayat mutasi dengan informasi tanggal, jenis transaksi, nominal, dan saldo akhir.
-- Buat endpoint riwayat mutasi dengan pagination dan filter tanggal atau jenis transaksi.
-- Tambahkan validasi agar Nasabah tidak dapat mengakses rekening, profil, atau mutasi nasabah lain.
-- Buat endpoint dan service pencatatan dua baris jurnal untuk setiap transaksi yang berhasil.
-- Implementasikan aturan akun Kas 101 dan Tabungan 201 untuk transaksi setoran dan penarikan.
-- Tambahkan validasi bahwa total debit dan kredit setiap transaksi harus seimbang.
-- Buat halaman audit jurnal untuk Administrator dan Supervisor dengan filter transaksi dan tanggal.
-- Buat endpoint audit jurnal yang menolak akses Teller dan Nasabah.
-- Gabungkan penyimpanan transaksi, pembaruan saldo, dan pembuatan jurnal dalam satu database transaction (tergantung: endpoint transaksi FASE 3).
-- Implementasikan rollback dan pesan error ketika transaksi akuntansi gagal.
-- Perbarui saldo, riwayat mutasi, dan status jurnal setelah proses transaksi berhasil.
+- [x] Buat halaman dashboard Nasabah yang menampilkan saldo rekening miliknya.
+- [x] Buat endpoint saldo rekening yang membatasi hasil berdasarkan identitas Nasabah yang sedang login.
+- [x] Buat halaman riwayat mutasi dengan informasi tanggal, jenis transaksi, nominal, dan saldo akhir.
+- [x] Buat endpoint riwayat mutasi dengan pagination dan filter tanggal atau jenis transaksi.
+- [x] Tambahkan validasi agar Nasabah tidak dapat mengakses rekening, profil, atau mutasi nasabah lain.
+- [x] Buat endpoint dan service pencatatan dua baris jurnal untuk setiap transaksi yang berhasil.
+- [x] Implementasikan aturan akun Kas 101 dan Tabungan 201 untuk transaksi setoran dan penarikan.
+- [x] Tambahkan validasi bahwa total debit dan kredit setiap transaksi harus seimbang.
+- [x] Buat halaman audit jurnal untuk Administrator dan Supervisor dengan filter transaksi dan tanggal.
+- [x] Buat endpoint audit jurnal yang menolak akses Teller dan Nasabah.
+- [x] Gabungkan penyimpanan transaksi, pembaruan saldo, dan pembuatan jurnal dalam satu database transaction (tergantung: endpoint transaksi FASE 3).
+- [x] Implementasikan rollback dan pesan error ketika transaksi akuntansi gagal.
+- [x] Perbarui saldo, riwayat mutasi, dan status jurnal setelah proses transaksi berhasil.

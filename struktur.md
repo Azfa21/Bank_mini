@@ -74,7 +74,7 @@ Tasks:
 - Implementasikan mekanisme approval laporan oleh Supervisor.
 - Implementasikan pembukuan pemindahan tanggung jawab kas ke brankas utama.
 - Buat pencatatan real-time log dan audit jurnal akuntansi.
-FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi (0/8) — Status: Direncanakan  
+FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi (8/8) — Status: Selesai  
 Sub-Fitur:
 - Dasbor saldo nasabah
 - Riwayat mutasi rekening
