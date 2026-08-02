@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DailyReport extends Model
 {
@@ -12,6 +13,7 @@ class DailyReport extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'report_number',
         'teller_id',
         'report_date',
         'opening_balance',
@@ -19,9 +21,12 @@ class DailyReport extends Model
         'total_withdrawal',
         'closing_balance_system',
         'closing_balance_physical',
+        'cash_difference',
         'status',
         'approved_by',
         'approved_at',
+        'submitted_at',
+        'approval_notes',
     ];
 
     protected $casts = [
@@ -31,7 +36,9 @@ class DailyReport extends Model
         'total_withdrawal' => 'integer',
         'closing_balance_system' => 'integer',
         'closing_balance_physical' => 'integer',
+        'cash_difference' => 'integer',
         'approved_at' => 'datetime',
+        'submitted_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 
@@ -43,5 +50,20 @@ class DailyReport extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function cashTransfer(): HasOne
+    {
+        return $this->hasOne(CashTransfer::class, 'report_id');
+    }
+
+    public function transactions()
+    {
+        return Transaction::query()
+            ->where('teller_id', $this->teller_id)
+            ->whereDate('transaction_at', $this->report_date)
+            ->where('status', 'success')
+            ->orderBy('transaction_at')
+            ->orderBy('id');
     }
 }

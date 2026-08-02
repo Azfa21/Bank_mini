@@ -13,13 +13,22 @@ class JurnalAkuntansi extends Model
 
     protected $fillable = [
         'transaction_id',
+        'journal_number',
         'account_code',
         'entry_type',
         'amount',
+        'debit_amount',
+        'credit_amount',
+        'description',
+        'status',
+        'journal_at',
     ];
 
     protected $casts = [
         'amount' => 'integer',
+        'debit_amount' => 'integer',
+        'credit_amount' => 'integer',
+        'journal_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 

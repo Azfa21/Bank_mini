@@ -20,12 +20,20 @@ class Transaction extends Model
         'balance_before',
         'balance_after',
         'receipt_number',
+        'slip_number',
+        'slip_amount',
+        'physical_cash_amount',
+        'status',
+        'transaction_at',
     ];
 
     protected $casts = [
         'amount' => 'integer',
+        'slip_amount' => 'integer',
+        'physical_cash_amount' => 'integer',
         'balance_before' => 'integer',
         'balance_after' => 'integer',
+        'transaction_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 

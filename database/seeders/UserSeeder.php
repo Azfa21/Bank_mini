@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -18,15 +19,21 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as [$username, $fullName, $role]) {
-            User::firstOrCreate(
+            $password = Str::random(12);
+
+            $user = User::firstOrCreate(
                 ['username' => $username],
                 [
-                    'password_hash' => Hash::make('password'),
+                    'password_hash' => Hash::make($password),
                     'full_name' => $fullName,
                     'role' => $role,
                     'status' => 'active',
                 ]
             );
+
+            if ($user->wasRecentlyCreated) {
+                $this->command->info("User [{$username}] ({$role}) -> password: {$password}");
+            }
         }
     }
 }

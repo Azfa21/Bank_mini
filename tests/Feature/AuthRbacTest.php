@@ -58,7 +58,7 @@ class AuthRbacTest extends TestCase
             'student_number' => '2023001',
             'full_name' => 'Ani',
             'pin_hash' => Hash::make('123456'),
-            'qr_token' => 'qr-test-1',
+            'qr_code_value' => 'qr-test-1',
             'created_by' => $this->admin->id,
             'status' => 'active',
         ]);
