@@ -5,14 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\JurnalAkuntansi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 
 class JournalController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         $user = Auth::guard('web')->user();
-        $userRole = $user->role;
+        $userRole = $user ? $user->role : null;
         $indexRoute = $userRole === 'admin'
             ? route('admin.journals.index')
             : route('supervisor.journals.index');
@@ -45,6 +44,17 @@ class JournalController extends Controller
             ->when($request->input('date_from'), fn ($query) => $query->whereDate('journal_at', '>=', $request->input('date_from')))
             ->when($request->input('date_to'), fn ($query) => $query->whereDate('journal_at', '<=', $request->input('date_to')))
             ->sum('credit_amount');
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'journals' => $journals,
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                ],
+            ]);
+        }
 
         return view('journals.index', compact('journals', 'totalDebit', 'totalCredit', 'userRole', 'indexRoute'));
     }

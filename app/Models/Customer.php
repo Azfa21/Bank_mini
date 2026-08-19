@@ -21,6 +21,8 @@ class Customer extends Authenticatable
         'qr_code_value',
         'created_by',
         'status',
+        'failed_pin_attempts',
+        'locked_until',
     ];
 
     protected $hidden = [
@@ -29,8 +31,15 @@ class Customer extends Authenticatable
 
     protected $casts = [
         'pin_hash' => 'hashed',
+        'failed_pin_attempts' => 'integer',
+        'locked_until' => 'datetime',
         'created_at' => 'datetime',
     ];
+
+    public function isPinLocked(): bool
+    {
+        return $this->locked_until !== null && $this->locked_until->isFuture();
+    }
 
     public function getAuthPassword(): string
     {

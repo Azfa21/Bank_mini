@@ -83,6 +83,7 @@ Sub-Fitur
 - Manajemen sesi atau token pengguna
 - Pembatasan akses berdasarkan role
 - Keamanan kredensial dan PIN nasabah
+- Pemulihan kredensial mandiri (Lupa Password & Reset PIN)
 - Pencatatan aktivitas akses
 Requirements Fitur
 1. Login terpusat
@@ -104,6 +105,11 @@ Requirements Fitur
 - PIN harus diverifikasi sebelum penarikan diproses.
 5. Pencatatan aktivitas akses
 - Sistem mencatat login, logout, penolakan akses, dan aktivitas penting.
+6. Pemulihan kredensial mandiri (Lupa Password & Reset PIN)
+- Pengguna internal (Staff) dapat memulihkan password dengan verifikasi username dan nama lengkap terdaftar, dengan password baru minimal 8 karakter.
+- Nasabah (Siswa) dapat memulihkan PIN dengan verifikasi nomor siswa (NIS) dan kelas terdaftar, dengan PIN baru tepat 6 digit angka.
+- Sistem menolak pemulihan untuk akun yang berstatus diblokir (blocked).
+- Seluruh aktivitas pemulihan (berhasil, gagal, diblokir) dicatat dalam audit log dan dilindungi rate limiting (5 req/menit).
 Field Wajib
 - username
 - password

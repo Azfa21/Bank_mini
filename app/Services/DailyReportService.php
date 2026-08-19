@@ -5,12 +5,17 @@ namespace App\Services;
 use App\Exceptions\TransactionValidationException;
 use App\Models\CashTransfer;
 use App\Models\DailyReport;
+use App\Models\JurnalAkuntansi;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DailyReportService
 {
+    public function __construct(
+        protected SequenceService $sequences,
+    ) {}
+
     public function recap(User $teller, string $date): array
     {
         $opening = (int) DailyReport::where('teller_id', $teller->id)
@@ -106,6 +111,10 @@ class DailyReportService
         });
     }
 
+    public const ACCOUNT_CODE_CASH_TELLER = '101';
+
+    public const ACCOUNT_CODE_CASH_VAULT = '102';
+
     public function approve(DailyReport $report, User $supervisor, string $notes): DailyReport
     {
         return DB::transaction(function () use ($report, $supervisor, $notes) {
@@ -126,10 +135,12 @@ class DailyReportService
                 'approval_notes' => $notes,
             ]);
 
-            CashTransfer::create([
+            $transferAmount = $locked->closing_balance_physical ?? $locked->closing_balance_system;
+
+            $cashTransfer = CashTransfer::create([
                 'report_id' => $locked->id,
                 'supervisor_id' => $supervisor->id,
-                'amount' => $locked->closing_balance_physical ?? $locked->closing_balance_system,
+                'amount' => $transferAmount,
                 'source_location' => 'Laci Teller',
                 'destination_location' => 'Brankas Utama',
                 'status' => 'transferred',
@@ -138,13 +149,50 @@ class DailyReportService
                 'created_at' => now(),
             ]);
 
+            if ($transferAmount > 0) {
+                // Post double-entry journal for Cash Transfer: Debet 102 Kas Brankas, Kredit 101 Kas Teller
+                $journalRows = [
+                    [
+                        'account_code' => self::ACCOUNT_CODE_CASH_VAULT,
+                        'entry_type' => 'debit',
+                        'debit_amount' => $transferAmount,
+                        'credit_amount' => 0,
+                        'description' => 'Pemindahan kas Laci Teller ke Brankas Utama (Lap: '.$locked->report_number.')',
+                    ],
+                    [
+                        'account_code' => self::ACCOUNT_CODE_CASH_TELLER,
+                        'entry_type' => 'credit',
+                        'debit_amount' => 0,
+                        'credit_amount' => $transferAmount,
+                        'description' => 'Pemindahan kas Laci Teller ke Brankas Utama (Lap: '.$locked->report_number.')',
+                    ],
+                ];
+
+                $journalPrefix = 'JRN-TRF-'.str_replace('-', '', $locked->report_date);
+                foreach ($journalRows as $idx => $row) {
+                    JurnalAkuntansi::create([
+                        'transaction_id' => null,
+                        'cash_transfer_id' => $cashTransfer->id,
+                        'journal_number' => $journalPrefix.'-'.str_pad($cashTransfer->id, 4, '0', STR_PAD_LEFT).'-'.str_pad($idx + 1, 2, '0', STR_PAD_LEFT),
+                        'account_code' => $row['account_code'],
+                        'entry_type' => $row['entry_type'],
+                        'amount' => $transferAmount,
+                        'debit_amount' => $row['debit_amount'],
+                        'credit_amount' => $row['credit_amount'],
+                        'description' => $row['description'],
+                        'status' => 'posted',
+                        'journal_at' => now(),
+                    ]);
+                }
+            }
+
             AuditLogService::record('daily_report_approved', 'daily_report', $locked->id, [
                 'report_number' => $locked->report_number,
                 'approval_notes' => $notes,
             ], $supervisor->id);
 
             AuditLogService::record('cash_transferred', 'daily_report', $locked->id, [
-                'amount' => $locked->closing_balance_physical ?? $locked->closing_balance_system,
+                'amount' => $transferAmount,
                 'source_location' => 'Laci Teller',
                 'destination_location' => 'Brankas Utama',
             ], $supervisor->id);
@@ -180,9 +228,8 @@ class DailyReportService
 
     protected function generateReportNumber(string $date): string
     {
-        $prefix = 'RPT-'.str_replace('-', '', $date);
-        $count = (int) DailyReport::whereDate('report_date', $date)->count();
+        $key = 'RPT-'.str_replace('-', '', $date);
 
-        return $prefix.'-'.str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        return $this->sequences->formatted($key, $key);
     }
 }

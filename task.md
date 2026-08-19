@@ -12,6 +12,9 @@ FASE 1 — Autentikasi, RBAC, dan Keamanan Akses
 - [x] Implementasikan pencatatan audit untuk login, logout, autentikasi gagal, dan akses yang ditolak.
 - [x] Implementasikan Security Headers middleware dan pembatasan cache browser.
 - [x] Tambahkan baris navigasi (menu) per role pada navbar halaman layout.
+- [x] Buat halaman dan alur pemulihan kredensial (Lupa Password untuk pegawai dan Reset PIN untuk nasabah).
+- [x] Buat endpoint verifikasi identitas dan reset password pegawai (username, nama lengkap, password min 8 karakter) serta reset PIN nasabah (nomor siswa, kelas, PIN 6 digit).
+- [x] Implementasikan rate limiting dan pencatatan audit log untuk aktivitas pemulihan kredensial.
 FASE 2 — Manajemen Pengguna dan Rekening Nasabah
 - [x] Buat halaman daftar akun Administrator, Teller, dan Supervisor dengan filter status dan role.
 - [x] Buat form tambah dan ubah akun internal dengan field full_name, username, password, role, dan status.
@@ -69,3 +72,19 @@ FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
 - [x] Gabungkan penyimpanan transaksi, pembaruan saldo, dan pembuatan jurnal dalam satu database transaction (tergantung: endpoint transaksi FASE 3).
 - [x] Implementasikan rollback dan pesan error ketika transaksi akuntansi gagal.
 - [x] Perbarui saldo, riwayat mutasi, dan status jurnal setelah proses transaksi berhasil.
+FASE 6 — Transaksi Lanjutan dan Layanan Nasabah
+- [x] Buat migration untuk mendukung transaksi transfer dan proteksi limit PIN nasabah.
+- [x] Implementasikan service method transaksi transfer antar rekening dengan double-entry journal (201 Pengirim -> 201 Penerima).
+- [x] Buat route, controller, form UI, dan struk bukti transfer di modul Teller.
+- [x] Buat fitur cetak buku tabungan fisik (Passbook printing) dengan opsi baris awal per halaman.
+- [x] Buat fitur cetak/ekspor Rekening Koran resmi (e-Statement) untuk Nasabah dan Staff.
+- [x] Buat tampilan Kartu Nasabah Virtual ber-QR Code di dasbor nasabah dan profil admin.
+FASE 7 — Modul Laporan Keuangan dan Akuntansi Lengkap
+- [x] Implementasikan auto-posting jurnal akuntansi saat approval pemindahan kas brankas (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+- [x] Buat modul Buku Besar (General Ledger) dengan filter per kode akun dan rentang tanggal.
+- [x] Buat modul Neraca Saldo (Trial Balance) dan indikator rasio likuiditas kas.
+- [x] Buat endpoint ekspor laporan akuntansi (Jurnal, Buku Besar, Neraca Saldo) ke format CSV.
+FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna
+- [x] Implementasikan proteksi brute-force PIN (kunci akun setelah 3 kali gagal + catat audit log).
+- [x] Refactor generator nomor transaksi dan laporan ke sequence yang anti-collision.
+- [x] Tambahkan kartu metrik analitik dan grafik keuangan pada dashboard Admin dan Supervisor.

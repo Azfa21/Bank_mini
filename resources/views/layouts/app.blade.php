@@ -32,13 +32,14 @@
             if ($role === 'admin') {
                 $menuItems[] = ['label' => 'Kelola Pengguna', 'url' => route('admin.users.index'), 'active' => request()->routeIs('admin.users.*')];
                 $menuItems[] = ['label' => 'Kelola Nasabah', 'url' => route('admin.customers.index'), 'active' => request()->routeIs('admin.customers.*', 'admin.accounts.*')];
+                $menuItems[] = ['label' => 'Laporan Keuangan', 'url' => route('admin.reports.general-ledger'), 'active' => request()->routeIs('admin.reports.*')];
                 $menuItems[] = ['label' => 'Konfigurasi', 'url' => route('admin.config.edit'), 'active' => request()->routeIs('admin.config.*')];
                 $menuItems[] = ['label' => 'Audit Jurnal', 'url' => route('admin.journals.index'), 'active' => request()->routeIs('admin.journals.*')];
             } elseif ($role === 'teller') {
                 $menuItems[] = [
                     'label' => 'Pencarian Nasabah',
                     'url' => route('teller.customers.search'),
-                    'active' => request()->routeIs('teller.customers.*', 'teller.deposits.*', 'teller.withdrawals.*', 'teller.transactions.*'),
+                    'active' => request()->routeIs('teller.customers.*', 'teller.deposits.*', 'teller.withdrawals.*', 'teller.transfers.*', 'teller.passbook.*', 'teller.transactions.*'),
                 ];
                 $menuItems[] = [
                     'label' => 'Penutupan Kas',
@@ -52,6 +53,11 @@
                     'active' => request()->routeIs('supervisor.reports.*'),
                 ];
                 $menuItems[] = [
+                    'label' => 'Laporan Keuangan',
+                    'url' => route('supervisor.reports.general-ledger'),
+                    'active' => request()->routeIs('supervisor.reports-accounting.*'),
+                ];
+                $menuItems[] = [
                     'label' => 'Audit Jurnal',
                     'url' => route('supervisor.journals.index'),
                     'active' => request()->routeIs('supervisor.journals.*'),
@@ -61,6 +67,11 @@
                     'label' => 'Riwayat Mutasi',
                     'url' => route('nasabah.mutasi'),
                     'active' => request()->routeIs('nasabah.mutasi'),
+                ];
+                $menuItems[] = [
+                    'label' => 'Rekening Koran',
+                    'url' => route('nasabah.statement'),
+                    'active' => request()->routeIs('nasabah.statement'),
                 ];
             }
         }

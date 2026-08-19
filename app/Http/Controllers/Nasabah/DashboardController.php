@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Nasabah;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index()
     {
         $nasabah = Auth::guard('nasabah')->user();
-        $account = $nasabah->account;
+        $account = $nasabah ? $nasabah->account : null;
 
         $lastTransaction = $account
             ? Transaction::where('account_id', $account->id)
@@ -21,6 +20,17 @@ class DashboardController extends Controller
                 ->orderByDesc('id')
                 ->first()
             : null;
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'nasabah' => $nasabah,
+                    'account' => $account,
+                    'last_transaction' => $lastTransaction,
+                ],
+            ]);
+        }
 
         return view('nasabah.dashboard', compact('nasabah', 'account', 'lastTransaction'));
     }

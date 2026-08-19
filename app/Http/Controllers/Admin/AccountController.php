@@ -4,13 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
-use Illuminate\View\View;
 
 class AccountController extends Controller
 {
-    public function show(Account $account): View
+    public function show(Account $account)
     {
         $account->load('customer');
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $account,
+            ]);
+        }
 
         return view('admin.accounts.show', compact('account'));
     }

@@ -14,6 +14,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'account_id',
+        'recipient_account_id',
         'teller_id',
         'type',
         'amount',
@@ -23,6 +24,7 @@ class Transaction extends Model
         'slip_number',
         'slip_amount',
         'physical_cash_amount',
+        'notes',
         'status',
         'transaction_at',
     ];
@@ -40,6 +42,11 @@ class Transaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function recipientAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'recipient_account_id');
     }
 
     public function teller(): BelongsTo

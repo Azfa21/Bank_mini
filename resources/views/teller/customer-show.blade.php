@@ -55,6 +55,20 @@
                         </svg>
                         Transaksi Penarikan
                     </a>
+                    <a href="{{ route('teller.transfers.create', $account) }}"
+                        class="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H8M17 7v9"/>
+                        </svg>
+                        Transfer Antar Rekening
+                    </a>
+                    <a href="{{ route('teller.passbook.show', $account) }}"
+                        class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4zM4 9h16"/>
+                        </svg>
+                        Buku Tabungan
+                    </a>
                 </div>
             @else
                 <p class="text-sm text-red-600">Rekening tidak aktif — transaksi tidak dapat diproses.</p>

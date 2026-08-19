@@ -38,11 +38,28 @@ class LoginController extends Controller
                 Auth::guard('web')->logout();
                 AuditLogService::record('login_blocked', 'user', $user->id, ['username' => $user->username]);
 
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json(['success' => false, 'message' => 'Akun Anda diblokir.'], 403);
+                }
+
                 return back()->withErrors(['identifier' => 'Akun Anda diblokir.']);
             }
 
             $request->session()->regenerate();
             AuditLogService::record('login_success', 'user', $user->id, ['role' => $user->role], $user->id);
+
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login berhasil.',
+                    'user' => [
+                        'id' => $user->id,
+                        'full_name' => $user->full_name,
+                        'username' => $user->username,
+                        'role' => $user->role,
+                    ],
+                ]);
+            }
 
             return $this->redirectByRole($user->role);
         }
@@ -54,21 +71,42 @@ class LoginController extends Controller
                 Auth::guard('nasabah')->logout();
                 AuditLogService::record('login_blocked', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json(['success' => false, 'message' => 'Akun Anda diblokir.'], 403);
+                }
+
                 return back()->withErrors(['identifier' => 'Akun Anda diblokir.']);
             }
 
             $request->session()->regenerate();
             AuditLogService::record('login_success', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login berhasil.',
+                    'customer' => [
+                        'id' => $nasabah->id,
+                        'full_name' => $nasabah->full_name,
+                        'student_number' => $nasabah->student_number,
+                        'role' => 'nasabah',
+                    ],
+                ]);
+            }
+
             return redirect()->route('nasabah.dashboard');
         }
 
         AuditLogService::record('login_failed', null, null, ['identifier' => $identifier]);
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json(['success' => false, 'message' => 'Kredensial tidak valid.'], 401);
+        }
+
         return back()->withErrors(['identifier' => 'Kredensial tidak valid.']);
     }
 
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request)
     {
         $staffId = Auth::guard('web')->id();
         $nasabah = Auth::guard('nasabah')->user();
@@ -84,6 +122,10 @@ class LoginController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json(['success' => true, 'message' => 'Logout berhasil.']);
+        }
 
         return redirect()->route('login');
     }

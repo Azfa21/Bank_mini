@@ -6,18 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function index(): View
+    public function index()
     {
         $users = User::query()
             ->when(request('role'), fn ($q, $role) => $q->where('role', $role))
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
             ->latest()
             ->paginate(15);
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $users,
+            ]);
+        }
 
         return view('admin.users.index', compact('users'));
     }
@@ -27,15 +33,23 @@ class UserController extends Controller
         return view('admin.users.create');
     }
 
-    public function store(StoreUserRequest $request): RedirectResponse
+    public function store(StoreUserRequest $request)
     {
-        User::create([
+        $user = User::create([
             'full_name' => $request->full_name,
             'username' => $request->username,
             'password_hash' => $request->password,
             'role' => $request->role,
             'status' => $request->status,
         ]);
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun pengguna berhasil dibuat.',
+                'data' => $user,
+            ], 201);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil dibuat.');
     }
@@ -45,7 +59,7 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user'));
     }
 
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user)
     {
         $data = $request->only(['full_name', 'username', 'role', 'status']);
 
@@ -55,21 +69,44 @@ class UserController extends Controller
 
         $user->update($data);
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun pengguna berhasil diperbarui.',
+                'data' => $user->fresh(),
+            ]);
+        }
+
         return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil diperbarui.');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(User $user)
     {
         $user->delete();
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun pengguna berhasil dihapus.',
+            ]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil dihapus.');
     }
 
-    public function toggleStatus(User $user): RedirectResponse
+    public function toggleStatus(User $user)
     {
         $user->update(['status' => $user->status === 'active' ? 'blocked' : 'active']);
 
         $label = $user->status === 'active' ? 'diaktifkan' : 'diblokir';
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Akun {$user->full_name} berhasil {$label}.",
+                'data' => $user->fresh(),
+            ]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', "Akun {$user->full_name} berhasil {$label}.");
     }

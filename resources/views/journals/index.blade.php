@@ -4,9 +4,15 @@
 @section('section', $userRole === 'admin' ? 'Administrator' : 'Supervisor')
 
 @section('content')
-    <div class="mb-6">
-        <h1 class="text-xl font-semibold text-gray-900">Audit Jurnal Akuntansi</h1>
-        <p class="text-sm text-gray-500 mt-1">Jurnal double-entry setiap transaksi setoran dan penarikan.</p>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-semibold text-gray-900">Audit Jurnal Akuntansi</h1>
+            <p class="text-sm text-gray-500 mt-1">Jurnal double-entry setiap transaksi setoran, penarikan, dan transfer.</p>
+        </div>
+        <a href="{{ $userRole === 'admin' ? route('admin.reports.export', 'journals') : route('supervisor.reports.export', 'journals') }}"
+            class="text-sm bg-green-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            Ekspor CSV
+        </a>
     </div>
 
     <form method="GET" action="{{ $indexRoute }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5 flex flex-wrap gap-3 items-end">

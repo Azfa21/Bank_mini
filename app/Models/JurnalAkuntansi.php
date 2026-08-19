@@ -13,6 +13,7 @@ class JurnalAkuntansi extends Model
 
     protected $fillable = [
         'transaction_id',
+        'cash_transfer_id',
         'journal_number',
         'account_code',
         'entry_type',
@@ -35,5 +36,10 @@ class JurnalAkuntansi extends Model
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
+
+    public function cashTransfer(): BelongsTo
+    {
+        return $this->belongsTo(CashTransfer::class, 'cash_transfer_id');
     }
 }

@@ -27,25 +27,44 @@
                     </span>
                 </div>
             </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+                <div class="text-sm text-gray-500">Transaksi Terakhir</div>
+                @if ($lastTransaction)
+                    <div class="text-2xl font-semibold text-gray-900 mt-1">
+                        @if ($lastTransaction->type === 'deposit')
+                            Setoran
+                        @elseif ($lastTransaction->type === 'withdrawal')
+                            Penarikan
+                        @elseif ($lastTransaction->recipient_account_id === $account->id)
+                            Transfer Masuk
+                        @else
+                            Transfer Keluar
+                        @endif
+                    </div>
+                    <div class="text-lg font-medium text-gray-700 mt-1">Rp {{ number_format($lastTransaction->amount, 0, ',', '.') }}</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ $lastTransaction->transaction_at->format('d/m/Y H:i') }}</div>
+                @else
+                    <div class="text-gray-500 mt-1">Belum ada transaksi.</div>
+                @endif
+            </div>
+
+            <div class="lg:col-span-2">
+                <h2 class="text-sm font-medium text-gray-900 mb-3">Kartu Nasabah Virtual</h2>
+                @include('partials.virtual-card', ['account' => $account, 'customer' => $nasabah])
+            </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <div class="text-sm text-gray-500">Transaksi Terakhir</div>
-            @if ($lastTransaction)
-                <div class="text-2xl font-semibold text-gray-900 mt-1">
-                    {{ $lastTransaction->type === 'deposit' ? 'Setoran' : 'Penarikan' }}
-                </div>
-                <div class="text-lg font-medium text-gray-700 mt-1">Rp {{ number_format($lastTransaction->amount, 0, ',', '.') }}</div>
-                <div class="text-xs text-gray-500 mt-1">{{ $lastTransaction->transaction_at->format('d/m/Y H:i') }}</div>
-            @else
-                <div class="text-gray-500 mt-1">Belum ada transaksi.</div>
-            @endif
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('nasabah.mutasi') }}"
+                class="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                Riwayat Mutasi
+            </a>
+            <a href="{{ route('nasabah.statement') }}"
+                class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                Rekening Koran (e-Statement)
+            </a>
         </div>
-
-        <a href="{{ route('nasabah.mutasi') }}"
-            class="inline-flex items-center gap-2 mt-6 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Riwayat Mutasi
-        </a>
     @else
         <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-xl p-5">
             Anda belum memiliki rekening aktif. Silakan hubungi administrator Bank Mini.

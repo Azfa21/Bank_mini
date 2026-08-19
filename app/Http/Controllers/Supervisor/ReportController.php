@@ -10,8 +10,6 @@ use App\Models\AuditLog;
 use App\Models\DailyReport;
 use App\Services\AuditLogService;
 use App\Services\DailyReportService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class ReportController extends Controller
 {
@@ -19,7 +17,7 @@ class ReportController extends Controller
         protected DailyReportService $reports,
     ) {}
 
-    public function index(): View
+    public function index()
     {
         $reports = DailyReport::query()
             ->with(['teller'])
@@ -29,10 +27,17 @@ class ReportController extends Controller
             ->orderByDesc('id')
             ->paginate(15);
 
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $reports,
+            ]);
+        }
+
         return view('supervisor.reports.index', compact('reports'));
     }
 
-    public function show(DailyReport $report): View
+    public function show(DailyReport $report)
     {
         $report->load(['teller', 'approver', 'cashTransfer.supervisor']);
 
@@ -43,10 +48,21 @@ class ReportController extends Controller
             ->latest('id')
             ->get();
 
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'report' => $report,
+                    'transactions' => $transactions,
+                    'audit_logs' => $auditLogs,
+                ],
+            ]);
+        }
+
         return view('supervisor.reports.show', compact('report', 'transactions', 'auditLogs'));
     }
 
-    public function approve(ApproveReportRequest $request, DailyReport $report): RedirectResponse
+    public function approve(ApproveReportRequest $request, DailyReport $report)
     {
         try {
             $this->reports->approve($report, $request->user(), $request->validated('approval_notes'));
@@ -55,19 +71,49 @@ class ReportController extends Controller
                 'reason' => $e->getMessage(),
             ], $request->user()->id);
 
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return back()->with('error', $e->getMessage());
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan berhasil disetujui dan kas dipindahkan ke brankas utama.',
+                'data' => $report->fresh(['teller', 'approver', 'cashTransfer.supervisor']),
+            ]);
         }
 
         return redirect()->route('supervisor.reports.show', $report)
             ->with('success', 'Laporan berhasil disetujui dan kas dipindahkan ke brankas utama.');
     }
 
-    public function reject(RejectReportRequest $request, DailyReport $report): RedirectResponse
+    public function reject(RejectReportRequest $request, DailyReport $report)
     {
         try {
             $this->reports->reject($report, $request->user(), $request->validated('approval_notes'));
         } catch (TransactionValidationException $e) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return back()->with('error', $e->getMessage());
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan ditolak. Teller dapat memperbaiki dan mengirim ulang.',
+                'data' => $report->fresh(['teller', 'approver']),
+            ]);
         }
 
         return redirect()->route('supervisor.reports.show', $report)

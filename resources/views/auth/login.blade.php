@@ -21,6 +21,12 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            @if (session('success'))
+                <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             @if (session('error'))
                 <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
                     {{ session('error') }}
@@ -55,7 +61,12 @@
                 </div>
 
                 <div>
-                    <label for="secret" class="block text-sm font-medium text-gray-700 mb-1">Password / PIN</label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="secret" class="block text-sm font-medium text-gray-700">Password / PIN</label>
+                        <a href="{{ route('password.request') }}" class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">
+                            Lupa Password / PIN?
+                        </a>
+                    </div>
                     <input
                         type="password"
                         id="secret"
@@ -72,6 +83,12 @@
                 >
                     Masuk
                 </button>
+
+                <div class="text-center pt-2">
+                    <a href="{{ route('password.request') }}" class="text-xs text-gray-500 hover:text-gray-700">
+                        Kesulitan masuk akun? <span class="text-blue-600 font-medium hover:underline">Pulihkan Akun</span>
+                    </a>
+                </div>
             </form>
         </div>
 

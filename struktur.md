@@ -1,9 +1,10 @@
-FASE 1 — Autentikasi, RBAC, dan Keamanan Akses (12/12) — Status: Selesai  
+FASE 1 — Autentikasi, RBAC, dan Keamanan Akses (15/15) — Status: Selesai  
 Sub-Fitur:
 - Login terpusat pengguna internal dan nasabah
 - Manajemen sesi atau token pengguna
 - Pembatasan akses berdasarkan role
 - Keamanan kredensial dan PIN nasabah
+- Pemulihan kredensial (Lupa Password & Reset PIN)
 - Pencatatan aktivitas akses
 - Pengamanan header HTTP (CSP, X-Frame-Options, dll)
 - Pembatasan laju (Rate Limiting) autentikasi
@@ -20,14 +21,17 @@ Tasks:
 - Implementasikan Security Headers middleware dan pembatasan cache.
 - Implementasikan rate limiting untuk endpoint login.
 - Buat tabel dan service audit log.
+- Buat halaman dan komponen UI pemulihan kredensial (Lupa Password & Reset PIN).
+- Buat endpoint verifikasi identitas mandiri dan reset password pegawai serta PIN nasabah.
+- Implementasikan rate limiting dan audit logging untuk pemulihan kredensial.
 FASE 2 — Manajemen Pengguna dan Rekening Nasabah (9/9) — Status: Selesai  
 Sub-Fitur:
 - Pengelolaan akun Administrator, Teller, dan Supervisor
 - Pengelolaan profil nasabah atau siswa
 - Pembuatan nomor rekening otomatis
-- PlanPengaturan saldo mengendap minimum·auto coding
+- Pengaturan saldo mengendap minimum
 - Konfigurasi perangkat pemindai QR Code
-D:\RPL\mdTasks:
+Tasks:
 - Buat halaman daftar akun pengguna internal.
 - Buat halaman tambah dan ubah akun pengguna.
 - Tambahkan mekanisme pemblokiran dan penghapusan akun sesuai hak Administrator.
@@ -90,6 +94,35 @@ Tasks:
 - Implementasikan validasi keseimbangan jurnal akuntansi.
 - Tambahkan mekanisme transaksi database dengan commit dan rollback.
 - Buat halaman audit jurnal akuntansi untuk Administrator dan Supervisor.
+FASE 6 — Transaksi Lanjutan dan Layanan Nasabah (4/4) — Status: Selesai  
+Sub-Fitur:
+- Transfer antar rekening nasabah (Overbooking/P2P)
+- Cetak buku tabungan fisik (Passbook printing)
+- Ekspor rekening koran digital (e-Statement PDF)
+- Kartu nasabah virtual & generator QR Code
+Tasks:
+- Buat endpoint dan modul transaksi transfer antar rekening dengan double-entry journal (Debet 201 Pengirim, Kredit 201 Penerima).
+- Buat halaman dan format cetak buku tabungan fisik berdasarkan indeks baris buku.
+- Buat fitur cetak rekening koran resmi e-Statement PDF dengan watermark dan verifikasi.
+- Buat tampilan kartu nasabah virtual ber-QR Code di dashboard nasabah dan admin.
+FASE 7 — Modul Laporan Keuangan dan Akuntansi Lengkap (3/3) — Status: Selesai  
+Sub-Fitur:
+- Buku Besar (General Ledger)
+- Neraca Saldo (Trial Balance) dan Laporan Likuiditas
+- Integrasi Jurnal Pemindahan Kas Brankas (Akun 102 Kas Brankas)
+Tasks:
+- Implementasikan pencatatan jurnal otomatis saat approval kas brankas (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+- Buat halaman dan filter Buku Besar per akun (101, 102, 201).
+- Buat halaman Neraca Saldo dan fitur ekspor CSV/Excel laporan akuntansi.
+FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna (3/3) — Status: Selesai  
+Sub-Fitur:
+- Perlindungan brute-force PIN nasabah (Failed PIN attempts lock)
+- Anti-collision sequence generator transaksi dan laporan
+- Dashboard analitik & indikator likuiditas
+Tasks:
+- Implementasikan penguncian akun dan audit log saat salah PIN berulang kali.
+- Refactor generator nomor transaksi dan nomor laporan dengan sequence anti-collision.
+- Tambahkan widget analitik keuangan dan grafik performa pada dashboard.
 Asumsi:
 - Role Nasabah mengakses dasbor dan riwayat mutasi melalui autentikasi atau identitas rekening yang telah ditentukan sistem.
 - Detail tabel database tidak dirinci karena struktur ini belum mencakup skema basis data.

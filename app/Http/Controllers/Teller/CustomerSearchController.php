@@ -5,22 +5,34 @@ namespace App\Http\Controllers\Teller;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Customer;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class CustomerSearchController extends Controller
 {
-    public function search(): View
+    public function search()
     {
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pencarian nasabah Teller.',
+            ]);
+        }
+
         return view('teller.search');
     }
 
-    public function lookup(Request $request): RedirectResponse
+    public function lookup(Request $request)
     {
         $q = trim($request->input('q', ''));
 
         if ($q === '') {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Masukkan nomor rekening atau nilai QR Code terlebih dahulu.',
+                ], 422);
+            }
+
             return back()->with('error', 'Masukkan nomor rekening atau nilai QR Code terlebih dahulu.');
         }
 
@@ -29,6 +41,13 @@ class CustomerSearchController extends Controller
             ->first();
 
         if ($account) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $account,
+                ]);
+            }
+
             return redirect()->route('teller.customers.show', $account);
         }
 
@@ -37,15 +56,36 @@ class CustomerSearchController extends Controller
             ->first();
 
         if ($customer && $customer->account) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $customer->account,
+                ]);
+            }
+
             return redirect()->route('teller.customers.show', $customer->account);
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Rekening atau QR Code tidak ditemukan.',
+            ], 404);
         }
 
         return back()->with('error', 'Rekening atau QR Code tidak ditemukan.');
     }
 
-    public function show(Account $account): View
+    public function show(Account $account)
     {
         $account->load('customer');
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $account,
+            ]);
+        }
 
         return view('teller.customer-show', compact('account'));
     }

@@ -25,6 +25,13 @@ class EnsureRole
                 'student_number' => $nasabah->student_number,
             ]);
 
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke endpoint ini.',
+                ], 403);
+            }
+
             return redirect()->route('login')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
@@ -41,7 +48,21 @@ class EnsureRole
                 'role' => $user->role,
             ], $user->id);
 
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke endpoint ini.',
+                ], 403);
+            }
+
             return redirect()->route('login')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
         }
 
         return redirect()->route('login')->with('error', 'Anda tidak memiliki akses ke halaman ini.');

@@ -7,18 +7,24 @@ use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\UpdateCustomerRequest;
 use App\Models\Account;
 use App\Models\Customer;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
-    public function index(): View
+    public function index()
     {
         $customers = Customer::with('account')
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
             ->latest()
             ->paginate(15);
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $customers,
+            ]);
+        }
 
         return view('admin.customers.index', compact('customers'));
     }
@@ -28,7 +34,7 @@ class CustomerController extends Controller
         return view('admin.customers.create');
     }
 
-    public function store(StoreCustomerRequest $request): RedirectResponse
+    public function store(StoreCustomerRequest $request)
     {
         $customer = Customer::create([
             'student_number' => $request->student_number,
@@ -44,7 +50,7 @@ class CustomerController extends Controller
         $academicYear = date('Y').'/'.(date('Y') + 1);
         $lastAccount = Account::where('academic_year', $academicYear)->count();
 
-        Account::create([
+        $account = Account::create([
             'account_number' => $academicYear.'-'.str_pad($lastAccount + 1, 3, '0', STR_PAD_LEFT),
             'customer_id' => $customer->id,
             'balance' => 0,
@@ -55,6 +61,14 @@ class CustomerController extends Controller
             'opened_at' => now(),
         ]);
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil nasabah dan rekening berhasil dibuat.',
+                'data' => $customer->load('account'),
+            ], 201);
+        }
+
         return redirect()->route('admin.customers.index')->with('success', 'Profil nasabah dan rekening berhasil dibuat.');
     }
 
@@ -63,7 +77,7 @@ class CustomerController extends Controller
         return view('admin.customers.edit', ['customer' => $customer->load('account')]);
     }
 
-    public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
+    public function update(UpdateCustomerRequest $request, Customer $customer)
     {
         $data = $request->only(['student_number', 'full_name', 'class_name', 'phone_number', 'status']);
 
@@ -73,12 +87,27 @@ class CustomerController extends Controller
 
         $customer->update($data);
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil nasabah berhasil diperbarui.',
+                'data' => $customer->fresh('account'),
+            ]);
+        }
+
         return redirect()->route('admin.customers.index')->with('success', 'Profil nasabah berhasil diperbarui.');
     }
 
-    public function destroy(Customer $customer): RedirectResponse
+    public function destroy(Customer $customer)
     {
         $customer->delete();
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil nasabah berhasil dihapus.',
+            ]);
+        }
 
         return redirect()->route('admin.customers.index')->with('success', 'Profil nasabah berhasil dihapus.');
     }

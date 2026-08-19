@@ -67,4 +67,9 @@
             <a href="{{ route('admin.customers.index') }}" class="text-sm text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">← Kembali ke Daftar Nasabah</a>
         </div>
     </div>
+
+    <div class="mt-8">
+        <h2 class="text-sm font-medium text-gray-900 mb-3">Kartu Nasabah Virtual</h2>
+        @include('partials.virtual-card', ['account' => $account, 'customer' => $account->customer])
+    </div>
 @endsection

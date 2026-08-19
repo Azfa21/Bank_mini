@@ -9,9 +9,7 @@ use App\Models\DailyReport;
 use App\Models\Transaction;
 use App\Services\AuditLogService;
 use App\Services\DailyReportService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class ClosingController extends Controller
 {
@@ -19,7 +17,7 @@ class ClosingController extends Controller
         protected DailyReportService $reports,
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         $date = $request->query('report_date', now()->toDateString());
 
@@ -36,10 +34,22 @@ class ClosingController extends Controller
             ->orderBy('id')
             ->get();
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'date' => $date,
+                    'recap' => $recap,
+                    'report' => $report,
+                    'transactions' => $transactions,
+                ],
+            ]);
+        }
+
         return view('teller.closing', compact('date', 'recap', 'report', 'transactions'));
     }
 
-    public function store(StoreClosingRequest $request): RedirectResponse
+    public function store(StoreClosingRequest $request)
     {
         $date = $request->validated('report_date');
         $physicalCash = (int) $request->validated('physical_cash');
@@ -52,21 +62,49 @@ class ClosingController extends Controller
                 'reason' => $e->getMessage(),
             ], $request->user()->id);
 
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return back()
                 ->with('error', $e->getMessage())
                 ->withInput(['report_date' => $date]);
         }
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan penutupan kas berhasil disimpan.',
+                'data' => $report->load(['teller', 'approver']),
+            ], 201);
+        }
+
         return redirect()->route('teller.closing.print', $report);
     }
 
-    public function print(DailyReport $report): View
+    public function print(DailyReport $report)
     {
         if ($report->teller_id !== auth()->id()) {
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke laporan ini.',
+                ], 403);
+            }
             abort(403);
         }
 
         $report->load(['teller', 'approver']);
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $report,
+            ]);
+        }
 
         return view('teller.report-print', compact('report'));
     }
