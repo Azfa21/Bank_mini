@@ -56,21 +56,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-                <tr>
-                    <th class="px-5 py-3">Nomor Jurnal</th>
-                    <th class="px-5 py-3">Transaksi</th>
-                    <th class="px-5 py-3">Tanggal</th>
-                    <th class="px-5 py-3">Akun</th>
-                    <th class="px-5 py-3">Jenis</th>
-                    <th class="px-5 py-3 text-right">Debit</th>
-                    <th class="px-5 py-3 text-right">Kredit</th>
-                    <th class="px-5 py-3">Keterangan</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
+    <x-data-table :headers="[['label' => 'Nomor Jurnal'], ['label' => 'Transaksi'], ['label' => 'Tanggal'], ['label' => 'Akun'], ['label' => 'Jenis'], ['label' => 'Debit', 'align' => 'right'], ['label' => 'Kredit', 'align' => 'right'], ['label' => 'Keterangan']]">
                 @forelse ($journals as $journal)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-3 font-mono">{{ $journal->journal_number }}</td>
@@ -91,9 +77,7 @@
                         <td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">Belum ada jurnal.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
-    </div>
+</x-data-table>
 
     <div class="mt-4">
         {{ $journals->links() }}

@@ -75,155 +75,68 @@
                     </div>
                 @endif
 
-                @if ($errors->any())
-                    <div class="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
-                        <div class="font-medium mb-1">Terjadi kesalahan validasi:</div>
-                        <ul class="list-disc list-inside text-xs space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                <x-form-errors class="rounded-xl" />
 
                 <!-- Staff Reset Form -->
-                <form
-                    id="form-staff"
-                    method="POST"
-                    action="{{ route('password.staff.reset') }}"
-                    class="space-y-4"
-                >
+                <form id="form-staff" method="POST" action="{{ route('password.staff.reset') }}" class="space-y-4">
                     @csrf
                     <div>
-                        <label for="staff_username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                        <input
-                            type="text"
-                            id="staff_username"
-                            name="username"
-                            value="{{ old('username') }}"
-                            required
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Contoh: admin, teller1, supervisor1"
-                        >
+                        <x-input-label for="staff_username">Username</x-input-label>
+                        <x-input id="staff_username" name="username" required
+                            placeholder="Contoh: admin, teller1, supervisor1" />
                     </div>
 
                     <div>
-                        <label for="staff_full_name" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap Terdaftar</label>
-                        <input
-                            type="text"
-                            id="staff_full_name"
-                            name="full_name"
-                            value="{{ old('full_name') }}"
-                            required
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Masukkan nama lengkap untuk verifikasi identitas"
-                        >
+                        <x-input-label for="staff_full_name">Nama Lengkap Terdaftar</x-input-label>
+                        <x-input id="staff_full_name" name="full_name" required
+                            placeholder="Masukkan nama lengkap untuk verifikasi identitas" />
                     </div>
 
                     <div>
-                        <label for="staff_password" class="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
-                        <input
-                            type="password"
-                            id="staff_password"
-                            name="password"
-                            required
-                            minlength="8"
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Minimal 8 karakter"
-                        >
+                        <x-input-label for="staff_password">Password Baru</x-input-label>
+                        <x-input id="staff_password" name="password" type="password" required minlength="8"
+                            placeholder="Minimal 8 karakter" />
                     </div>
 
                     <div>
-                        <label for="staff_password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password Baru</label>
-                        <input
-                            type="password"
-                            id="staff_password_confirmation"
-                            name="password_confirmation"
-                            required
-                            minlength="8"
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Ulangi password baru"
-                        >
+                        <x-input-label for="staff_password_confirmation">Konfirmasi Password Baru</x-input-label>
+                        <x-input id="staff_password_confirmation" name="password_confirmation" type="password" required minlength="8"
+                            placeholder="Ulangi password baru" />
                     </div>
 
-                    <button
-                        type="submit"
-                        class="w-full bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-sm"
-                    >
+                    <x-primary-button class="w-full py-2.5 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Reset Password
-                    </button>
+                    </x-primary-button>
                 </form>
 
                 <!-- Nasabah Reset Form -->
-                <form
-                    id="form-nasabah"
-                    method="POST"
-                    action="{{ route('password.nasabah.reset') }}"
-                    class="space-y-4 hidden"
-                >
+                <form id="form-nasabah" method="POST" action="{{ route('password.nasabah.reset') }}" class="space-y-4 hidden">
                     @csrf
                     <div>
-                        <label for="nasabah_student_number" class="block text-sm font-medium text-gray-700 mb-1">Nomor Siswa (NIS)</label>
-                        <input
-                            type="text"
-                            id="nasabah_student_number"
-                            name="student_number"
-                            value="{{ old('student_number') }}"
-                            required
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Contoh: 2023001"
-                        >
+                        <x-input-label for="nasabah_student_number">Nomor Siswa (NIS)</x-input-label>
+                        <x-input id="nasabah_student_number" name="student_number" required placeholder="Contoh: 2023001" />
                     </div>
 
                     <div>
-                        <label for="nasabah_class_name" class="block text-sm font-medium text-gray-700 mb-1">Kelas Terdaftar</label>
-                        <input
-                            type="text"
-                            id="nasabah_class_name"
-                            name="class_name"
-                            value="{{ old('class_name') }}"
-                            required
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Contoh: X RPL 1, XI AKL 2"
-                        >
+                        <x-input-label for="nasabah_class_name">Kelas Terdaftar</x-input-label>
+                        <x-input id="nasabah_class_name" name="class_name" required placeholder="Contoh: X RPL 1, XI AKL 2" />
                     </div>
 
                     <div>
-                        <label for="nasabah_pin" class="block text-sm font-medium text-gray-700 mb-1">PIN Baru (6 Digit)</label>
-                        <input
-                            type="password"
-                            id="nasabah_pin"
-                            name="pin"
-                            required
-                            maxlength="6"
-                            pattern="[0-9]{6}"
-                            inputmode="numeric"
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="6 digit angka (contoh: 123456)"
-                        >
+                        <x-input-label for="nasabah_pin">PIN Baru (6 Digit)</x-input-label>
+                        <x-input id="nasabah_pin" name="pin" type="password" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                            placeholder="6 digit angka (contoh: 123456)" />
                     </div>
 
                     <div>
-                        <label for="nasabah_pin_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi PIN Baru</label>
-                        <input
-                            type="password"
-                            id="nasabah_pin_confirmation"
-                            name="pin_confirmation"
-                            required
-                            maxlength="6"
-                            pattern="[0-9]{6}"
-                            inputmode="numeric"
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Ulangi 6 digit PIN baru"
-                        >
+                        <x-input-label for="nasabah_pin_confirmation">Konfirmasi PIN Baru</x-input-label>
+                        <x-input id="nasabah_pin_confirmation" name="pin_confirmation" type="password" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                            placeholder="Ulangi 6 digit PIN baru" />
                     </div>
 
-                    <button
-                        type="submit"
-                        class="w-full bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-sm"
-                    >
+                    <x-primary-button class="w-full py-2.5 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Reset PIN Nasabah
-                    </button>
+                    </x-primary-button>
                 </form>
             </div>
 

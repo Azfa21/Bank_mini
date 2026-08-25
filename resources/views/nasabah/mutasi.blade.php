@@ -36,18 +36,7 @@
             </x-primary-button>
         </form>
 
-        <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-                    <tr>
-                        <th class="px-5 py-3">Tanggal</th>
-                        <th class="px-5 py-3">Nomor Transaksi</th>
-                        <th class="px-5 py-3">Jenis</th>
-                        <th class="px-5 py-3 text-right">Nominal</th>
-                        <th class="px-5 py-3 text-right">Saldo Akhir</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
+        <x-data-table :headers="[['label' => 'Tanggal'], ['label' => 'Nomor Transaksi'], ['label' => 'Jenis'], ['label' => 'Nominal', 'align' => 'right'], ['label' => 'Saldo Akhir', 'align' => 'right']]">
                     @forelse ($transactions as $transaction)
                         <tr class="hover:bg-gray-50">
                             <td class="px-5 py-3">{{ $transaction->transaction_at->format('d/m/Y H:i') }}</td>
@@ -67,9 +56,7 @@
                             <td colspan="5" class="px-5 py-8 text-center text-sm text-gray-500">Belum ada mutasi.</td>
                         </tr>
                     @endforelse
-                </tbody>
-            </table>
-        </div>
+</x-data-table>
 
         <div class="mt-4">
             {{ $transactions->links() }}

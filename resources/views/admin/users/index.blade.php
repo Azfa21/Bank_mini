@@ -1,7 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Kelola Pengguna — Bank Mini')
-@section('section', 'Administrator · Pengguna')
+@section('title', 'Kelola Pengguna â€” Bank Mini')
+@section('section', 'Administrator Â· Pengguna')
 
 @section('content')
     <div class="flex items-center justify-between mb-6">
@@ -29,29 +29,18 @@
         <button type="submit" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50">Filter</button>
     </form>
 
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-200">
-                <tr>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Nama</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Username</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Role</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                    <th class="text-right px-4 py-3 font-medium text-gray-600">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
+    <x-data-table :headers="[['label' => 'Nama'], ['label' => 'Username'], ['label' => 'Role'], ['label' => 'Status'], ['label' => 'Aksi', 'align' => 'right']]">
                 @forelse ($users as $user)
-                    <tr>
-                        <td class="px-4 py-3">{{ $user->full_name }}</td>
-                        <td class="px-4 py-3 text-gray-500">{{ $user->username }}</td>
-                        <td class="px-4 py-3">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3">{{ $user->full_name }}</td>
+                        <td class="px-5 py-3 text-gray-500 font-mono">{{ $user->username }}</td>
+                        <td class="px-5 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                 {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-700' : ($user->role === 'teller' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700') }}">
                                 {{ ucfirst($user->role) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-5 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                 {{ $user->status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
                                 {{ $user->status === 'active' ? 'Aktif' : 'Diblokir' }}
@@ -74,11 +63,9 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Belum ada data pengguna.</td></tr>
+                    <tr><td colspan="5" class="px-5 py-8 text-center text-sm text-gray-500">Belum ada data pengguna.</td></tr>
                 @endforelse
-            </tbody>
-        </table>
-    </div>
+</x-data-table>
 
     <div class="mt-4">{{ $users->withQueryString()->links() }}</div>
 @endsection

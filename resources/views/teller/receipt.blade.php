@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <div class="max-w-md mx-auto bg-white rounded-xl border border-gray-200 p-6" id="receipt">
+    <div class="print-sheet max-w-md mx-auto bg-white rounded-xl border border-gray-200 p-6" id="receipt">
         <div class="text-center border-b border-dashed border-gray-300 pb-4">
             <div class="w-10 h-10 bg-blue-600 rounded-lg mx-auto flex items-center justify-center mb-2">
                 <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -90,14 +90,3 @@
         Transaksi berstatus <strong>success</strong> dan telah terkunci. Transaksi tidak dapat diubah atau dihapus.
     </div>
 @endsection
-
-@push('scripts')
-    <style>
-        @media print {
-            body { background: white; }
-            nav, main .mb-6, .print\:hidden { display: none !important; }
-            main { padding: 0; }
-            #receipt { border: none; box-shadow: none; max-width: 100%; }
-        }
-    </style>
-@endpush

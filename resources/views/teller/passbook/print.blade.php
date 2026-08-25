@@ -19,7 +19,7 @@
         </div>
     </div>
 
-    <div class="max-w-3xl mx-auto bg-white rounded-xl border-2 border-gray-800 p-6 text-gray-900" id="passbook">
+    <div class="print-sheet max-w-3xl mx-auto bg-white rounded-xl border-2 border-gray-800 p-6 text-gray-900" id="passbook">
         <div class="text-center border-b-2 border-gray-800 pb-3">
             <p class="font-bold tracking-wide text-base">BANK MINI SEKOLAH</p>
             <p class="text-xs mt-0.5">Buku Tabungan Siswa — Tahun Ajaran {{ $account->academic_year }}</p>
@@ -91,14 +91,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <style>
-        @media print {
-            body { background: white; }
-            nav, main .print\:hidden { display: none !important; }
-            main { padding: 0; max-width: 100% !important; }
-            #passbook { border: none; border-radius: 0; box-shadow: none; max-width: 100%; }
-        }
-    </style>
-@endpush

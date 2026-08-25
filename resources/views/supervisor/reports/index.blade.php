@@ -30,21 +30,7 @@
         </x-primary-button>
     </form>
 
-    <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-                <tr>
-                    <th class="px-5 py-3">Nomor Laporan</th>
-                    <th class="px-5 py-3">Teller</th>
-                    <th class="px-5 py-3">Tanggal</th>
-                    <th class="px-5 py-3 text-right">Saldo Sistem</th>
-                    <th class="px-5 py-3 text-right">Uang Fisik</th>
-                    <th class="px-5 py-3 text-right">Selisih</th>
-                    <th class="px-5 py-3">Status</th>
-                    <th class="px-5 py-3"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
+    <x-data-table :headers="[['label' => 'Nomor Laporan'], ['label' => 'Teller'], ['label' => 'Tanggal'], ['label' => 'Saldo Sistem', 'align' => 'right'], ['label' => 'Uang Fisik', 'align' => 'right'], ['label' => 'Selisih', 'align' => 'right'], ['label' => 'Status'], ['label' => '', 'align' => 'right']]">
                 @forelse ($reports as $report)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-3 font-mono">{{ $report->report_number }}</td>
@@ -69,9 +55,7 @@
                         <td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">Belum ada laporan.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
-    </div>
+</x-data-table>
 
     <div class="mt-4">
         {{ $reports->links() }}

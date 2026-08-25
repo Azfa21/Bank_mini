@@ -13,35 +13,52 @@
         size: A4;
         margin: 15mm;
     }
-    
+
     body {
         background-color: white !important;
         color: black !important;
     }
-    
+
+    nav,
+    main .mb-6 {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .print-sheet {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+    }
+
     #statement {
         box-shadow: none !important;
         border: none !important;
         page-break-after: avoid;
     }
-    
+
     .no-print {
         display: none !important;
     }
-    
+
     table {
         page-break-inside: auto;
     }
-    
+
     tr {
         page-break-inside: avoid;
         page-break-after: auto;
     }
-    
+
     thead {
         display: table-header-group;
     }
-    
+
     tfoot {
         display: table-footer-group;
     }
