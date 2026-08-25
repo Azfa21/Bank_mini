@@ -97,20 +97,30 @@ class SecurityTest extends TestCase
             ->assertStatus(429);
     }
 
-    public function test_nasabah_is_denied_from_multi_role_route(): void
+    public function test_nasabah_is_allowed_on_multi_role_route_that_lists_it(): void
     {
         Route::middleware('role:admin,nasabah')
             ->get('/_security/multi-role', fn () => 'ok');
 
         $this->actingAs($this->nasabah, 'nasabah')
             ->get('/_security/multi-role')
-            ->assertRedirect(route('login'));
+            ->assertOk();
 
         $this->app['auth']->guard('nasabah')->logout();
 
         $this->actingAs($this->admin, 'web')
             ->get('/_security/multi-role')
             ->assertOk();
+    }
+
+    public function test_nasabah_is_denied_from_multi_role_route_without_its_role(): void
+    {
+        Route::middleware('role:admin,teller')
+            ->get('/_security/multi-role-excluded', fn () => 'ok');
+
+        $this->actingAs($this->nasabah, 'nasabah')
+            ->get('/_security/multi-role-excluded')
+            ->assertRedirect(route('login'));
     }
 
     public function test_security_headers_are_present_on_responses(): void
