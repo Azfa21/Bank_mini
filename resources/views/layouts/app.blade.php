@@ -11,67 +11,31 @@
 <body class="min-h-screen bg-gray-50">
     @php
         $currentUser = Auth::guard('web')->user() ?? Auth::guard('nasabah')->user();
+        $role = $currentUser ? ($currentUser->role ?? 'nasabah') : null;
+        $dashboardRouteName = match ($role) {
+            'admin' => 'admin.dashboard',
+            'teller' => 'teller.dashboard',
+            'supervisor' => 'supervisor.dashboard',
+            default => 'nasabah.dashboard',
+        };
+
         $menuItems = [];
 
-        if ($currentUser) {
-            $role = $currentUser->role ?? 'nasabah';
-            $dashboardRoute = match ($role) {
-                'admin' => route('admin.dashboard'),
-                'teller' => route('teller.dashboard'),
-                'supervisor' => route('supervisor.dashboard'),
-                default => route('nasabah.dashboard'),
-            };
-            $dashboardActive = match ($role) {
-                'admin' => request()->routeIs('admin.dashboard'),
-                'teller' => request()->routeIs('teller.dashboard'),
-                'supervisor' => request()->routeIs('supervisor.dashboard'),
-                default => request()->routeIs('nasabah.dashboard'),
-            };
-            $menuItems[] = ['label' => 'Dashboard', 'url' => $dashboardRoute, 'active' => $dashboardActive];
+        if ($role !== null) {
+            $menuItems[] = [
+                'label' => 'Dashboard',
+                'url' => route($dashboardRouteName),
+                'active' => request()->routeIs($dashboardRouteName),
+            ];
 
-            if ($role === 'admin') {
-                $menuItems[] = ['label' => 'Kelola Pengguna', 'url' => route('admin.users.index'), 'active' => request()->routeIs('admin.users.*')];
-                $menuItems[] = ['label' => 'Kelola Nasabah', 'url' => route('admin.customers.index'), 'active' => request()->routeIs('admin.customers.*', 'admin.accounts.*')];
-                $menuItems[] = ['label' => 'Laporan Keuangan', 'url' => route('admin.reports.general-ledger'), 'active' => request()->routeIs('admin.reports.*')];
-                $menuItems[] = ['label' => 'Konfigurasi', 'url' => route('admin.config.edit'), 'active' => request()->routeIs('admin.config.*')];
-                $menuItems[] = ['label' => 'Audit Jurnal', 'url' => route('admin.journals.index'), 'active' => request()->routeIs('admin.journals.*')];
-            } elseif ($role === 'teller') {
+            foreach (config('menu.'.$role, []) as $item) {
+                $active = collect($item['routes'] ?? [])->contains(fn ($pattern) => request()->routeIs($pattern))
+                    || collect($item['paths'] ?? [])->contains(fn ($pattern) => request()->is($pattern));
+
                 $menuItems[] = [
-                    'label' => 'Pencarian Nasabah',
-                    'url' => route('teller.customers.search'),
-                    'active' => request()->routeIs('teller.customers.*', 'teller.deposits.*', 'teller.withdrawals.*', 'teller.transfers.*', 'teller.passbook.*', 'teller.transactions.*'),
-                ];
-                $menuItems[] = [
-                    'label' => 'Penutupan Kas',
-                    'url' => route('teller.closing.index'),
-                    'active' => request()->routeIs('teller.closing.*'),
-                ];
-            } elseif ($role === 'supervisor') {
-                $menuItems[] = [
-                    'label' => 'Laporan Harian',
-                    'url' => route('supervisor.reports.index'),
-                    'active' => request()->routeIs('supervisor.reports.*'),
-                ];
-                $menuItems[] = [
-                    'label' => 'Laporan Keuangan',
-                    'url' => route('supervisor.reports.general-ledger'),
-                    'active' => request()->routeIs('supervisor.reports-accounting.*'),
-                ];
-                $menuItems[] = [
-                    'label' => 'Audit Jurnal',
-                    'url' => route('supervisor.journals.index'),
-                    'active' => request()->routeIs('supervisor.journals.*'),
-                ];
-            } elseif ($role === 'nasabah') {
-                $menuItems[] = [
-                    'label' => 'Riwayat Mutasi',
-                    'url' => route('nasabah.mutasi'),
-                    'active' => request()->routeIs('nasabah.mutasi'),
-                ];
-                $menuItems[] = [
-                    'label' => 'Rekening Koran',
-                    'url' => route('nasabah.statement'),
-                    'active' => request()->routeIs('nasabah.statement'),
+                    'label' => $item['label'],
+                    'url' => route($item['route']),
+                    'active' => $active,
                 ];
             }
         }

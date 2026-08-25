@@ -35,60 +35,42 @@
                     @csrf
 
                     <div>
-                        <label for="recipient_account_number" class="block text-xs font-medium text-gray-600 mb-1">Nomor Rekening Tujuan *</label>
-                        <input type="text" id="recipient_account_number" name="recipient_account_number" value="{{ old('recipient_account_number') }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: 2026/2027-002" required>
-                        @error('recipient_account_number')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="recipient_account_number" size="xs">Nomor Rekening Tujuan *</x-input-label>
+                        <x-input id="recipient_account_number" name="recipient_account_number"
+                            class="font-mono" placeholder="Contoh: 2026/2027-002" required />
+                        <x-input-error :message="$errors->first('recipient_account_number')" />
                     </div>
 
                     <div>
-                        <label for="amount" class="block text-xs font-medium text-gray-600 mb-1">Nominal Transfer *</label>
-                        <input type="number" id="amount" name="amount" value="{{ old('amount') }}" min="1" step="1"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: 50000" required>
-                        @error('amount')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="amount" size="xs">Nominal Transfer *</x-input-label>
+                        <x-input id="amount" name="amount" type="number" min="1" step="1" placeholder="Contoh: 50000" required />
+                        <x-input-error :message="$errors->first('amount')" />
                     </div>
 
                     <div>
-                        <label for="pin" class="block text-xs font-medium text-gray-600 mb-1">PIN Nasabah (6 digit) *</label>
-                        <input type="password" id="pin" name="pin" value="" inputmode="numeric" autocomplete="off" maxlength="6"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest"
-                            placeholder="••••••" required>
-                        @error('pin')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="pin" size="xs">PIN Nasabah (6 digit) *</x-input-label>
+                        <x-input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6"
+                            class="tracking-widest" placeholder="••••••" required />
+                        <x-input-error :message="$errors->first('pin')" />
                     </div>
 
                     <div>
-                        <label for="slip_number" class="block text-xs font-medium text-gray-600 mb-1">Nomor Slip</label>
-                        <input type="text" id="slip_number" name="slip_number" value="{{ old('slip_number') }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Opsional">
-                        @error('slip_number')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="slip_number" size="xs">Nomor Slip</x-input-label>
+                        <x-input id="slip_number" name="slip_number" placeholder="Opsional" />
+                        <x-input-error :message="$errors->first('slip_number')" />
                     </div>
 
                     <div>
-                        <label for="notes" class="block text-xs font-medium text-gray-600 mb-1">Keterangan</label>
-                        <textarea id="notes" name="notes" rows="2"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: Iuran kas kelas / pembayaran koperasi">{{ old('notes') }}</textarea>
-                        @error('notes')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="notes" size="xs">Keterangan</x-input-label>
+                        <x-textarea id="notes" name="notes" rows="2"
+                            placeholder="Contoh: Iuran kas kelas / pembayaran koperasi" />
+                        <x-input-error :message="$errors->first('notes')" />
                     </div>
 
-                    <button type="submit"
-                        class="w-full bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
+                    <x-primary-button variant="blue" class="w-full py-2.5"
                         onclick="this.disabled = true; this.form.submit();">
                         Proses Transfer
-                    </button>
+                    </x-primary-button>
                 </form>
             </div>
         </div>

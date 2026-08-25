@@ -3,19 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\JurnalAkuntansi;
+use App\Services\AccountingService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AccountingReportController extends Controller
 {
-    public const ACCOUNTS = [
-        '101' => ['name' => 'Kas Teller (Laci Loket)', 'normal' => 'debit'],
-        '102' => ['name' => 'Kas Brankas Utama (Khazanah)', 'normal' => 'debit'],
-        '201' => ['name' => 'Tabungan Nasabah (Simpanan Siswa)', 'normal' => 'credit'],
-    ];
+    public function __construct(
+        protected AccountingService $accounting,
+    ) {}
 
     public function generalLedger(Request $request)
     {
+        $this->authorize('viewAny', JurnalAkuntansi::class);
+
         $accountCode = $request->input('account_code', '101');
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
@@ -32,7 +33,7 @@ class AccountingReportController extends Controller
         $totalDebit = (int) (clone $query)->sum('debit_amount');
         $totalCredit = (int) (clone $query)->sum('credit_amount');
 
-        $normalBalance = self::ACCOUNTS[$accountCode]['normal'] ?? 'debit';
+        $normalBalance = AccountingService::CHART_OF_ACCOUNTS[$accountCode]['normal'] ?? 'debit';
         $endingBalance = $normalBalance === 'debit'
             ? ($totalDebit - $totalCredit)
             : ($totalCredit - $totalDebit);
@@ -42,7 +43,7 @@ class AccountingReportController extends Controller
                 'success' => true,
                 'data' => [
                     'account_code' => $accountCode,
-                    'account_name' => self::ACCOUNTS[$accountCode]['name'] ?? 'Akun '.$accountCode,
+                    'account_name' => $this->accounting->accountName($accountCode),
                     'total_debit' => $totalDebit,
                     'total_credit' => $totalCredit,
                     'ending_balance' => $endingBalance,
@@ -51,7 +52,7 @@ class AccountingReportController extends Controller
             ]);
         }
 
-        $accounts = self::ACCOUNTS;
+        $accounts = AccountingService::CHART_OF_ACCOUNTS;
 
         return view('reports.general_ledger', compact(
             'entries',
@@ -67,51 +68,22 @@ class AccountingReportController extends Controller
 
     public function trialBalance(Request $request)
     {
-        $date = $request->input('date', now()->toDateString());
+        $this->authorize('viewAny', JurnalAkuntansi::class);
 
-        $balances = [];
-        $grandDebit = 0;
-        $grandCredit = 0;
+        $trialBalance = $this->accounting->trialBalance(
+            $request->input('date', now()->toDateString())
+        );
 
-        foreach (self::ACCOUNTS as $code => $info) {
-            $debit = (int) JurnalAkuntansi::where('account_code', $code)
-                ->whereDate('journal_at', '<=', $date)
-                ->sum('debit_amount');
-
-            $credit = (int) JurnalAkuntansi::where('account_code', $code)
-                ->whereDate('journal_at', '<=', $date)
-                ->sum('credit_amount');
-
-            $netDebit = 0;
-            $netCredit = 0;
-
-            if ($info['normal'] === 'debit') {
-                $netDebit = max(0, $debit - $credit);
-                $netCredit = max(0, $credit - $debit);
-            } else {
-                $netCredit = max(0, $credit - $debit);
-                $netDebit = max(0, $debit - $credit);
-            }
-
-            $balances[$code] = [
-                'name' => $info['name'],
-                'total_debit' => $debit,
-                'total_credit' => $credit,
-                'net_debit' => $netDebit,
-                'net_credit' => $netCredit,
-            ];
-
-            $grandDebit += $netDebit;
-            $grandCredit += $netCredit;
-        }
-
-        $isBalanced = ($grandDebit === $grandCredit);
+        $balances = $trialBalance['balances'];
+        $grandDebit = $trialBalance['grand_debit'];
+        $grandCredit = $trialBalance['grand_credit'];
+        $isBalanced = $trialBalance['is_balanced'];
 
         // Calculate Liquidity
-        $cashInTeller = $balances['101']['net_debit'] ?? 0;
-        $cashInVault = $balances['102']['net_debit'] ?? 0;
+        $cashInTeller = $balances['101']['net_debit'];
+        $cashInVault = $balances['102']['net_debit'];
         $totalPhysicalCash = $cashInTeller + $cashInVault;
-        $totalSavingsObligation = $balances['201']['net_credit'] ?? 0;
+        $totalSavingsObligation = $balances['201']['net_credit'];
         $liquidityRatio = $totalSavingsObligation > 0
             ? round(($totalPhysicalCash / $totalSavingsObligation) * 100, 2)
             : 100.0;
@@ -120,7 +92,7 @@ class AccountingReportController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'date' => $date,
+                    'date' => $trialBalance['date'],
                     'balances' => $balances,
                     'grand_debit' => $grandDebit,
                     'grand_credit' => $grandCredit,
@@ -136,22 +108,24 @@ class AccountingReportController extends Controller
             ]);
         }
 
-        return view('reports.trial_balance', compact(
-            'date',
-            'balances',
-            'grandDebit',
-            'grandCredit',
-            'isBalanced',
-            'cashInTeller',
-            'cashInVault',
-            'totalPhysicalCash',
-            'totalSavingsObligation',
-            'liquidityRatio'
-        ));
+        return view('reports.trial_balance', [
+            'date' => $trialBalance['date'],
+            'balances' => $balances,
+            'grandDebit' => $grandDebit,
+            'grandCredit' => $grandCredit,
+            'isBalanced' => $isBalanced,
+            'cashInTeller' => $cashInTeller,
+            'cashInVault' => $cashInVault,
+            'totalPhysicalCash' => $totalPhysicalCash,
+            'totalSavingsObligation' => $totalSavingsObligation,
+            'liquidityRatio' => $liquidityRatio,
+        ]);
     }
 
     public function exportCsv(Request $request, string $type = 'journals'): StreamedResponse
     {
+        $this->authorize('viewAny', JurnalAkuntansi::class);
+
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="'.$type.'-'.now()->format('Ymd_His').'.csv"',
@@ -160,6 +134,7 @@ class AccountingReportController extends Controller
         ];
 
         return response()->stream(function () use ($type, $request) {
+            $accounting = app(AccountingService::class);
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for Excel
 
@@ -171,13 +146,13 @@ class AccountingReportController extends Controller
                     ->when($code, fn ($q) => $q->where('account_code', $code))
                     ->orderBy('journal_at');
 
-                $query->chunk(500, function ($rows) use ($handle) {
+                $query->chunk(500, function ($rows) use ($handle, $accounting) {
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $row->journal_number,
-                            $row->journal_at?->format('Y-m-d H:i:s'),
+                            $row->journal_at->format('Y-m-d H:i:s'),
                             $row->account_code,
-                            self::ACCOUNTS[$row->account_code]['name'] ?? $row->account_code,
+                            $accounting->accountName($row->account_code),
                             $row->debit_amount,
                             $row->credit_amount,
                             $row->description,
@@ -190,10 +165,14 @@ class AccountingReportController extends Controller
 
                 JurnalAkuntansi::with('transaction')->orderBy('id')->chunk(500, function ($rows) use ($handle) {
                     foreach ($rows as $row) {
+                        $relatedNumber = $row->transaction !== null
+                            ? $row->transaction->receipt_number
+                            : '-';
+
                         fputcsv($handle, [
                             $row->journal_number,
-                            $row->transaction?->receipt_number ?? '-',
-                            $row->journal_at?->format('Y-m-d H:i:s'),
+                            $relatedNumber,
+                            $row->journal_at->format('Y-m-d H:i:s'),
                             $row->account_code,
                             $row->entry_type,
                             $row->debit_amount,

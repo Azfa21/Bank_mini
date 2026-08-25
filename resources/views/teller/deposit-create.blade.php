@@ -34,40 +34,27 @@
                     @csrf
 
                     <div>
-                        <label for="slip_number" class="block text-xs font-medium text-gray-600 mb-1">Nomor Slip *</label>
-                        <input type="text" id="slip_number" name="slip_number" value="{{ old('slip_number') }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: SLIP-20260802-001" required>
-                        @error('slip_number')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="slip_number" size="xs">Nomor Slip *</x-input-label>
+                        <x-input id="slip_number" name="slip_number" placeholder="Contoh: SLIP-20260802-001" required />
+                        <x-input-error :message="$errors->first('slip_number')" />
                     </div>
 
                     <div>
-                        <label for="slip_amount" class="block text-xs font-medium text-gray-600 mb-1">Nominal pada Slip *</label>
-                        <input type="number" id="slip_amount" name="slip_amount" value="{{ old('slip_amount') }}" min="1" step="1"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: 100000" required>
-                        @error('slip_amount')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="slip_amount" size="xs">Nominal pada Slip *</x-input-label>
+                        <x-input id="slip_amount" name="slip_amount" type="number" min="1" step="1" placeholder="Contoh: 100000" required />
+                        <x-input-error :message="$errors->first('slip_amount')" />
                     </div>
 
                     <div>
-                        <label for="physical_cash_amount" class="block text-xs font-medium text-gray-600 mb-1">Nominal Uang Fisik *</label>
-                        <input type="number" id="physical_cash_amount" name="physical_cash_amount" value="{{ old('physical_cash_amount') }}" min="1" step="1"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Hitung ulang uang yang diterima" required>
-                        @error('physical_cash_amount')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="physical_cash_amount" size="xs">Nominal Uang Fisik *</x-input-label>
+                        <x-input id="physical_cash_amount" name="physical_cash_amount" type="number" min="1" step="1" placeholder="Hitung ulang uang yang diterima" required />
+                        <x-input-error :message="$errors->first('physical_cash_amount')" />
                     </div>
 
-                    <button type="submit"
-                        class="w-full bg-green-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors"
+                    <x-primary-button variant="green" class="w-full py-2.5"
                         onclick="this.disabled = true; this.form.submit();">
                         Proses Setoran
-                    </button>
+                    </x-primary-button>
                 </form>
             </div>
         </div>

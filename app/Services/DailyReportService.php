@@ -8,6 +8,7 @@ use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DailyReportService
@@ -22,7 +23,7 @@ class DailyReportService
             ->whereDate('report_date', '<', $date)
             ->where('status', 'approved')
             ->orderByDesc('report_date')
-            ->value('closing_balance_system') ?? 0;
+            ->value('closing_balance_system');
 
         $totalDeposit = (int) Transaction::where('teller_id', $teller->id)
             ->whereDate('transaction_at', $date)
@@ -75,7 +76,9 @@ class DailyReportService
                 ->lockForUpdate()
                 ->first();
 
-            $reportNumber = $report?->report_number ?? $this->generateReportNumber($date);
+            $reportNumber = $report !== null
+                ? $report->report_number
+                : $this->generateReportNumber($date);
 
             $values = [
                 'report_number' => $reportNumber,
@@ -111,9 +114,9 @@ class DailyReportService
         });
     }
 
-    public const ACCOUNT_CODE_CASH_TELLER = '101';
+    public const ACCOUNT_CODE_CASH_TELLER = AccountingService::ACCOUNT_CODE_CASH_TELLER;
 
-    public const ACCOUNT_CODE_CASH_VAULT = '102';
+    public const ACCOUNT_CODE_CASH_VAULT = AccountingService::ACCOUNT_CODE_CASH_VAULT;
 
     public function approve(DailyReport $report, User $supervisor, string $notes): DailyReport
     {
@@ -168,12 +171,12 @@ class DailyReportService
                     ],
                 ];
 
-                $journalPrefix = 'JRN-TRF-'.str_replace('-', '', $locked->report_date);
+                $journalPrefix = 'JRN-TRF-'.Carbon::parse($locked->report_date)->format('Ymd');
                 foreach ($journalRows as $idx => $row) {
                     JurnalAkuntansi::create([
                         'transaction_id' => null,
                         'cash_transfer_id' => $cashTransfer->id,
-                        'journal_number' => $journalPrefix.'-'.str_pad($cashTransfer->id, 4, '0', STR_PAD_LEFT).'-'.str_pad($idx + 1, 2, '0', STR_PAD_LEFT),
+                        'journal_number' => $journalPrefix.'-'.str_pad((string) $cashTransfer->id, 4, '0', STR_PAD_LEFT).'-'.str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
                         'account_code' => $row['account_code'],
                         'entry_type' => $row['entry_type'],
                         'amount' => $transferAmount,

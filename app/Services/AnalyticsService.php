@@ -4,38 +4,26 @@ namespace App\Services;
 
 use App\Models\Account;
 use App\Models\Customer;
-use App\Models\JurnalAkuntansi;
-use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
 {
-    public const ACCOUNT_CODE_CASH_TELLER = '101';
-
-    public const ACCOUNT_CODE_CASH_VAULT = '102';
-
-    public const ACCOUNT_CODE_SAVINGS = '201';
+    public function __construct(
+        protected AccountingService $accounting,
+    ) {}
 
     public function summary(?string $asOfDate = null): array
     {
         $date = $asOfDate ?: now()->toDateString();
 
-        $netBalance = function (string $code, string $normal) use ($date): int {
-            $debit = (int) JurnalAkuntansi::where('account_code', $code)
-                ->whereDate('journal_at', '<=', $date)
-                ->sum('debit_amount');
+        $trialBalance = $this->accounting->trialBalance($date);
+        $balances = $trialBalance['balances'];
 
-            $credit = (int) JurnalAkuntansi::where('account_code', $code)
-                ->whereDate('journal_at', '<=', $date)
-                ->sum('credit_amount');
-
-            return $normal === 'debit' ? ($debit - $credit) : ($credit - $debit);
-        };
-
-        $cashTeller = max(0, $netBalance(self::ACCOUNT_CODE_CASH_TELLER, 'debit'));
-        $cashVault = max(0, $netBalance(self::ACCOUNT_CODE_CASH_VAULT, 'debit'));
-        $savings = max(0, $netBalance(self::ACCOUNT_CODE_SAVINGS, 'credit'));
+        $cashTeller = max(0, $balances[AccountingService::ACCOUNT_CODE_CASH_TELLER]['net_debit']);
+        $cashVault = max(0, $balances[AccountingService::ACCOUNT_CODE_CASH_VAULT]['net_debit']);
+        $savings = max(0, $balances[AccountingService::ACCOUNT_CODE_SAVINGS]['net_credit']);
 
         $totalCash = $cashTeller + $cashVault;
         $liquidityRatio = $savings > 0 ? round(($totalCash / $savings) * 100, 2) : 100.0;
@@ -56,21 +44,14 @@ class AnalyticsService
     {
         $start = now()->startOfDay()->subDays($days - 1);
 
-        $deposits = Transaction::query()
+        $totals = DB::table('transactions')
             ->where('status', 'success')
-            ->where('type', 'deposit')
+            ->whereIn('type', ['deposit', 'withdrawal'])
             ->whereDate('transaction_at', '>=', $start->toDateString())
+            ->selectRaw('DATE(transaction_at) as day, type, SUM(amount) as total')
+            ->groupBy('day', 'type')
             ->get()
-            ->groupBy(fn ($t) => $t->transaction_at->toDateString())
-            ->map->sum('amount');
-
-        $withdrawals = Transaction::query()
-            ->where('status', 'success')
-            ->where('type', 'withdrawal')
-            ->whereDate('transaction_at', '>=', $start->toDateString())
-            ->get()
-            ->groupBy(fn ($t) => $t->transaction_at->toDateString())
-            ->map->sum('amount');
+            ->mapWithKeys(fn ($row) => [$row->day.'|'.$row->type => (int) $row->total]);
 
         $rows = collect();
         for ($i = 0; $i < $days; $i++) {
@@ -78,8 +59,8 @@ class AnalyticsService
             $rows->push([
                 'date' => $day,
                 'label' => $start->copy()->addDays($i)->format('d/m'),
-                'deposit' => (int) ($deposits[$day] ?? 0),
-                'withdrawal' => (int) ($withdrawals[$day] ?? 0),
+                'deposit' => $totals[$day.'|deposit'] ?? 0,
+                'withdrawal' => $totals[$day.'|withdrawal'] ?? 0,
             ]);
         }
 
@@ -88,36 +69,53 @@ class AnalyticsService
 
     public function topDepositors(int $limit = 5): Collection
     {
-        return Transaction::query()
+        $totals = DB::table('transactions')
             ->where('status', 'success')
             ->where('type', 'deposit')
             ->selectRaw('account_id, SUM(amount) as total')
             ->groupBy('account_id')
             ->orderByDesc('total')
             ->limit($limit)
-            ->with('account.customer')
+            ->get();
+
+        $accounts = Account::query()
+            ->with('customer')
+            ->whereIn('id', $totals->pluck('account_id'))
             ->get()
-            ->map(fn ($row) => [
-                'name' => $row->account?->customer?->full_name ?? '—',
-                'account_number' => $row->account?->account_number ?? '—',
-                'total' => (int) $row->total,
-            ]);
+            ->keyBy('id');
+
+        return $totals->map(fn ($row) => [
+            'name' => $accounts->has($row->account_id)
+                ? ($accounts[$row->account_id]->customer->full_name ?? '—')
+                : '—',
+            'account_number' => $accounts->has($row->account_id)
+                ? $accounts[$row->account_id]->account_number
+                : '—',
+            'total' => (int) $row->total,
+        ]);
     }
 
     public function tellerPerformance(int $limit = 5): Collection
     {
-        return Transaction::query()
+        $totals = DB::table('transactions')
             ->where('status', 'success')
             ->selectRaw('teller_id, COUNT(*) as total_transactions, SUM(amount) as total_amount')
             ->groupBy('teller_id')
             ->orderByDesc('total_transactions')
             ->limit($limit)
-            ->with('teller')
+            ->get();
+
+        $tellers = User::query()
+            ->whereIn('id', $totals->pluck('teller_id'))
             ->get()
-            ->map(fn ($row) => [
-                'name' => $row->teller?->full_name ?? '—',
-                'total_transactions' => (int) $row->total_transactions,
-                'total_amount' => (int) $row->total_amount,
-            ]);
+            ->keyBy('id');
+
+        return $totals->map(fn ($row) => [
+            'name' => $tellers->has($row->teller_id)
+                ? ($tellers[$row->teller_id]->full_name ?? '—')
+                : '—',
+            'total_transactions' => (int) $row->total_transactions,
+            'total_amount' => (int) $row->total_amount,
+        ]);
     }
 }

@@ -35,40 +35,28 @@
                     @csrf
 
                     <div>
-                        <label for="slip_number" class="block text-xs font-medium text-gray-600 mb-1">Nomor Slip *</label>
-                        <input type="text" id="slip_number" name="slip_number" value="{{ old('slip_number') }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: SLIP-20260802-002" required>
-                        @error('slip_number')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="slip_number" size="xs">Nomor Slip *</x-input-label>
+                        <x-input id="slip_number" name="slip_number" placeholder="Contoh: SLIP-20260802-002" required />
+                        <x-input-error :message="$errors->first('slip_number')" />
                     </div>
 
                     <div>
-                        <label for="amount" class="block text-xs font-medium text-gray-600 mb-1">Nominal Penarikan *</label>
-                        <input type="number" id="amount" name="amount" value="{{ old('amount') }}" min="1" step="1"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Contoh: 50000" required>
-                        @error('amount')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="amount" size="xs">Nominal Penarikan *</x-input-label>
+                        <x-input id="amount" name="amount" type="number" min="1" step="1" placeholder="Contoh: 50000" required />
+                        <x-input-error :message="$errors->first('amount')" />
                     </div>
 
                     <div>
-                        <label for="pin" class="block text-xs font-medium text-gray-600 mb-1">PIN Nasabah (6 digit) *</label>
-                        <input type="password" id="pin" name="pin" value="" inputmode="numeric" autocomplete="off" maxlength="6"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest"
-                            placeholder="••••••" required>
-                        @error('pin')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="pin" size="xs">PIN Nasabah (6 digit) *</x-input-label>
+                        <x-input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6"
+                            class="tracking-widest" placeholder="••••••" required />
+                        <x-input-error :message="$errors->first('pin')" />
                     </div>
 
-                    <button type="submit"
-                        class="w-full bg-red-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors"
+                    <x-primary-button variant="red" class="w-full py-2.5"
                         onclick="this.disabled = true; this.form.submit();">
                         Proses Penarikan
-                    </button>
+                    </x-primary-button>
                 </form>
             </div>
         </div>

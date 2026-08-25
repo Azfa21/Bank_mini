@@ -15,12 +15,12 @@
         <form method="POST" action="{{ route('admin.config.update') }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
             @csrf @method('PUT')
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Saldo Mengendap Minimum (Rp)</label>
-                <input type="number" name="minimum_balance" value="{{ $configs->get('minimum_balance')->config_value ?? 10000 }}" min="0" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <x-input-label for="minimum_balance">Saldo Mengendap Minimum (Rp)</x-input-label>
+                <x-input id="minimum_balance" name="minimum_balance" type="number" :value="$configs->get('minimum_balance')->config_value ?? 10000" min="0" required />
                 <p class="text-xs text-gray-400 mt-1">Penarikan tidak boleh menghasilkan saldo di bawah nilai ini.</p>
             </div>
             <div class="pt-2">
-                <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700">Simpan Konfigurasi</button>
+                <x-primary-button>Simpan Konfigurasi</x-primary-button>
             </div>
         </form>
     </div>
