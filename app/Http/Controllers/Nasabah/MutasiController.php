@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MutasiController extends Controller
 {
@@ -84,10 +85,28 @@ class MutasiController extends Controller
             ->orderBy('id')
             ->get();
 
-        $totalDeposit = $transactions->where('type', 'deposit')->sum('amount');
-        $totalWithdrawal = $transactions->where('type', 'withdrawal')->sum('amount');
-        $totalTransferOut = $transactions->where('type', 'transfer')->where('account_id', $account->id)->sum('amount');
-        $totalTransferIn = $transactions->where('type', 'transfer')->where('recipient_account_id', $account->id)->sum('amount');
+        $summary = collect(DB::table('transactions')
+            ->where(function ($query) use ($account) {
+                $query->where('account_id', $account->id)
+                    ->orWhere('recipient_account_id', $account->id);
+            })
+            ->where('status', 'success')
+            ->whereDate('transaction_at', '>=', $dateFrom)
+            ->whereDate('transaction_at', '<=', $dateTo)
+            ->selectRaw(
+                'type, SUM(CASE WHEN account_id = ? THEN amount ELSE 0 END) as total_out, SUM(CASE WHEN recipient_account_id = ? THEN amount ELSE 0 END) as total_in',
+                [$account->id, $account->id]
+            )
+            ->groupBy('type')
+            ->get())
+            ->mapWithKeys(fn ($row) => [
+                $row->type => ['out' => (int) $row->total_out, 'in' => (int) $row->total_in],
+            ]);
+
+        $totalDeposit = $summary['deposit']['out'] ?? 0;
+        $totalWithdrawal = $summary['withdrawal']['out'] ?? 0;
+        $totalTransferOut = $summary['transfer']['out'] ?? 0;
+        $totalTransferIn = $summary['transfer']['in'] ?? 0;
 
         $verificationCode = 'EST-'.strtoupper(substr(
             hash('sha256', $account->id.'|'.$dateFrom.'|'.$dateTo.'|'.$transactions->count().'|'.$totalDeposit.'|'.$totalWithdrawal),
