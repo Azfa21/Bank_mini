@@ -15,7 +15,7 @@ class EnsureRole
         if (Auth::guard('nasabah')->check()) {
             $nasabah = Auth::guard('nasabah')->user();
 
-            if ($roles === ['nasabah'] && $nasabah->status === 'active') {
+            if ($nasabah->status === 'active' && in_array('nasabah', $roles, true)) {
                 return $next($request);
             }
 

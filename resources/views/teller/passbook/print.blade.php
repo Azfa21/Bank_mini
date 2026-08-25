@@ -48,13 +48,13 @@
                 </tr>
             </thead>
             <tbody>
-                @for ($i = 1; $i <= 20; $i++)
+                @for ($line = $startLine; $line <= 20; $line++)
                     @php
-                        $row = $transactions[$i - $startLine] ?? null;
+                        $row = $transactions[$line - $startLine] ?? null;
                     @endphp
                     <tr class="border-b border-gray-300 h-8 align-top">
                         @if ($row)
-                            <td class="py-1 pr-1 text-gray-400">{{ $startLine + $i - 1 }}</td>
+                            <td class="py-1 pr-1 text-gray-400">{{ $line }}</td>
                             <td class="py-1 pr-1">{{ $row->transaction_at?->format('d/m/Y') }}</td>
                             <td class="py-1 pr-1">
                                 {{ ucfirst($row->type) }}
@@ -77,7 +77,7 @@
                             </td>
                             <td class="py-1 text-right font-mono">{{ number_format($row->balance_after, 0, ',', '.') }}</td>
                         @else
-                            <td class="py-1 pr-1 text-gray-300">{{ $startLine + $i - 1 }}</td>
+                            <td class="py-1 pr-1 text-gray-300">{{ $line }}</td>
                             <td colspan="5" class="py-1"></td>
                         @endif
                     </tr>
