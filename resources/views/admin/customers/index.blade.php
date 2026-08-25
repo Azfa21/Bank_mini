@@ -14,13 +14,18 @@
         </a>
     </div>
 
-    <form method="GET" class="flex gap-2 mb-4">
+    <form method="GET" class="flex flex-wrap gap-2 mb-4">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, no. siswa, atau kelas..."
+            class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         <select name="status" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
             <option value="">Semua Status</option>
             <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
             <option value="blocked" {{ request('status') === 'blocked' ? 'selected' : '' }}>Diblokir</option>
         </select>
-        <button type="submit" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50">Filter</button>
+        <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors">Filter</button>
+        @if (request('search') || request('status'))
+            <a href="{{ route('admin.customers.index') }}" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50">Reset</a>
+        @endif
     </form>
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -69,7 +74,13 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Belum ada data nasabah.</td></tr>
+                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                        @if (request('search'))
+                            Tidak ada nasabah yang cocok dengan pencarian "{{ request('search') }}".
+                        @else
+                            Belum ada data nasabah.
+                        @endif
+                    </td></tr>
                 @endforelse
             </tbody>
         </table>

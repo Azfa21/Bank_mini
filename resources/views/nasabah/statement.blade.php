@@ -9,10 +9,26 @@
             <h1 class="text-xl font-semibold text-gray-900">Rekening Koran (e-Statement)</h1>
             <p class="text-sm text-gray-500 mt-1">Laporan mutasi rekening resmi untuk periode tertentu.</p>
         </div>
-        <button onclick="window.print()" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        <button onclick="printStatement()" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
             Cetak / Simpan PDF
         </button>
     </div>
+
+@push('scripts')
+<script>
+    function printStatement() {
+        // Ensure all styles are loaded before printing
+        setTimeout(() => {
+            window.print();
+        }, 200);
+    }
+    
+    // Handle potential print dialog issues
+    window.addEventListener('afterprint', () => {
+        // Cleanup or feedback if needed
+    });
+</script>
+@endpush
 
     <form method="GET" action="{{ route('nasabah.statement') }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5 flex flex-wrap gap-3 items-end print:hidden">
         <div>
@@ -30,7 +46,7 @@
         </button>
     </form>
 
-    <div class="relative max-w-3xl mx-auto bg-white rounded-xl border-2 border-gray-300 p-6" id="statement">
+    <div class="relative max-w-3xl mx-auto bg-white p-6 print:border-none print:shadow-none" id="statement">
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-[0.06]">
             <span class="text-5xl font-bold text-gray-900 whitespace-nowrap select-none">BANK MINI SEKOLAH</span>
         </div>
@@ -59,48 +75,48 @@
                 </div>
             </div>
 
-            <table class="w-full text-xs">
+            <table class="w-full text-xs print:table-fixed print:w-full">
                 <thead>
-                    <tr class="border-b-2 border-gray-800">
-                        <th class="py-2 text-left">Tanggal</th>
-                        <th class="py-2 text-left">Keterangan</th>
-                        <th class="py-2 text-right">Debet</th>
-                        <th class="py-2 text-right">Kredit</th>
-                        <th class="py-2 text-right">Saldo</th>
-                    </tr>
+                         <tr class="border-b-2 border-gray-800 print:border-black print:border-2">
+                         <th class="py-2 text-left print:w-20">Tanggal</th>
+                         <th class="py-2 text-left print:w-40">Keterangan</th>
+                         <th class="py-2 text-right print:w-24">Debet</th>
+                         <th class="py-2 text-right print:w-24">Kredit</th>
+                         <th class="py-2 text-right print:w-28">Saldo</th>
+                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse ($transactions as $transaction)
-                        <tr>
-                            <td class="py-2">{{ $transaction->transaction_at->format('d/m/Y') }}</td>
-                            <td class="py-2">
-                                @if ($transaction->type === 'deposit')
-                                    Setoran tunai
-                                @elseif ($transaction->type === 'withdrawal')
-                                    Penarikan tunai
-                                @elseif ($transaction->recipient_account_id === $account->id)
-                                    Transfer masuk {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
-                                @else
-                                    Transfer keluar {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
-                                @endif
-                                <span class="block text-gray-400 font-mono">{{ $transaction->receipt_number }}</span>
-                            </td>
-                            <td class="py-2 text-right font-mono">
-                                @if ($transaction->type === 'deposit' || ($transaction->type === 'transfer' && $transaction->recipient_account_id === $account->id))
-                                    {{ number_format($transaction->amount, 0, ',', '.') }}
-                                @else
-                                    &nbsp;
-                                @endif
-                            </td>
-                            <td class="py-2 text-right font-mono">
-                                @if ($transaction->type === 'withdrawal' || ($transaction->type === 'transfer' && $transaction->account_id === $account->id))
-                                    {{ number_format($transaction->amount, 0, ',', '.') }}
-                                @else
-                                    &nbsp;
-                                @endif
-                            </td>
-                            <td class="py-2 text-right font-mono">{{ number_format($transaction->balance_after, 0, ',', '.') }}</td>
-                        </tr>
+                         <tr class="print:page-break-inside-avoid">
+                             <td class="py-2 print:border print:border-gray-300">{{ $transaction->transaction_at->format('d/m/Y') }}</td>
+                             <td class="py-2 print:border print:border-gray-300">
+                                 @if ($transaction->type === 'deposit')
+                                     Setoran tunai
+                                 @elseif ($transaction->type === 'withdrawal')
+                                     Penarikan tunai
+                                 @elseif ($transaction->recipient_account_id === $account->id)
+                                     Transfer masuk {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
+                                 @else
+                                     Transfer keluar {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
+                                 @endif
+                                 <span class="block text-gray-400 font-mono">{{ $transaction->receipt_number }}</span>
+                             </td>
+                             <td class="py-2 text-right font-mono print:border print:border-gray-300">
+                                 @if ($transaction->type === 'deposit' || ($transaction->type === 'transfer' && $transaction->recipient_account_id === $account->id))
+                                     {{ number_format($transaction->amount, 0, ',', '.') }}
+                                 @else
+                                     &nbsp;
+                                 @endif
+                             </td>
+                             <td class="py-2 text-right font-mono print:border print:border-gray-300">
+                                 @if ($transaction->type === 'withdrawal' || ($transaction->type === 'transfer' && $transaction->account_id === $account->id))
+                                     {{ number_format($transaction->amount, 0, ',', '.') }}
+                                 @else
+                                     &nbsp;
+                                 @endif
+                             </td>
+                             <td class="py-2 text-right font-mono print:border print:border-gray-300">{{ number_format($transaction->balance_after, 0, ',', '.') }}</td>
+                         </tr>
                     @empty
                         <tr>
                             <td colspan="5" class="py-6 text-center text-gray-500">Tidak ada mutasi pada periode ini.</td>
@@ -108,12 +124,12 @@
                     @endforelse
                 </tbody>
                 <tfoot>
-                    <tr class="border-t-2 border-gray-800 font-semibold">
-                        <td colspan="2" class="py-2">Total</td>
-                        <td class="py-2 text-right font-mono">{{ number_format($totalDeposit + $totalTransferIn, 0, ',', '.') }}</td>
-                        <td class="py-2 text-right font-mono">{{ number_format($totalWithdrawal + $totalTransferOut, 0, ',', '.') }}</td>
-                        <td class="py-2 text-right font-mono">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</td>
-                    </tr>
+                     <tr class="border-t-2 border-gray-800 font-semibold print:border-black print:border-2">
+                         <td colspan="2" class="py-2 print:border print:border-gray-300">Total</td>
+                         <td class="py-2 text-right font-mono print:border print:border-gray-300">{{ number_format($totalDeposit + $totalTransferIn, 0, ',', '.') }}</td>
+                         <td class="py-2 text-right font-mono print:border print:border-gray-300">{{ number_format($totalWithdrawal + $totalTransferOut, 0, ',', '.') }}</td>
+                         <td class="py-2 text-right font-mono print:border print:border-gray-300">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</td>
+                     </tr>
                 </tfoot>
             </table>
 
