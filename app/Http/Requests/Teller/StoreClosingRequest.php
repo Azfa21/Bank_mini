@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests\Teller;
 
+use App\Models\DailyReport;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreClosingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'teller';
+        return $this->user()?->can('create', DailyReport::class) ?? false;
     }
 
     public function rules(): array

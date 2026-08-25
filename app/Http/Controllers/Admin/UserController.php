@@ -12,6 +12,8 @@ class UserController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', User::class);
+
         $users = User::query()
             ->when(request('role'), fn ($q, $role) => $q->where('role', $role))
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
@@ -30,6 +32,8 @@ class UserController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', User::class);
+
         return view('admin.users.create');
     }
 
@@ -56,11 +60,15 @@ class UserController extends Controller
 
     public function edit(User $user): View
     {
+        $this->authorize('update', $user);
+
         return view('admin.users.edit', compact('user'));
     }
 
     public function update(UpdateUserRequest $request, User $user)
     {
+        $this->authorize('update', $user);
+
         $data = $request->only(['full_name', 'username', 'role', 'status']);
 
         if ($request->filled('password')) {
@@ -82,6 +90,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        $this->authorize('delete', $user);
+
         $user->delete();
 
         if (request()->expectsJson() || request()->is('api/*')) {
@@ -96,6 +106,8 @@ class UserController extends Controller
 
     public function toggleStatus(User $user)
     {
+        $this->authorize('update', $user);
+
         $user->update(['status' => $user->status === 'active' ? 'blocked' : 'active']);
 
         $label = $user->status === 'active' ? 'diaktifkan' : 'diblokir';

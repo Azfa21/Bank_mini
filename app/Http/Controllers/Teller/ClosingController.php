@@ -19,6 +19,8 @@ class ClosingController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', DailyReport::class);
+
         $date = $request->query('report_date', now()->toDateString());
 
         $recap = $this->reports->recap($request->user(), $date);
@@ -51,6 +53,8 @@ class ClosingController extends Controller
 
     public function store(StoreClosingRequest $request)
     {
+        $this->authorize('create', DailyReport::class);
+
         $date = $request->validated('report_date');
         $physicalCash = (int) $request->validated('physical_cash');
 
@@ -87,15 +91,7 @@ class ClosingController extends Controller
 
     public function print(DailyReport $report)
     {
-        if ($report->teller_id !== auth()->id()) {
-            if (request()->expectsJson() || request()->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki akses ke laporan ini.',
-                ], 403);
-            }
-            abort(403);
-        }
+        $this->authorize('view', $report);
 
         $report->load(['teller', 'approver']);
 

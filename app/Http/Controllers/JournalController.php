@@ -10,6 +10,8 @@ class JournalController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', JurnalAkuntansi::class);
+
         $user = Auth::guard('web')->user();
         $userRole = $user ? $user->role : null;
         $indexRoute = $userRole === 'admin'

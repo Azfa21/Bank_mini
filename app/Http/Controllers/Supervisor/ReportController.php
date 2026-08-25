@@ -19,6 +19,8 @@ class ReportController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', DailyReport::class);
+
         $reports = DailyReport::query()
             ->with(['teller'])
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
@@ -39,6 +41,8 @@ class ReportController extends Controller
 
     public function show(DailyReport $report)
     {
+        $this->authorize('view', $report);
+
         $report->load(['teller', 'approver', 'cashTransfer.supervisor']);
 
         $transactions = $report->transactions()->get();
@@ -64,6 +68,8 @@ class ReportController extends Controller
 
     public function approve(ApproveReportRequest $request, DailyReport $report)
     {
+        $this->authorize('approve', $report);
+
         try {
             $this->reports->approve($report, $request->user(), $request->validated('approval_notes'));
         } catch (TransactionValidationException $e) {
@@ -95,6 +101,8 @@ class ReportController extends Controller
 
     public function reject(RejectReportRequest $request, DailyReport $report)
     {
+        $this->authorize('reject', $report);
+
         try {
             $this->reports->reject($report, $request->user(), $request->validated('approval_notes'));
         } catch (TransactionValidationException $e) {

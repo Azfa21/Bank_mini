@@ -11,6 +11,8 @@ class CustomerSearchController extends Controller
 {
     public function search()
     {
+        $this->authorize('viewAny', Account::class);
+
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
                 'success' => true,
@@ -23,6 +25,8 @@ class CustomerSearchController extends Controller
 
     public function lookup(Request $request)
     {
+        $this->authorize('viewAny', Account::class);
+
         $q = trim($request->input('q', ''));
 
         if ($q === '') {
@@ -78,6 +82,8 @@ class CustomerSearchController extends Controller
 
     public function show(Account $account)
     {
+        $this->authorize('view', $account);
+
         $account->load('customer');
 
         if (request()->expectsJson() || request()->is('api/*')) {

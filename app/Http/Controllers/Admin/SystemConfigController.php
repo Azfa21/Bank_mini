@@ -9,6 +9,8 @@ class SystemConfigController extends Controller
 {
     public function edit()
     {
+        $this->authorize('viewAny', SystemConfig::class);
+
         $configs = SystemConfig::all()->keyBy('config_key');
 
         if (request()->expectsJson() || request()->is('api/*')) {
@@ -23,6 +25,8 @@ class SystemConfigController extends Controller
 
     public function update()
     {
+        $this->authorize('update', SystemConfig::class);
+
         $validated = request()->validate([
             'minimum_balance' => ['required', 'integer', 'min:0'],
         ]);

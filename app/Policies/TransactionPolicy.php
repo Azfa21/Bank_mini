@@ -11,7 +11,13 @@ class TransactionPolicy
 
     public function view($user, $transaction = null): bool
     {
-        return $user?->role === 'supervisor';
+        if ($user?->role === 'supervisor') {
+            return true;
+        }
+
+        return $user?->role === 'teller'
+            && $transaction !== null
+            && $transaction->teller_id === $user->id;
     }
 
     public function create($user): bool

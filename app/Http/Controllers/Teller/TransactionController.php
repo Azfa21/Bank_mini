@@ -34,6 +34,8 @@ class TransactionController extends Controller
 
     public function storeDeposit(StoreDepositRequest $request, Account $account)
     {
+        $this->authorize('create', Transaction::class);
+
         $data = $request->validated();
         $data['amount'] = (int) $data['slip_amount'];
 
@@ -81,6 +83,8 @@ class TransactionController extends Controller
 
     public function storeWithdrawal(StoreWithdrawalRequest $request, Account $account)
     {
+        $this->authorize('create', Transaction::class);
+
         $data = $request->validated();
 
         try {
@@ -127,6 +131,8 @@ class TransactionController extends Controller
 
     public function storeTransfer(StoreTransferRequest $request, Account $account)
     {
+        $this->authorize('create', Transaction::class);
+
         $recipientAccount = Account::where('account_number', $request->input('recipient_account_number'))->firstOrFail();
 
         try {
@@ -166,6 +172,8 @@ class TransactionController extends Controller
 
     public function receipt(Transaction $transaction)
     {
+        $this->authorize('view', $transaction);
+
         $transaction->load(['account.customer', 'recipientAccount.customer', 'teller']);
 
         if (request()->expectsJson() || request()->is('api/*')) {

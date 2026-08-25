@@ -8,12 +8,12 @@ class UpdateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->role === 'admin';
+        return $this->user()->can('update', $this->route('user'));
     }
 
     public function rules(): array
     {
-        $userId = $this->route('user')?->id ?? $this->route('user');
+        $userId = $this->route('user')?->id;
 
         return [
             'full_name' => ['sometimes', 'required', 'string', 'max:100'],

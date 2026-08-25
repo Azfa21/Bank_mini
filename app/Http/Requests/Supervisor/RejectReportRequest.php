@@ -8,7 +8,7 @@ class RejectReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'supervisor';
+        return $this->user()?->can('reject', $this->route('report')) ?? false;
     }
 
     public function rules(): array

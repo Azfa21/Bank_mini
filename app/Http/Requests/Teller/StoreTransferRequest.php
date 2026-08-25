@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests\Teller;
 
+use App\Models\Transaction;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTransferRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'teller';
+        return $this->user()?->can('create', Transaction::class) ?? false;
     }
 
     public function rules(): array

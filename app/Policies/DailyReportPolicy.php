@@ -37,4 +37,9 @@ class DailyReportPolicy
     {
         return $user?->role === 'supervisor';
     }
+
+    public function reject($user, $report = null): bool
+    {
+        return $user?->role === 'supervisor';
+    }
 }

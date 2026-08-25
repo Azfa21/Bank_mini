@@ -9,6 +9,8 @@ class AccountController extends Controller
 {
     public function show(Account $account)
     {
+        $this->authorize('view', $account);
+
         $account->load('customer');
 
         if (request()->expectsJson() || request()->is('api/*')) {
