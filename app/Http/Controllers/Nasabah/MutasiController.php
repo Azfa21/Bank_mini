@@ -19,7 +19,7 @@ class MutasiController extends Controller
         if (! $account) {
             $transactions = new LengthAwarePaginator([], 0, 15, $request->integer('page', 1));
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => true,
                     'data' => [
@@ -47,7 +47,7 @@ class MutasiController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -114,7 +114,7 @@ class MutasiController extends Controller
             12
         ));
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [

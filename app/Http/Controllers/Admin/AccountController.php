@@ -13,7 +13,7 @@ class AccountController extends Controller
 
         $account->load('customer');
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $account,

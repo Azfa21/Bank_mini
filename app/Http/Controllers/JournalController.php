@@ -47,7 +47,7 @@ class JournalController extends Controller
             ->when($request->input('date_to'), fn ($query) => $query->whereDate('journal_at', '<=', $request->input('date_to')))
             ->sum('credit_amount');
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [

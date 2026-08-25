@@ -40,7 +40,7 @@ class ForgotPasswordController extends Controller
                 'reason' => 'invalid_identity',
             ]);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data verifikasi identitas pegawai tidak sesuai.',
@@ -57,7 +57,7 @@ class ForgotPasswordController extends Controller
                 'username' => $user->username,
             ]);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Akun Anda diblokir. Silakan hubungi Administrator.',
@@ -78,7 +78,7 @@ class ForgotPasswordController extends Controller
             'role' => $user->role,
         ], $user->id);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Password berhasil diperbarui. Silakan masuk menggunakan password baru.',
@@ -110,7 +110,7 @@ class ForgotPasswordController extends Controller
                 'reason' => 'invalid_identity',
             ]);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data verifikasi nasabah / siswa tidak sesuai.',
@@ -127,7 +127,7 @@ class ForgotPasswordController extends Controller
                 'student_number' => $customer->student_number,
             ]);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Akun rekening Anda diblokir. Silakan hubungi loket teller atau Administrator.',
@@ -149,7 +149,7 @@ class ForgotPasswordController extends Controller
             'student_number' => $customer->student_number,
         ]);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'PIN nasabah berhasil diperbarui. Silakan masuk menggunakan PIN baru.',

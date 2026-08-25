@@ -38,7 +38,7 @@ class LoginController extends Controller
                 Auth::guard('web')->logout();
                 AuditLogService::record('login_blocked', 'user', $user->id, ['username' => $user->username]);
 
-                if ($request->expectsJson() || $request->is('api/*')) {
+                if ($this->wantsJson($request)) {
                     return response()->json(['success' => false, 'message' => 'Akun Anda diblokir.'], 403);
                 }
 
@@ -48,7 +48,7 @@ class LoginController extends Controller
             $request->session()->regenerate();
             AuditLogService::record('login_success', 'user', $user->id, ['role' => $user->role], $user->id);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Login berhasil.',
@@ -71,7 +71,7 @@ class LoginController extends Controller
                 Auth::guard('nasabah')->logout();
                 AuditLogService::record('login_blocked', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
-                if ($request->expectsJson() || $request->is('api/*')) {
+                if ($this->wantsJson($request)) {
                     return response()->json(['success' => false, 'message' => 'Akun Anda diblokir.'], 403);
                 }
 
@@ -81,7 +81,7 @@ class LoginController extends Controller
             $request->session()->regenerate();
             AuditLogService::record('login_success', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Login berhasil.',
@@ -99,7 +99,7 @@ class LoginController extends Controller
 
         AuditLogService::record('login_failed', null, null, ['identifier' => $identifier]);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json(['success' => false, 'message' => 'Kredensial tidak valid.'], 401);
         }
 
@@ -123,7 +123,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json(['success' => true, 'message' => 'Logout berhasil.']);
         }
 

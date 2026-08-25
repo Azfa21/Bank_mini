@@ -13,7 +13,7 @@ class SystemConfigController extends Controller
 
         $configs = SystemConfig::all()->keyBy('config_key');
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $configs,
@@ -36,7 +36,7 @@ class SystemConfigController extends Controller
             ['config_value' => (string) $validated['minimum_balance']]
         );
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Konfigurasi berhasil disimpan.',

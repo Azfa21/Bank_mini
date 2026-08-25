@@ -19,7 +19,7 @@ class PassbookController extends Controller
             ->orderBy('id')
             ->paginate(20);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -48,7 +48,7 @@ class PassbookController extends Controller
             ->forPage($page, $limit)
             ->get();
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [

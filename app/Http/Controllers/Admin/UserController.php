@@ -20,7 +20,7 @@ class UserController extends Controller
             ->latest()
             ->paginate(15);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $users,
@@ -47,7 +47,7 @@ class UserController extends Controller
             'status' => $request->status,
         ]);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Akun pengguna berhasil dibuat.',
@@ -77,7 +77,7 @@ class UserController extends Controller
 
         $user->update($data);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Akun pengguna berhasil diperbarui.',
@@ -94,7 +94,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Akun pengguna berhasil dihapus.',
@@ -112,7 +112,7 @@ class UserController extends Controller
 
         $label = $user->status === 'active' ? 'diaktifkan' : 'diblokir';
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "Akun {$user->full_name} berhasil {$label}.",

@@ -13,7 +13,7 @@ class CustomerSearchController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Pencarian nasabah Teller.',
@@ -30,7 +30,7 @@ class CustomerSearchController extends Controller
         $q = trim($request->input('q', ''));
 
         if ($q === '') {
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Masukkan nomor rekening atau nilai QR Code terlebih dahulu.',
@@ -45,7 +45,7 @@ class CustomerSearchController extends Controller
             ->first();
 
         if ($account) {
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => true,
                     'data' => $account,
@@ -60,7 +60,7 @@ class CustomerSearchController extends Controller
             ->first();
 
         if ($customer && $customer->account) {
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => true,
                     'data' => $customer->account,
@@ -70,7 +70,7 @@ class CustomerSearchController extends Controller
             return redirect()->route('teller.customers.show', $customer->account);
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Rekening atau QR Code tidak ditemukan.',
@@ -86,7 +86,7 @@ class CustomerSearchController extends Controller
 
         $account->load('customer');
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $account,

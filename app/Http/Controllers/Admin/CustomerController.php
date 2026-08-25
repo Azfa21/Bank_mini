@@ -35,7 +35,7 @@ class CustomerController extends Controller
             ->latest()
             ->paginate(15);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $customers,
@@ -69,7 +69,7 @@ class CustomerController extends Controller
             return $created;
         });
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Profil nasabah dan rekening berhasil dibuat.',
@@ -95,7 +95,7 @@ class CustomerController extends Controller
 
         $customer->update($data);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Profil nasabah berhasil diperbarui.',
@@ -110,7 +110,7 @@ class CustomerController extends Controller
     {
         $customer->delete();
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Profil nasabah berhasil dihapus.',

@@ -29,7 +29,7 @@ class ReportController extends Controller
             ->orderByDesc('id')
             ->paginate(15);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $reports,
@@ -52,7 +52,7 @@ class ReportController extends Controller
             ->latest('id')
             ->get();
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -77,7 +77,7 @@ class ReportController extends Controller
                 'reason' => $e->getMessage(),
             ], $request->user()->id);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -87,7 +87,7 @@ class ReportController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan berhasil disetujui dan kas dipindahkan ke brankas utama.',
@@ -106,7 +106,7 @@ class ReportController extends Controller
         try {
             $this->reports->reject($report, $request->user(), $request->validated('approval_notes'));
         } catch (TransactionValidationException $e) {
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -116,7 +116,7 @@ class ReportController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan ditolak. Teller dapat memperbaiki dan mengirim ulang.',

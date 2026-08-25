@@ -36,7 +36,7 @@ class ClosingController extends Controller
             ->orderBy('id')
             ->get();
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -66,7 +66,7 @@ class ClosingController extends Controller
                 'reason' => $e->getMessage(),
             ], $request->user()->id);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -78,7 +78,7 @@ class ClosingController extends Controller
                 ->withInput(['report_date' => $date]);
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan penutupan kas berhasil disimpan.',
@@ -95,7 +95,7 @@ class ClosingController extends Controller
 
         $report->load(['teller', 'approver']);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $report,

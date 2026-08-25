@@ -22,7 +22,7 @@ class TransactionController extends Controller
     {
         $account->load('customer');
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $account,
@@ -46,7 +46,7 @@ class TransactionController extends Controller
                 'reason' => $e->getMessage(),
             ], $request->user()->id);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -56,7 +56,7 @@ class TransactionController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Setoran tunai berhasil disimpan.',
@@ -71,7 +71,7 @@ class TransactionController extends Controller
     {
         $account->load('customer');
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $account,
@@ -94,7 +94,7 @@ class TransactionController extends Controller
                 'reason' => $e->getMessage(),
             ], $request->user()->id);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -104,7 +104,7 @@ class TransactionController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Penarikan tunai berhasil disimpan.',
@@ -119,7 +119,7 @@ class TransactionController extends Controller
     {
         $account->load('customer');
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $account,
@@ -149,7 +149,7 @@ class TransactionController extends Controller
                 'recipient_account_number' => $request->input('recipient_account_number'),
             ], $request->user()->id);
 
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -159,7 +159,7 @@ class TransactionController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'message' => 'Transfer saldo berhasil diproses.',
@@ -176,7 +176,7 @@ class TransactionController extends Controller
 
         $transaction->load(['account.customer', 'recipientAccount.customer', 'teller']);
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $transaction,

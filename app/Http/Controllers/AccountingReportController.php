@@ -38,7 +38,7 @@ class AccountingReportController extends Controller
             ? ($totalDebit - $totalCredit)
             : ($totalCredit - $totalDebit);
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -88,7 +88,7 @@ class AccountingReportController extends Controller
             ? round(($totalPhysicalCash / $totalSavingsObligation) * 100, 2)
             : 100.0;
 
-        if ($request->expectsJson() || $request->is('api/*')) {
+        if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [

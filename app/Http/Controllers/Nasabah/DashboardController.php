@@ -21,7 +21,7 @@ class DashboardController extends Controller
                 ->first()
             : null;
 
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => [
