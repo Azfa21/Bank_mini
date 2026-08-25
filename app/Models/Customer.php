@@ -2,10 +2,25 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+/**
+ * @property int $id
+ * @property string $student_number
+ * @property string $full_name
+ * @property string|null $class_name
+ * @property string|null $phone_number
+ * @property string $pin_hash
+ * @property string $qr_code_value
+ * @property int|null $created_by
+ * @property string $status
+ * @property int $failed_pin_attempts
+ * @property CarbonInterface|null $locked_until
+ * @property CarbonInterface|null $created_at
+ */
 class Customer extends Authenticatable
 {
     protected $table = 'customers';
@@ -46,11 +61,13 @@ class Customer extends Authenticatable
         return $this->pin_hash;
     }
 
+    /** @return HasOne<Account, $this> */
     public function account(): HasOne
     {
         return $this->hasOne(Account::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
