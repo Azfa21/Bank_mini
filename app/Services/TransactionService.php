@@ -18,11 +18,11 @@ class TransactionService
         protected SequenceService $sequences,
     ) {}
 
-    public const ACCOUNT_CODE_CASH = '101';
+    public const ACCOUNT_CODE_CASH = AccountingService::ACCOUNT_CODE_CASH_TELLER;
 
-    public const ACCOUNT_CODE_VAULT = '102';
+    public const ACCOUNT_CODE_VAULT = AccountingService::ACCOUNT_CODE_CASH_VAULT;
 
-    public const ACCOUNT_CODE_SAVINGS = '201';
+    public const ACCOUNT_CODE_SAVINGS = AccountingService::ACCOUNT_CODE_SAVINGS;
 
     public function deposit(Account $account, array $data, User $teller): Transaction
     {
@@ -65,23 +65,26 @@ class TransactionService
 
     public function withdraw(Account $account, array $data, string $pin, User $teller): Transaction
     {
-        return DB::transaction(function () use ($account, $data, $pin, $teller) {
+        $this->assertAccountActive($account);
+
+        $customer = $account->customer()->first();
+        if (! $customer) {
+            throw new TransactionValidationException('Data nasabah tidak ditemukan.');
+        }
+
+        $this->verifyCustomerPin($customer, $pin, 'penarikan', $teller->id);
+
+        return DB::transaction(function () use ($account, $data, $teller) {
             $locked = Account::query()->lockForUpdate()->findOrFail($account->id);
             $this->assertAccountActive($locked);
-
-            $customer = $locked->customer;
-            if (! $customer) {
-                throw new TransactionValidationException('Data nasabah tidak ditemukan.');
-            }
-
-            $this->verifyCustomerPin($customer, $pin, 'penarikan', $teller->id);
 
             $amount = (int) ($data['amount'] ?? 0);
             if ($amount <= 0) {
                 throw new TransactionValidationException('Nominal harus lebih besar dari nol.');
             }
 
-            $minimumBalance = (int) (SystemConfig::find('minimum_balance')?->config_value ?? 10000);
+            $config = SystemConfig::find('minimum_balance');
+            $minimumBalance = (int) ($config->config_value ?? 10000);
 
             $balanceBefore = (int) $locked->balance;
             if ($amount > $balanceBefore) {
@@ -122,11 +125,20 @@ class TransactionService
 
     public function transfer(Account $source, Account $destination, array $data, string $pin, User $teller): Transaction
     {
-        return DB::transaction(function () use ($source, $destination, $data, $pin, $teller) {
-            if ($source->id === $destination->id) {
-                throw new TransactionValidationException('Rekening tujuan tidak boleh sama dengan rekening pengirim.');
-            }
+        if ($source->id === $destination->id) {
+            throw new TransactionValidationException('Rekening tujuan tidak boleh sama dengan rekening pengirim.');
+        }
 
+        $this->assertAccountActive($source);
+
+        $customer = $source->customer()->first();
+        if (! $customer) {
+            throw new TransactionValidationException('Data nasabah pengirim tidak ditemukan.');
+        }
+
+        $this->verifyCustomerPin($customer, $pin, 'transfer', $teller->id);
+
+        return DB::transaction(function () use ($source, $destination, $data, $teller) {
             // Deadlock prevention: lock accounts in ascending ID order
             $firstId = min($source->id, $destination->id);
             $secondId = max($source->id, $destination->id);
@@ -138,19 +150,13 @@ class TransactionService
             $this->assertAccountActive($lockedSource);
             $this->assertAccountActive($lockedDest);
 
-            $customer = $lockedSource->customer;
-            if (! $customer) {
-                throw new TransactionValidationException('Data nasabah pengirim tidak ditemukan.');
-            }
-
-            $this->verifyCustomerPin($customer, $pin, 'transfer', $teller->id);
-
             $amount = (int) ($data['amount'] ?? 0);
             if ($amount <= 0) {
                 throw new TransactionValidationException('Nominal transfer harus lebih besar dari nol.');
             }
 
-            $minimumBalance = (int) (SystemConfig::find('minimum_balance')?->config_value ?? 10000);
+            $config = SystemConfig::find('minimum_balance');
+            $minimumBalance = (int) ($config->config_value ?? 10000);
 
             $sourceBalanceBefore = (int) $lockedSource->balance;
             if ($amount > $sourceBalanceBefore) {
@@ -205,40 +211,60 @@ class TransactionService
 
     public function verifyCustomerPin(Customer $customer, string $pin, string $actionType = 'transaksi', ?int $actorId = null): void
     {
-        if ($customer->isPinLocked()) {
-            throw new TransactionValidationException(
-                'PIN rekening terkunci sementara karena 3x salah. Silakan coba kembali setelah '.$customer->locked_until->diffForHumans().' atau lakukan reset PIN.'
-            );
-        }
+        $failure = null;
 
-        if (! Hash::check($pin, $customer->pin_hash)) {
-            $attempts = $customer->failed_pin_attempts + 1;
-            if ($attempts >= 3) {
-                $customer->update([
-                    'failed_pin_attempts' => $attempts,
-                    'locked_until' => now()->addMinutes(15),
-                ]);
+        DB::transaction(function () use ($customer, $pin, $actionType, $actorId, &$failure) {
+            $locked = Customer::query()
+                ->whereKey($customer->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-                AuditLogService::record('customer_pin_locked', 'customer', $customer->id, [
-                    'student_number' => $customer->student_number,
-                    'action' => $actionType,
-                    'failed_attempts' => $attempts,
-                ], $actorId);
+            if ($locked->isPinLocked()) {
+                $failure = new TransactionValidationException(
+                    'PIN rekening terkunci sementara karena 3x salah. Silakan coba kembali setelah '.$locked->locked_until->diffForHumans().' atau lakukan reset PIN.'
+                );
 
-                throw new TransactionValidationException('PIN salah 3 kali berturut-turut. Rekening nasabah dikunci selama 15 menit.');
+                return;
             }
 
-            $customer->update(['failed_pin_attempts' => $attempts]);
+            if (! Hash::check($pin, $locked->pin_hash)) {
+                $attempts = (int) $locked->failed_pin_attempts + 1;
 
-            throw new TransactionValidationException('PIN nasabah salah. (Percobaan ke-'.$attempts.' dari 3)');
-        }
+                if ($attempts >= 3) {
+                    $locked->update([
+                        'failed_pin_attempts' => $attempts,
+                        'locked_until' => now()->addMinutes(15),
+                    ]);
 
-        // Reset failed attempts on success
-        if ($customer->failed_pin_attempts > 0 || $customer->locked_until !== null) {
-            $customer->update([
-                'failed_pin_attempts' => 0,
-                'locked_until' => null,
-            ]);
+                    AuditLogService::record('customer_pin_locked', 'customer', $locked->id, [
+                        'student_number' => $locked->student_number,
+                        'action' => $actionType,
+                        'failed_attempts' => $attempts,
+                    ], $actorId);
+
+                    $failure = new TransactionValidationException('PIN salah 3 kali berturut-turut. Rekening nasabah dikunci selama 15 menit.');
+
+                    return;
+                }
+
+                $locked->update(['failed_pin_attempts' => $attempts]);
+
+                $failure = new TransactionValidationException('PIN nasabah salah. (Percobaan ke-'.$attempts.' dari 3)');
+
+                return;
+            }
+
+            // Reset failed attempts on success
+            if ((int) $locked->failed_pin_attempts > 0 || $locked->locked_until !== null) {
+                $locked->update([
+                    'failed_pin_attempts' => 0,
+                    'locked_until' => null,
+                ]);
+            }
+        });
+
+        if ($failure !== null) {
+            throw $failure;
         }
     }
 
@@ -285,7 +311,7 @@ class TransactionService
             JurnalAkuntansi::create([
                 'transaction_id' => $transaction->id,
                 'cash_transfer_id' => null,
-                'journal_number' => $transaction->receipt_number.'-'.str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                'journal_number' => $transaction->receipt_number.'-'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
                 'account_code' => $row['account_code'],
                 'entry_type' => $row['entry_type'],
                 'amount' => $amount,
@@ -321,7 +347,7 @@ class TransactionService
             JurnalAkuntansi::create([
                 'transaction_id' => $transaction->id,
                 'cash_transfer_id' => null,
-                'journal_number' => $transaction->receipt_number.'-'.str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                'journal_number' => $transaction->receipt_number.'-'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
                 'account_code' => $row['account_code'],
                 'entry_type' => $row['entry_type'],
                 'amount' => $amount,

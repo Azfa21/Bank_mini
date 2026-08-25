@@ -5,17 +5,33 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\UpdateCustomerRequest;
-use App\Models\Account;
 use App\Models\Customer;
+use App\Services\AccountService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
+    public function __construct(
+        protected AccountService $accounts,
+    ) {}
+
     public function index()
     {
         $customers = Customer::with('account')
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
+            ->when(request('search'), function ($query, $search) {
+                $search = trim($search);
+
+                if ($search !== '') {
+                    $query->where(function ($sub) use ($search) {
+                        $sub->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('student_number', 'like', "%{$search}%")
+                            ->orWhere('class_name', 'like', "%{$search}%");
+                    });
+                }
+            })
             ->latest()
             ->paginate(15);
 
@@ -36,30 +52,22 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request)
     {
-        $customer = Customer::create([
-            'student_number' => $request->student_number,
-            'full_name' => $request->full_name,
-            'class_name' => $request->class_name,
-            'phone_number' => $request->phone_number,
-            'pin_hash' => $request->pin,
-            'qr_code_value' => Str::uuid()->toString(),
-            'created_by' => $request->user()->id,
-            'status' => 'active',
-        ]);
+        $customer = DB::transaction(function () use ($request) {
+            $created = Customer::create([
+                'student_number' => $request->student_number,
+                'full_name' => $request->full_name,
+                'class_name' => $request->class_name,
+                'phone_number' => $request->phone_number,
+                'pin_hash' => $request->pin,
+                'qr_code_value' => Str::uuid()->toString(),
+                'created_by' => $request->user()->id,
+                'status' => 'active',
+            ]);
 
-        $academicYear = date('Y').'/'.(date('Y') + 1);
-        $lastAccount = Account::where('academic_year', $academicYear)->count();
+            $this->accounts->openFor($created);
 
-        $account = Account::create([
-            'account_number' => $academicYear.'-'.str_pad($lastAccount + 1, 3, '0', STR_PAD_LEFT),
-            'customer_id' => $customer->id,
-            'balance' => 0,
-            'opening_balance' => 0,
-            'minimum_balance' => 10000,
-            'academic_year' => $academicYear,
-            'status' => 'active',
-            'opened_at' => now(),
-        ]);
+            return $created;
+        });
 
         if ($request->expectsJson() || $request->is('api/*')) {
             return response()->json([

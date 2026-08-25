@@ -14,12 +14,16 @@ class SequenceService
      * (lockForUpdate) dan proses lain yang berjalan bersamaan akan
      * menunggu hingga transaksi pertama selesai (anti race condition).
      */
-    public function next(string $key): int
+    public function next(string $key, ?int $floor = null): int
     {
-        return DB::transaction(function () use ($key) {
+        return DB::transaction(function () use ($key, $floor) {
             $sequence = DocumentSequence::query()
                 ->lockForUpdate()
                 ->firstOrCreate(['key' => $key], ['last_number' => 0]);
+
+            if ($floor !== null && $sequence->last_number < $floor) {
+                $sequence->update(['last_number' => $floor]);
+            }
 
             $next = $sequence->last_number + 1;
 
@@ -31,6 +35,6 @@ class SequenceService
 
     public function formatted(string $key, string $prefix, int $length = 4): string
     {
-        return $prefix.'-'.str_pad($this->next($key), $length, '0', STR_PAD_LEFT);
+        return $prefix.'-'.str_pad((string) $this->next($key), $length, '0', STR_PAD_LEFT);
     }
 }
