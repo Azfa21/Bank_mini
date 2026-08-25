@@ -17,31 +17,28 @@
 
     <form method="GET" action="{{ $indexRoute }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5 flex flex-wrap gap-3 items-end">
         <div>
-            <label for="transaction_number" class="block text-xs font-medium text-gray-600 mb-1">Nomor Transaksi</label>
-            <input type="text" id="transaction_number" name="transaction_number" value="{{ request('transaction_number') }}"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="TRX-...">
+            <x-input-label for="transaction_number" size="xs">Nomor Transaksi</x-input-label>
+            <x-input id="transaction_number" name="transaction_number" :value="request('transaction_number')" :block="false" placeholder="TRX-..." />
         </div>
         <div>
-            <label for="account_code" class="block text-xs font-medium text-gray-600 mb-1">Kode Akun</label>
-            <select id="account_code" name="account_code" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <x-input-label for="account_code" size="xs">Kode Akun</x-input-label>
+            <x-select id="account_code" name="account_code" :block="false">
                 <option value="">Semua</option>
                 <option value="101" @selected(request('account_code') === '101')>101 — Kas</option>
                 <option value="201" @selected(request('account_code') === '201')>201 — Tabungan</option>
-            </select>
+            </x-select>
         </div>
         <div>
-            <label for="date_from" class="block text-xs font-medium text-gray-600 mb-1">Dari Tanggal</label>
-            <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <x-input-label for="date_from" size="xs">Dari Tanggal</x-input-label>
+            <x-input id="date_from" name="date_from" type="date" :value="request('date_from')" :block="false" />
         </div>
         <div>
-            <label for="date_to" class="block text-xs font-medium text-gray-600 mb-1">Sampai Tanggal</label>
-            <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <x-input-label for="date_to" size="xs">Sampai Tanggal</x-input-label>
+            <x-input id="date_to" name="date_to" type="date" :value="request('date_to')" :block="false" />
         </div>
-        <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        <x-primary-button>
             Filter
-        </button>
+        </x-primary-button>
     </form>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

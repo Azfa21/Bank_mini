@@ -15,14 +15,12 @@
 
             <form method="GET" action="{{ route('teller.customers.lookup') }}" class="space-y-4">
                 <div>
-                    <label for="q" class="block text-xs font-medium text-gray-600 mb-1">Nomor rekening atau nilai QR Code</label>
-                    <input type="text" id="q" name="q" value="{{ request('q') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Contoh: 2026/2027-001" autofocus>
+                    <x-input-label for="q" size="xs">Nomor rekening atau nilai QR Code</x-input-label>
+                    <x-input id="q" name="q" :value="request('q')" placeholder="Contoh: 2026/2027-001" autofocus />
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <x-primary-button class="w-full">
                     Cari Nasabah
-                </button>
+                </x-primary-button>
             </form>
 
             <div class="mt-6 border-t border-gray-100 pt-6">

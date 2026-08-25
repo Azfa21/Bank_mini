@@ -12,13 +12,12 @@
     </div>
 
     <form method="GET" action="{{ route('teller.closing.index') }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5">
-        <label for="report_date" class="block text-xs font-medium text-gray-600 mb-1">Tanggal Kerja</label>
+        <x-input-label for="report_date" size="xs">Tanggal Kerja</x-input-label>
         <div class="flex gap-3">
-            <input type="date" id="report_date" name="report_date" value="{{ $date }}"
-                class="w-full max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <x-input id="report_date" name="report_date" type="date" :value="$date" :block="false" class="max-w-xs" />
+            <x-primary-button>
                 Tampilkan
-            </button>
+            </x-primary-button>
         </div>
     </form>
 
@@ -65,19 +64,15 @@
                         @csrf
                         <input type="hidden" name="report_date" value="{{ $date }}">
                         <div class="flex-1 max-w-xs">
-                            <label for="physical_cash" class="block text-xs font-medium text-gray-600 mb-1">Uang Fisik di Laci *</label>
-                            <input type="number" id="physical_cash" name="physical_cash" value="{{ old('physical_cash') }}" min="0" step="1"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Contoh: 500000" required>
-                            @error('physical_cash')
-                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
+                            <x-input-label for="physical_cash" size="xs">Uang Fisik di Laci *</x-input-label>
+                            <x-input id="physical_cash" name="physical_cash" type="number" min="0" step="1"
+                                placeholder="Contoh: 500000" required />
+                            <x-input-error :message="$errors->first('physical_cash')" />
                         </div>
-                        <button type="submit"
-                            class="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                        <x-primary-button variant="green"
                             onclick="this.disabled = true; this.form.submit();">
                             Buat Laporan
-                        </button>
+                        </x-primary-button>
                     </form>
 
                     @php

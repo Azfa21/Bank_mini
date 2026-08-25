@@ -13,22 +13,21 @@
 
     <form method="GET" action="{{ route('supervisor.reports.index') }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5 flex flex-wrap gap-3 items-end">
         <div>
-            <label for="status" class="block text-xs font-medium text-gray-600 mb-1">Status</label>
-            <select id="status" name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <x-input-label for="status" size="xs">Status</x-input-label>
+            <x-select id="status" name="status" :block="false">
                 <option value="">Semua</option>
                 @foreach (['draft', 'submitted', 'approved', 'rejected'] as $status)
                     <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
                 @endforeach
-            </select>
+            </x-select>
         </div>
         <div>
-            <label for="report_date" class="block text-xs font-medium text-gray-600 mb-1">Tanggal Kerja</label>
-            <input type="date" id="report_date" name="report_date" value="{{ request('report_date') }}"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <x-input-label for="report_date" size="xs">Tanggal Kerja</x-input-label>
+            <x-input id="report_date" name="report_date" type="date" :value="request('report_date')" :block="false" />
         </div>
-        <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        <x-primary-button>
             Filter
-        </button>
+        </x-primary-button>
     </form>
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">

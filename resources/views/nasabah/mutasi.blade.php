@@ -16,26 +16,24 @@
     @else
         <form method="GET" action="{{ route('nasabah.mutasi') }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5 flex flex-wrap gap-3 items-end">
             <div>
-                <label for="type" class="block text-xs font-medium text-gray-600 mb-1">Jenis Transaksi</label>
-                <select id="type" name="type" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <x-input-label for="type" size="xs">Jenis Transaksi</x-input-label>
+                <x-select id="type" name="type" :block="false">
                     <option value="">Semua</option>
                     <option value="deposit" @selected(request('type') === 'deposit')>Setoran</option>
                     <option value="withdrawal" @selected(request('type') === 'withdrawal')>Penarikan</option>
-                </select>
+                </x-select>
             </div>
             <div>
-                <label for="date_from" class="block text-xs font-medium text-gray-600 mb-1">Dari Tanggal</label>
-                <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <x-input-label for="date_from" size="xs">Dari Tanggal</x-input-label>
+                <x-input id="date_from" name="date_from" type="date" :value="request('date_from')" :block="false" />
             </div>
             <div>
-                <label for="date_to" class="block text-xs font-medium text-gray-600 mb-1">Sampai Tanggal</label>
-                <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <x-input-label for="date_to" size="xs">Sampai Tanggal</x-input-label>
+                <x-input id="date_to" name="date_to" type="date" :value="request('date_to')" :block="false" />
             </div>
-            <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <x-primary-button>
                 Filter
-            </button>
+            </x-primary-button>
         </form>
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">

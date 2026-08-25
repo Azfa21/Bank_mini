@@ -33,56 +33,31 @@
                 </div>
             @endif
 
-            @if ($errors->any())
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                    <ul class="list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <x-form-errors />
 
             <form method="POST" action="{{ route('login.submit') }}" class="space-y-4">
                 @csrf
 
                 <div>
-                    <label for="identifier" class="block text-sm font-medium text-gray-700 mb-1">Username / No. Siswa</label>
-                    <input
-                        type="text"
-                        id="identifier"
-                        name="identifier"
-                        value="{{ old('identifier') }}"
-                        required
-                        autofocus
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Masukkan username atau nomor siswa"
-                    >
+                    <x-input-label for="identifier">Username / No. Siswa</x-input-label>
+                    <x-input id="identifier" name="identifier" required autofocus
+                        placeholder="Masukkan username atau nomor siswa" />
                 </div>
 
                 <div>
                     <div class="flex items-center justify-between mb-1">
-                        <label for="secret" class="block text-sm font-medium text-gray-700">Password / PIN</label>
+                        <x-input-label for="secret" class="mb-0">Password / PIN</x-input-label>
                         <a href="{{ route('password.request') }}" class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">
                             Lupa Password / PIN?
                         </a>
                     </div>
-                    <input
-                        type="password"
-                        id="secret"
-                        name="secret"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Masukkan password atau PIN 6 digit"
-                    >
+                    <x-input id="secret" name="secret" type="password" required
+                        placeholder="Masukkan password atau PIN 6 digit" />
                 </div>
 
-                <button
-                    type="submit"
-                    class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                >
+                <x-primary-button class="w-full py-2.5 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     Masuk
-                </button>
+                </x-primary-button>
 
                 <div class="text-center pt-2">
                     <a href="{{ route('password.request') }}" class="text-xs text-gray-500 hover:text-gray-700">
