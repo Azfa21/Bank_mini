@@ -69,6 +69,16 @@ npm run build
 php artisan serve
 ```
 
+### Membersihkan Data Testing (Peluncuran)
+```bash
+# Hapus seluruh data nasabah, transaksi, jurnal, laporan, dan audit log hasil testing.
+# Akun staff (admin/teller/supervisor) beserta passwordnya dan konfigurasi sistem tetap utuh.
+php artisan bankmini:reset-nasabah
+
+# Tanpa prompt konfirmasi (untuk skrip/deployment)
+php artisan bankmini:reset-nasabah --force
+```
+
 ### Menjalankan Pengujian (Testing)
 ```bash
 # Jalankan seluruh unit & feature tests

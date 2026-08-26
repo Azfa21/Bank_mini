@@ -39,8 +39,13 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::resource('users', UserController::class)->except(['show']);
     Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
-    Route::resource('customers', CustomerController::class)->except(['show']);
+    Route::get('customers/import', [CustomerController::class, 'importForm'])->name('customers.import.form');
+    Route::get('customers/import/template', [CustomerController::class, 'importTemplate'])->name('customers.import.template');
+    Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
+    Route::resource('customers', CustomerController::class)->except(['show', 'destroy']);
+    Route::patch('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
 
+    Route::get('accounts/{account}/card/print', [AccountController::class, 'printCard'])->name('accounts.card-print');
     Route::get('accounts/{account}', [AccountController::class, 'show'])->name('accounts.show');
 
     Route::get('config', [SystemConfigController::class, 'edit'])->name('config.edit');
@@ -94,6 +99,7 @@ Route::middleware(['role:supervisor'])->prefix('supervisor')->group(function () 
 
 Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {
     Route::get('/dashboard', [NasabahDashboardController::class, 'index'])->name('nasabah.dashboard');
+    Route::get('/card/print', [NasabahDashboardController::class, 'printCard'])->name('nasabah.card.print');
     Route::get('/mutasi', [MutasiController::class, 'index'])->name('nasabah.mutasi');
     Route::get('/statement', [MutasiController::class, 'statement'])->name('nasabah.statement');
 });

@@ -72,19 +72,6 @@ class DepositTest extends TellerTestCase
         $this->assertSame(25000, $this->account->refresh()->balance);
     }
 
-    public function test_deposit_requires_slip_number(): void
-    {
-        $this->actingAsTeller()
-            ->post(route('teller.deposits.store', $this->account), [
-                'slip_number' => '',
-                'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
-            ])
-            ->assertSessionHasErrors('slip_number');
-
-        $this->assertSame(0, Transaction::count());
-    }
-
     public function test_deposit_rejected_on_inactive_account(): void
     {
         $this->account->update(['status' => 'closed']);

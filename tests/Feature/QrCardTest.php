@@ -37,6 +37,21 @@ class QrCardTest extends TellerTestCase
         );
     }
 
+    public function test_qr_includes_white_background_and_quiet_zone(): void
+    {
+        $content = $this->actingAsTeller()
+            ->get(route('qr.download', ['data' => '2026/2027-001']))
+            ->getContent();
+
+        $this->assertStringContainsString('<rect width="100%" height="100%" fill="#ffffff"/>', $content);
+
+        $this->assertMatchesRegularExpression(
+            '/translate\(4,4\)/',
+            $content,
+            'QR must be rendered with a 4-module quiet zone.'
+        );
+    }
+
     public function test_all_roles_can_access_qr_endpoints(): void
     {
         foreach ([

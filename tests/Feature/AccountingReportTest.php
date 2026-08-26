@@ -45,6 +45,15 @@ class AccountingReportTest extends TellerTestCase
             ->assertSee('101 — Kas Teller');
     }
 
+    public function test_general_ledger_dropdown_marks_selected_account_code(): void
+    {
+        $this->actingAs($this->admin, 'web')
+            ->get(route('admin.reports.general-ledger', ['account_code' => '102']))
+            ->assertOk()
+            ->assertSee('value="102" selected', false)
+            ->assertDontSee('value="101" selected', false);
+    }
+
     public function test_admin_can_open_trial_balance(): void
     {
         $this->actingAs($this->admin, 'web')

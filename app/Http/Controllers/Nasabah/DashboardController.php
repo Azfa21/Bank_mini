@@ -34,4 +34,38 @@ class DashboardController extends Controller
 
         return view('nasabah.dashboard', compact('nasabah', 'account', 'lastTransaction'));
     }
+
+    public function printCard()
+    {
+        $nasabah = Auth::guard('nasabah')->user();
+        $account = $nasabah?->account;
+
+        if (! $account) {
+            if ($this->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda belum memiliki rekening aktif.',
+                ], 404);
+            }
+
+            return redirect()
+                ->route('nasabah.dashboard')
+                ->with('error', 'Anda belum memiliki rekening aktif.');
+        }
+
+        $account->load('customer');
+
+        if ($this->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $account,
+            ]);
+        }
+
+        return view('cards.print', [
+            'account' => $account,
+            'sectionLabel' => 'Nasabah',
+            'backUrl' => route('nasabah.dashboard'),
+        ]);
+    }
 }

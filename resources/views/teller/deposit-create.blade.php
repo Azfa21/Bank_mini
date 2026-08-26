@@ -34,12 +34,6 @@
                     @csrf
 
                     <div>
-                        <x-input-label for="slip_number" size="xs">Nomor Slip *</x-input-label>
-                        <x-input id="slip_number" name="slip_number" placeholder="Contoh: SLIP-20260802-001" required />
-                        <x-input-error :message="$errors->first('slip_number')" />
-                    </div>
-
-                    <div>
                         <x-input-label for="slip_amount" size="xs">Nominal pada Slip *</x-input-label>
                         <x-input id="slip_amount" name="slip_amount" type="number" min="1" step="1" placeholder="Contoh: 100000" required />
                         <x-input-error :message="$errors->first('slip_amount')" />

@@ -9,9 +9,14 @@
             <h1 class="text-xl font-semibold text-gray-900">Daftar Nasabah</h1>
             <p class="text-sm text-gray-500 mt-1">Profil siswa dan rekening tabungan.</p>
         </div>
-        <a href="{{ route('admin.customers.create') }}" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            + Tambah Nasabah
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.customers.import.form') }}" class="bg-white border border-gray-300 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                Import CSV
+            </a>
+            <a href="{{ route('admin.customers.create') }}" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                + Tambah Nasabah
+            </a>
+        </div>
     </div>
 
     <form method="GET" class="flex flex-wrap gap-2 mb-4">
@@ -52,10 +57,15 @@
                         </td>
                         <td class="px-5 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
+                                @if ($customer->account)
+                                    <a href="{{ route('admin.accounts.card-print', $customer->account) }}" class="text-indigo-600 hover:text-indigo-800 text-xs">Kartu</a>
+                                @endif
                                 <a href="{{ route('admin.customers.edit', $customer) }}" class="text-blue-600 hover:text-blue-800 text-xs">Ubah</a>
-                                <form method="POST" action="{{ route('admin.customers.destroy', $customer) }}" class="inline" onsubmit="return confirm('Hapus nasabah ini?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs">Hapus</button>
+                                <form method="POST" action="{{ route('admin.customers.toggle-status', $customer) }}" class="inline" onsubmit="return confirm('{{ $customer->status === 'active' ? 'Blokir nasabah ini?' : 'Aktifkan kembali nasabah ini?' }}')">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="text-xs {{ $customer->status === 'active' ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800' }}">
+                                        {{ $customer->status === 'active' ? 'Blokir' : 'Aktifkan' }}
+                                    </button>
                                 </form>
                             </div>
                         </td>

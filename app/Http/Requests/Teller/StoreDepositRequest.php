@@ -15,7 +15,7 @@ class StoreDepositRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'slip_number' => ['required', 'string', 'max:30'],
+            'slip_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'slip_amount' => ['required', 'integer', 'min:1'],
             'physical_cash_amount' => ['required', 'integer', 'min:1'],
         ];

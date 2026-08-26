@@ -184,7 +184,7 @@ class TransactionService
                 'balance_before' => $sourceBalanceBefore,
                 'balance_after' => $sourceBalanceAfter,
                 'receipt_number' => $this->generateTransactionNumber(),
-                'slip_number' => $data['slip_number'] ?? null,
+                'slip_number' => $data['slip_number'] ?? $this->generateSlipNumber(),
                 'notes' => $notes,
                 'status' => 'success',
                 'transaction_at' => now(),
@@ -285,7 +285,7 @@ class TransactionService
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
             'receipt_number' => $this->generateTransactionNumber(),
-            'slip_number' => $data['slip_number'] ?? null,
+            'slip_number' => $data['slip_number'] ?? $this->generateSlipNumber(),
             'slip_amount' => isset($data['slip_amount']) ? (int) $data['slip_amount'] : null,
             'physical_cash_amount' => isset($data['physical_cash_amount']) ? (int) $data['physical_cash_amount'] : null,
             'notes' => $data['notes'] ?? null,
@@ -375,11 +375,22 @@ class TransactionService
         if ($account->status !== 'active') {
             throw new TransactionValidationException('Rekening tidak aktif.');
         }
+
+        if ($account->customer && $account->customer->status !== 'active') {
+            throw new TransactionValidationException('Nasabah dalam status diblokir.');
+        }
     }
 
     protected function generateTransactionNumber(): string
     {
         $key = 'TRX-'.now()->format('Ymd');
+
+        return $this->sequences->formatted($key, $key);
+    }
+
+    protected function generateSlipNumber(): string
+    {
+        $key = 'SLIP-'.now()->format('Ymd');
 
         return $this->sequences->formatted($key, $key);
     }

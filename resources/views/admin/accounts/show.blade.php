@@ -70,6 +70,6 @@
 
     <div class="mt-8">
         <h2 class="text-sm font-medium text-gray-900 mb-3">Kartu Nasabah Virtual</h2>
-        @include('partials.virtual-card', ['account' => $account, 'customer' => $account->customer])
+        @include('partials.virtual-card', ['account' => $account, 'customer' => $account->customer, 'cardPrintUrl' => route('admin.accounts.card-print', $account)])
     </div>
 @endsection

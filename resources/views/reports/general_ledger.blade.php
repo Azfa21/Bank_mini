@@ -25,7 +25,7 @@
             <x-input-label for="account_code" size="xs">Kode Akun</x-input-label>
             <x-select id="account_code" name="account_code" :block="false">
                 @foreach ($accounts as $code => $info)
-                    <option value="{{ $code }}" @selected($accountCode === $code)>{{ $code }} — {{ $info['name'] }}</option>
+                    <option value="{{ $code }}" @selected((string) $accountCode === (string) $code)>{{ $code }} — {{ $info['name'] }}</option>
                 @endforeach
             </x-select>
         </div>
@@ -57,10 +57,16 @@
         </div>
     </div>
 
+    @if ($endingBalance < 0)
+        <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-6">
+            Peringatan: saldo akhir akun ini negatif. Untuk akun kas, artinya mutasi jurnal pengeluaran melebihi penerimaan — segera periksa riwayat jurnal dan lakukan rekonsiliasi fisik.
+        </div>
+    @endif
+
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
         <div class="flex justify-between items-center">
             <span class="text-sm text-gray-500">Saldo Akhir Buku Besar ({{ $accounts[$accountCode]['normal'] === 'debit' ? 'Normal Debit' : 'Normal Kredit' }})</span>
-            <span class="text-xl font-semibold text-blue-600">Rp {{ number_format($endingBalance, 0, ',', '.') }}</span>
+            <span class="text-xl font-semibold {{ $endingBalance < 0 ? 'text-red-600' : 'text-blue-600' }}">Rp {{ number_format($endingBalance, 0, ',', '.') }}</span>
         </div>
     </div>
 

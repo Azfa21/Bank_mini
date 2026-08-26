@@ -38,7 +38,8 @@ class CustomerSeeder extends Seeder
             $this->command->info("Nasabah [{$studentNumber}] {$fullName} -> PIN: 123456");
 
             $academicYear = date('Y').'/'.(date('Y') + 1);
-            $accountNumber = $academicYear.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT);
+            $startYear = date('y');
+            $accountNumber = '10'.$startYear.((int) $startYear + 1).str_pad($i + 1, 4, '0', STR_PAD_LEFT);
 
             Account::create([
                 'account_number' => $accountNumber,

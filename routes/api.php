@@ -32,8 +32,9 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
 
     Route::get('/customers', [CustomerController::class, 'index']);
     Route::post('/customers', [CustomerController::class, 'store']);
+    Route::post('/customers/import', [CustomerController::class, 'import']);
     Route::match(['put', 'patch'], '/customers/{customer}', [CustomerController::class, 'update']);
-    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy']);
+    Route::patch('/customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus']);
 
     Route::get('/accounts/{account}', [AccountController::class, 'show']);
 

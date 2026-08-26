@@ -51,7 +51,7 @@
 
             <div class="lg:col-span-2">
                 <h2 class="text-sm font-medium text-gray-900 mb-3">Kartu Nasabah Virtual</h2>
-                @include('partials.virtual-card', ['account' => $account, 'customer' => $nasabah])
+                @include('partials.virtual-card', ['account' => $account, 'customer' => $nasabah, 'cardPrintUrl' => route('nasabah.card.print')])
             </div>
         </div>
 

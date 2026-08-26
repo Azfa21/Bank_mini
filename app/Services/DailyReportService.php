@@ -9,9 +9,7 @@ use App\Models\JurnalAkuntansi;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-
-class DailyReportService
+use Illuminate\Support\Facades\DB;class DailyReportService
 {
     public function __construct(
         protected SequenceService $sequences,
@@ -19,11 +17,26 @@ class DailyReportService
 
     public function recap(User $teller, string $date): array
     {
-        $opening = (int) DailyReport::where('teller_id', $teller->id)
+        // Model brankas: setiap laporan yang disetujui menyapu seluruh kas laci ke brankas,
+        // sehingga saldo awal = mutasi kas yang belum tersapu sebelum tanggal ini.
+        $totalDepositBefore = (int) Transaction::where('teller_id', $teller->id)
+            ->whereDate('transaction_at', '<', $date)
+            ->where('status', 'success')
+            ->where('type', 'deposit')
+            ->sum('amount');
+
+        $totalWithdrawalBefore = (int) Transaction::where('teller_id', $teller->id)
+            ->whereDate('transaction_at', '<', $date)
+            ->where('status', 'success')
+            ->where('type', 'withdrawal')
+            ->sum('amount');
+
+        $sweptBefore = (int) DailyReport::where('teller_id', $teller->id)
             ->whereDate('report_date', '<', $date)
             ->where('status', 'approved')
-            ->orderByDesc('report_date')
-            ->value('closing_balance_system');
+            ->sum(DB::raw('COALESCE(closing_balance_physical, closing_balance_system)'));
+
+        $opening = $totalDepositBefore - $totalWithdrawalBefore - $sweptBefore;
 
         $totalDeposit = (int) Transaction::where('teller_id', $teller->id)
             ->whereDate('transaction_at', $date)
@@ -140,6 +153,16 @@ class DailyReportService
 
             $transferAmount = $locked->closing_balance_physical ?? $locked->closing_balance_system;
 
+            if ($transferAmount > 0 && $this->cashLedgerHasEntries()) {
+                $drawerBalance = $this->cashTellerLedgerBalance();
+
+                if ($transferAmount > $drawerBalance) {
+                    throw new TransactionValidationException(
+                        'Pemindahan kas ditolak karena saldo kas laci berdasarkan jurnal hanya Rp '.number_format(max(0, $drawerBalance)).'.'
+                    );
+                }
+            }
+
             $cashTransfer = CashTransfer::create([
                 'report_id' => $locked->id,
                 'supervisor_id' => $supervisor->id,
@@ -234,5 +257,17 @@ class DailyReportService
         $key = 'RPT-'.str_replace('-', '', $date);
 
         return $this->sequences->formatted($key, $key);
+    }
+
+    protected function cashLedgerHasEntries(): bool
+    {
+        return JurnalAkuntansi::where('account_code', AccountingService::ACCOUNT_CODE_CASH_TELLER)->exists();
+    }
+
+    protected function cashTellerLedgerBalance(): int
+    {
+        return (int) JurnalAkuntansi::where('account_code', AccountingService::ACCOUNT_CODE_CASH_TELLER)
+            ->selectRaw('COALESCE(SUM(debit_amount), 0) - COALESCE(SUM(credit_amount), 0) as balance')
+            ->value('balance');
     }
 }

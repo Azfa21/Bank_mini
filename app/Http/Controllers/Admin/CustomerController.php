@@ -3,18 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ImportCustomersRequest;
 use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Services\AccountService;
+use App\Services\CustomerImportService;
+use App\Services\SequenceService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
 {
     public function __construct(
         protected AccountService $accounts,
+        protected SequenceService $sequences,
+        protected CustomerImportService $imports,
     ) {}
 
     public function index()
@@ -53,8 +60,14 @@ class CustomerController extends Controller
     public function store(StoreCustomerRequest $request)
     {
         $customer = DB::transaction(function () use ($request) {
+            $year = now()->format('Y');
+
+            do {
+                $candidate = sprintf('%s%04d', $year, $this->sequences->next("NIS-{$year}"));
+            } while (Customer::where('student_number', $candidate)->exists());
+
             $created = Customer::create([
-                'student_number' => $request->student_number,
+                'student_number' => $candidate,
                 'full_name' => $request->full_name,
                 'class_name' => $request->class_name,
                 'phone_number' => $request->phone_number,
@@ -106,17 +119,70 @@ class CustomerController extends Controller
         return redirect()->route('admin.customers.index')->with('success', 'Profil nasabah berhasil diperbarui.');
     }
 
-    public function destroy(Customer $customer)
+    public function toggleStatus(Customer $customer)
     {
-        $customer->delete();
+        $customer->update(['status' => $customer->status === 'active' ? 'blocked' : 'active']);
+
+        $label = $customer->status === 'active' ? 'diaktifkan' : 'diblokir';
 
         if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Profil nasabah berhasil dihapus.',
+                'message' => "Nasabah {$customer->full_name} berhasil {$label}.",
+                'data' => $customer->fresh(),
             ]);
         }
 
-        return redirect()->route('admin.customers.index')->with('success', 'Profil nasabah berhasil dihapus.');
+        return redirect()->route('admin.customers.index')->with('success', "Nasabah {$customer->full_name} berhasil {$label}.");
+    }
+
+    public function importForm(): View
+    {
+        return view('admin.customers.import');
+    }
+
+    public function import(ImportCustomersRequest $request)
+    {
+        try {
+            $summary = $this->imports->importFromCsv(
+                $request->file('file')->getRealPath(),
+                (int) $request->user()->id,
+            );
+        } catch (InvalidArgumentException $e) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$summary['imported']} nasabah berhasil diimpor.",
+                'data' => $summary,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.customers.import.form')
+            ->with('import_summary', $summary);
+    }
+
+    public function importTemplate(): StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $handle = fopen('php://output', 'wb');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['nis', 'nama', 'kelas', 'no_hp']);
+            fputcsv($handle, ['20260001', 'Budi Santoso', 'VII A', '081234567001']);
+            fputcsv($handle, ['20260002', 'Citra Lestari', 'VII B', '081234567002']);
+
+            fclose($handle);
+        }, 'template-import-nasabah.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

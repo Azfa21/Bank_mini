@@ -16,7 +16,7 @@
             <form method="GET" action="{{ route('teller.customers.lookup') }}" class="space-y-4">
                 <div>
                     <x-input-label for="q" size="xs">Nomor rekening atau nilai QR Code</x-input-label>
-                    <x-input id="q" name="q" :value="request('q')" placeholder="Contoh: 2026/2027-001" autofocus />
+                    <x-input id="q" name="q" :value="request('q')" placeholder="Contoh: 1026270001" autofocus />
                 </div>
                 <x-primary-button class="w-full">
                     Cari Nasabah

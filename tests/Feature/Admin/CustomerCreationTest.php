@@ -5,22 +5,25 @@ namespace Tests\Feature\Admin;
 use App\Models\Account;
 use App\Models\Customer;
 use App\Services\SequenceService;
-use Illuminate\Support\Str;
 use RuntimeException;
 use Tests\Feature\Teller\TellerTestCase;
 
 class CustomerCreationTest extends TellerTestCase
 {
-    private function academicYear(): string
+    private function compactAcademicYear(): string
     {
-        return now()->format('Y').'/'.(now()->format('Y') + 1);
+        return now()->format('y').((int) now()->format('y') + 1);
     }
 
-    public function test_store_creates_customer_with_account_in_sequence(): void
+    private function expectedAccountNumber(int $ordinal): string
+    {
+        return '10'.$this->compactAcademicYear().str_pad((string) $ordinal, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function test_store_generates_student_number_and_account_in_sequence(): void
     {
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
-                'student_number' => '2026001',
                 'full_name' => 'Budi Santoso',
                 'class_name' => 'VII A',
                 'phone_number' => '081234567777',
@@ -28,50 +31,47 @@ class CustomerCreationTest extends TellerTestCase
             ])
             ->assertRedirect(route('admin.customers.index'));
 
-        $customer = Customer::where('student_number', '2026001')->firstOrFail();
+        $customer = Customer::where('full_name', 'Budi Santoso')->firstOrFail();
         $account = Account::where('customer_id', $customer->id)->firstOrFail();
 
-        $expectedOrdinal = Account::where('academic_year', $this->academicYear())
-            ->whereKeyNot($account->id)
-            ->get()
-            ->filter(fn (Account $existing) => str($existing->account_number)->contains('-'))
-            ->map(fn (Account $existing) => (int) Str::afterLast($existing->account_number, '-'))
-            ->max();
-
-        $this->assertSame(
-            $this->academicYear().'-'.str_pad((string) ($expectedOrdinal + 1), 3, '0', STR_PAD_LEFT),
-            $account->account_number
-        );
+        $this->assertSame(now()->format('Y').'0001', $customer->student_number);
+        $this->assertSame($this->expectedAccountNumber(1), $account->account_number);
+        $this->assertSame(now()->format('Y').'/'.(now()->format('Y') + 1), $account->academic_year);
         $this->assertSame(0, $account->balance);
         $this->assertSame(10000, $account->minimum_balance);
         $this->assertSame('active', $account->status);
     }
 
-    public function test_consecutive_creations_produce_distinct_numbers(): void
+    public function test_consecutive_creations_produce_sequential_numbers(): void
     {
-        foreach ([['2026002', 'Citra Lestari'], ['2026003', 'Dewi Anggraini']] as [$nis, $name]) {
+        foreach ([['Citra Lestari'], ['Dewi Anggraini']] as [$name]) {
             $this->actingAs($this->admin, 'web')
                 ->post(route('admin.customers.store'), [
-                    'student_number' => $nis,
                     'full_name' => $name,
                     'pin' => '123456',
                 ])
                 ->assertRedirect(route('admin.customers.index'));
         }
 
-        $numbers = Account::whereIn('customer_id', Customer::whereIn('student_number', ['2026002', '2026003'])->pluck('id'))
+        $customers = Customer::whereIn('full_name', ['Citra Lestari', 'Dewi Anggraini'])
+            ->orderBy('id')
+            ->get();
+
+        $this->assertCount(2, $customers);
+        $this->assertSame(
+            [now()->format('Y').'0001', now()->format('Y').'0002'],
+            $customers->pluck('student_number')->all(),
+        );
+
+        $numbers = Account::whereIn('customer_id', $customers->pluck('id'))
+            ->orderBy('customer_id')
             ->pluck('account_number')
             ->all();
 
-        $this->assertCount(2, $numbers);
-        $this->assertCount(2, array_unique($numbers));
-
-        $ordinals = array_map(fn (string $number) => (int) Str::afterLast($number, '-'), $numbers);
-        sort($ordinals);
-        $this->assertSame([$ordinals[0], $ordinals[0] + 1], $ordinals);
+        $this->assertSame([$this->expectedAccountNumber(1), $this->expectedAccountNumber(2)], $numbers);
     }
 
-    public function test_new_account_number_continues_after_legacy_higher_ordinal(): void
+    public function test_new_numbering_is_independent_of_legacy_format_accounts(): void
     {
         $legacyCustomer = Customer::create([
             'student_number' => 'LEGACY001',
@@ -85,45 +85,75 @@ class CustomerCreationTest extends TellerTestCase
         ]);
 
         Account::create([
-            'account_number' => $this->academicYear().'-009',
+            'account_number' => now()->format('Y').'/'.(now()->format('Y') + 1).'-009',
             'customer_id' => $legacyCustomer->id,
             'balance' => 0,
             'opening_balance' => 0,
             'minimum_balance' => 10000,
-            'academic_year' => $this->academicYear(),
+            'academic_year' => now()->format('Y').'/'.(now()->format('Y') + 1),
             'status' => 'active',
             'opened_at' => now(),
         ]);
 
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
-                'student_number' => '2026010',
                 'full_name' => 'Eko Prasetyo',
                 'pin' => '123456',
             ])
             ->assertRedirect(route('admin.customers.index'));
 
-        $newCustomer = Customer::where('student_number', '2026010')->firstOrFail();
+        $newCustomer = Customer::where('full_name', 'Eko Prasetyo')->firstOrFail();
         $newAccount = Account::where('customer_id', $newCustomer->id)->firstOrFail();
 
-        $this->assertSame($this->academicYear().'-010', $newAccount->account_number);
+        $this->assertSame($this->expectedAccountNumber(1), $newAccount->account_number);
+    }
+
+    public function test_customer_can_edit_generated_student_number(): void
+    {
+        $this->actingAs($this->admin, 'web')
+            ->post(route('admin.customers.store'), [
+                'full_name' => 'Fajar Nugroho',
+                'pin' => '123456',
+            ])
+            ->assertRedirect(route('admin.customers.index'));
+
+        $customer = Customer::where('full_name', 'Fajar Nugroho')->firstOrFail();
+        $this->assertSame(now()->format('Y').'0001', $customer->student_number);
+
+        $this->actingAs($this->admin, 'web')
+            ->put(route('admin.customers.update', $customer), [
+                'student_number' => '20235999',
+                'full_name' => 'Fajar Nugroho',
+                'status' => 'active',
+            ])
+            ->assertRedirect(route('admin.customers.index'));
+
+        $this->assertDatabaseHas('customers', [
+            'id' => $customer->id,
+            'student_number' => '20235999',
+        ]);
     }
 
     public function test_customer_is_rolled_back_when_account_opening_fails(): void
     {
         $this->mock(SequenceService::class, function ($mock) {
-            $mock->shouldReceive('next')->andThrow(new RuntimeException('sequence failure'));
+            $mock->shouldReceive('next')->andReturnUsing(function (string $key): int {
+                if (str_starts_with($key, 'ACC-')) {
+                    throw new RuntimeException('sequence failure');
+                }
+
+                return 1;
+            });
         });
 
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
-                'student_number' => '2026999',
                 'full_name' => 'Gagal Buat',
                 'pin' => '123456',
             ])
             ->assertServerError();
 
-        $this->assertDatabaseMissing('customers', ['student_number' => '2026999']);
+        $this->assertDatabaseMissing('customers', ['full_name' => 'Gagal Buat']);
         $this->assertDatabaseCount('accounts', 1);
     }
 }

@@ -13,8 +13,8 @@
         <form method="POST" action="{{ route('admin.customers.store') }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
             @csrf
             <div>
-                <x-input-label for="student_number">Nomor Siswa</x-input-label>
-                <x-input id="student_number" name="student_number" required />
+                <x-input-label>Nomor Siswa</x-input-label>
+                <p class="text-sm text-gray-500">Dibuat otomatis oleh sistem setelah nasabah disimpan.</p>
             </div>
             <div>
                 <x-input-label for="full_name">Nama Lengkap</x-input-label>

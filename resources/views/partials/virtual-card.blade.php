@@ -3,6 +3,7 @@
     $qrValue = $customer->qr_code_value ?? ('BMS:'.$account->account_number);
     $qrUrl = route('qr.show', ['data' => $qrValue, 'size' => 160]);
     $qrDownloadUrl = route('qr.download', ['data' => $qrValue, 'size' => 400]);
+    $cardPrintUrl = $cardPrintUrl ?? null;
 @endphp
 
 <div class="bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg max-w-md">
@@ -52,11 +53,21 @@
         </svg>
         Unduh QR
     </a>
-    <button onclick="window.print()"
-        class="inline-flex items-center gap-1.5 text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors print:hidden">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2m-12-4h.01M18 14h.01M6 21h12v-6H6v6z"/>
-        </svg>
-        Cetak Kartu
-    </button>
+    @if ($cardPrintUrl)
+        <a href="{{ $cardPrintUrl }}"
+            class="inline-flex items-center gap-1.5 text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2m-12-4h.01M18 14h.01M6 21h12v-6H6v6z"/>
+            </svg>
+            Cetak Kartu
+        </a>
+    @else
+        <button onclick="window.print()"
+            class="inline-flex items-center gap-1.5 text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors print:hidden">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2m-12-4h.01M18 14h.01M6 21h12v-6H6v6z"/>
+            </svg>
+            Cetak Kartu
+        </button>
+    @endif
 </div>

@@ -37,7 +37,7 @@
                     <div>
                         <x-input-label for="recipient_account_number" size="xs">Nomor Rekening Tujuan *</x-input-label>
                         <x-input id="recipient_account_number" name="recipient_account_number"
-                            class="font-mono" placeholder="Contoh: 2026/2027-002" required />
+                            class="font-mono" placeholder="Contoh: 1026270002" required />
                         <x-input-error :message="$errors->first('recipient_account_number')" />
                     </div>
 
@@ -52,12 +52,6 @@
                         <x-input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6"
                             class="tracking-widest" placeholder="••••••" required />
                         <x-input-error :message="$errors->first('pin')" />
-                    </div>
-
-                    <div>
-                        <x-input-label for="slip_number" size="xs">Nomor Slip</x-input-label>
-                        <x-input id="slip_number" name="slip_number" placeholder="Opsional" />
-                        <x-input-error :message="$errors->first('slip_number')" />
                     </div>
 
                     <div>
