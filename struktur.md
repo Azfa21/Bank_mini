@@ -123,6 +123,42 @@ Tasks:
 - Implementasikan penguncian akun dan audit log saat salah PIN berulang kali.
 - Refactor generator nomor transaksi dan nomor laporan dengan sequence anti-collision.
 - Tambahkan widget analitik keuangan dan grafik performa pada dashboard.
+FASE 9 — Penyempurnaan Berbasis Riset Pengguna (24/24) — Status: Selesai  
+Sub-Fitur:
+- Rincian uang kertas & logam pada transaksi dan penutupan kas
+- Biaya administrasi penarikan (akun pendapatan 401)
+- Struk transaksi lengkap (nama bank, referensi jurnal, terbilang, biaya admin, status)
+- Jurnal koreksi/pembalik oleh Supervisor
+- Pencarian nasabah berdasarkan nama/NIS/nomor rekening
+- Registrasi nasabah didampingi Teller
+- Laporan Laba Rugi dan Neraca (akun 401 & 501)
+- Konfigurasi produk (nama bank, jam operasional, batas penarikan tanpa pesanan)
+Tasks:
+- Buat helper CashDenomination dan Terbilang sebagai fondasi fitur revisi.
+- Buat migration kolom admin_fee, denomination_breakdown, dan kolom reversal pada transactions.
+- Buat migration kolom closing_breakdown dan total_admin_fee pada daily_reports serta default konfigurasi produk.
+- Implementasikan perhitungan biaya administrasi penarikan dan jurnal pendapatan akun 401.
+- Implementasikan validasi batas maksimal penarikan tanpa pesanan.
+- Buat komponen Blade input rincian pecahan uang kertas & logam.
+- Hubungkan form setoran, penarikan, dan penutupan kas dengan rincian pecahan.
+- Simpan dan tampilkan rincian pecahan pada laporan harian beserta halaman cetak.
+- Perkaya struk transaksi dengan informasi bank, referensi jurnal, terbilang, biaya admin, dan status.
+- Buat ReversalService untuk jurnal pembalik dan pemulihan saldo.
+- Tambahkan kolom penanda koreksi pada transaksi asal.
+- Buat endpoint koreksi transaksi dengan otorisasi Supervisor.
+- Tambahkan aksi koreksi pada halaman detail laporan Supervisor.
+- Tolak koreksi transaksi bila laporan harian tanggal tersebut sudah disetujui.
+- Uji integritas koreksi: transfer, saldo tidak mencukupi, dampak rekap kas, dan tampilan mutasi/buku tabungan.
+- Perbaiki kata terbilang Rupiah agar tidak menyisakan "Nol" berlebih.
+- Perbaiki down() migrasi customers dan daily_reports agar proses rollback berjalan.
+- Verifikasi menghapus dan menyetel ulang seluruh migrasi pada database uji.
+- Perluas pencarian nasabah berdasarkan nama, NIS, dan nomor rekening.
+- Buat halaman hasil pencarian ketika terdapat lebih dari satu kecocokan.
+- Buat CustomerRegistrationService dan modul registrasi nasabah untuk Teller.
+- Tambahkan akun 401 dan 501 ke chart of accounts.
+- Buat laporan Laba Rugi dan Neraca untuk Administrator dan Supervisor.
+- Perluas halaman konfigurasi sistem Administrator.
+- Perbarui menu navigasi dan dashboard Teller untuk fitur baru.
 Asumsi:
 - Role Nasabah mengakses dasbor dan riwayat mutasi melalui autentikasi atau identitas rekening yang telah ditentukan sistem.
 - Detail tabel database tidak dirinci karena struktur ini belum mencakup skema basis data.

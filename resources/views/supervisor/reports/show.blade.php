@@ -62,6 +62,10 @@
                         <span class="text-gray-500">Total Penarikan</span>
                         <span class="font-mono text-red-600">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Biaya Administrasi</span>
+                        <span class="font-mono">Rp {{ number_format($report->total_admin_fee, 0, ',', '.') }}</span>
+                    </div>
                     <div class="flex justify-between pt-2 border-t border-gray-100 font-semibold">
                         <span class="text-gray-900">Saldo Sistem</span>
                         <span class="font-mono text-gray-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</span>
@@ -98,6 +102,25 @@
                     </div>
                 @endif
             </div>
+
+            @if ($report->closing_breakdown)
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <p class="text-xs text-gray-500 mb-3">Rincian Uang Kertas &amp; Logam</p>
+                    <div class="text-sm space-y-1">
+                        @foreach (\App\Support\CashDenomination::GROUPS as $group => $info)
+                            @foreach ($info['values'] as $value)
+                                @php $key = $group.'_'.$value; @endphp
+                                @if (isset($report->closing_breakdown[$key]))
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">{{ \App\Support\CashDenomination::label($value) }}</span>
+                                        <span class="font-mono">{{ $report->closing_breakdown[$key] }} × = Rp {{ number_format($value * $report->closing_breakdown[$key], 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             @if ($report->status === 'submitted')
                 <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
@@ -148,21 +171,55 @@
                             <th class="px-5 py-3">Waktu</th>
                             <th class="px-5 py-3">Jenis</th>
                             <th class="px-5 py-3 text-right">Nominal</th>
+                            <th class="px-5 py-3 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @forelse ($transactions as $transaction)
+                            @php
+                                $typeLabel = match ($transaction->type) {
+                                    'deposit' => 'Setoran',
+                                    'withdrawal' => 'Penarikan',
+                                    'transfer' => 'Transfer',
+                                    'reversal' => 'Koreksi',
+                                    default => ucfirst($transaction->type),
+                                };
+                                $isCredit = $transaction->type === 'deposit'
+                                    || ($transaction->type === 'reversal' && $transaction->reversalOf?->type === 'withdrawal');
+                                $canReverse = $report->status !== 'approved'
+                                    && $transaction->status === 'success'
+                                    && $transaction->type !== 'reversal';
+                            @endphp
                             <tr>
-                                <td class="px-5 py-3 font-mono">{{ $transaction->receipt_number }}</td>
+                                <td class="px-5 py-3 font-mono">
+                                    {{ $transaction->receipt_number }}
+                                    @if ($transaction->status === 'reversed')
+                                        <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700">Dikoreksi</span>
+                                    @elseif ($transaction->type === 'reversal')
+                                        <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">Pembalik</span>
+                                    @endif
+                                </td>
                                 <td class="px-5 py-3 font-mono">{{ $transaction->transaction_at?->format('d/m/Y H:i') }}</td>
-                                <td class="px-5 py-3">{{ $transaction->type === 'deposit' ? 'Setoran' : 'Penarikan' }}</td>
-                                <td class="px-5 py-3 text-right font-mono {{ $transaction->type === 'deposit' ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $transaction->type === 'deposit' ? '+' : '−' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                                <td class="px-5 py-3">{{ $typeLabel }}</td>
+                                <td class="px-5 py-3 text-right font-mono {{ $isCredit ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $isCredit ? '+' : '−' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                                </td>
+                                <td class="px-5 py-3 text-right">
+                                    @if ($canReverse)
+                                        <form method="POST" action="{{ route('supervisor.transactions.reverse', $transaction) }}"
+                                            onsubmit="var r = prompt('Alasan koreksi untuk {{ $transaction->receipt_number }}:', 'Salah input transaksi'); if (r === null || r.trim().length < 5) { return false; } this.reason.value = r.trim(); return true;">
+                                            @csrf
+                                            <input type="hidden" name="reason" value="">
+                                            <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">Koreksi</button>
+                                        </form>
+                                    @else
+                                        <span class="text-xs text-gray-300">—</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-5 py-6 text-center text-sm text-gray-500">Tidak ada transaksi.</td>
+                                <td colspan="5" class="px-5 py-6 text-center text-sm text-gray-500">Tidak ada transaksi.</td>
                             </tr>
                         @endforelse
                     </tbody>

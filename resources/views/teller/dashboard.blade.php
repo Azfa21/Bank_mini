@@ -7,6 +7,13 @@
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-gray-900">Dashboard Teller</h1>
         <p class="text-sm text-gray-500 mt-1">Layani transaksi setoran dan penarikan nasabah.</p>
+        <p class="text-xs text-gray-400 mt-1">
+            Jam operasional: {{ \App\Models\SystemConfig::value('operational_hours', '07.30 - 14.00 WIB') }}
+            @php $maxWithoutOrder = (int) \App\Models\SystemConfig::value('max_withdrawal_without_order', 0); @endphp
+            @if ($maxWithoutOrder > 0)
+                · Batas penarikan tanpa pesanan: Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}
+            @endif
+        </p>
     </div>
 
     @php
@@ -46,9 +53,13 @@
             <div class="text-sm font-medium text-gray-900">Transaksi Loket</div>
             <div class="text-xs text-gray-500 mt-1">Mulai setoran atau penarikan tunai setelah menemukan nasabah.</div>
         </a>
+        <a href="{{ route('teller.customers.register') }}" class="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 transition-colors">
+            <div class="text-sm font-medium text-gray-900">Registrasi Nasabah</div>
+            <div class="text-xs text-gray-500 mt-1">Daftarkan nasabah baru didampingi Teller, nomor rekening otomatis.</div>
+        </a>
         <a href="{{ route('teller.closing.index') }}" class="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 transition-colors">
             <div class="text-sm font-medium text-gray-900">Penutupan Kas</div>
-            <div class="text-xs text-gray-500 mt-1">Rekonsiliasi uang fisik dan buat laporan harian.</div>
+            <div class="text-xs text-gray-500 mt-1">Rekonsiliasi rincian uang fisik dan buat laporan harian.</div>
         </a>
     </div>
 @endsection

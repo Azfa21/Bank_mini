@@ -88,3 +88,30 @@ FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna
 - [x] Implementasikan proteksi brute-force PIN (kunci akun setelah 3 kali gagal + catat audit log).
 - [x] Refactor generator nomor transaksi dan laporan ke sequence yang anti-collision.
 - [x] Tambahkan kartu metrik analitik dan grafik keuangan pada dashboard Admin dan Supervisor.
+FASE 9 — Penyempurnaan Berbasis Riset Pengguna (Revisi Besar)
+- [x] Buat helper rincian pecahan uang kertas & logam (CashDenomination) dan helper terbilang Rupiah (Terbilang).
+- [x] Tambahkan kolom admin_fee, denomination_breakdown, serta kolom reversal pada tabel transactions (migration).
+- [x] Tambahkan kolom closing_breakdown dan total_admin_fee pada tabel daily_reports (migration).
+- [x] Implementasikan biaya administrasi penarikan beserta jurnal pendapatan akun 401.
+- [x] Implementasikan validasi batas maksimal penarikan tanpa pesanan di sisi server.
+- [x] Buat form input rincian uang kertas & logam pada transaksi setoran, penarikan, dan penutupan kas.
+- [x] Hitung total uang fisik otomatis dari rincian pecahan dan simpan sebagai bukti audit.
+- [x] Tampilkan rincian pecahan uang pada Laporan Harian Teller dan halaman cetak laporan.
+- [x] Perkaya struk transaksi: nama bank, no. referensi jurnal, terbilang, biaya admin, total, dan status.
+- [x] Buat ReversalService: jurnal pembalik, pemulihan saldo, dan penandaan transaksi asal sebagai reversed.
+- [x] Buat endpoint dan otorisasi koreksi transaksi yang hanya dapat dipanggil Supervisor.
+- [x] Tambahkan tombol koreksi dan tampilan riwayat transaksi (pembalik/dikoreksi) pada halaman Supervisor.
+- [x] Tolak koreksi transaksi bila laporan harian tanggal tersebut sudah disetujui (kas sudah dipindah ke brankas).
+- [x] Uji integritas koreksi: transfer, saldo tidak mencukupi, dampak rekap kas, dan tampilan mutasi/buku tabungan.
+- [x] Perluas pencarian nasabah berdasarkan nomor rekening, NIS, dan nama lengkap beserta halaman hasil pencarian.
+- [x] Buat modul registrasi nasabah didampingi Teller beserta service registrasi bersama.
+- [x] Tambahkan akun pendapatan 401 dan beban 501 ke chart of accounts untuk laporan keuangan.
+- [x] Buat laporan Laba Rugi (Income Statement) untuk Administrator dan Supervisor.
+- [x] Buat laporan Neraca (Balance Sheet) beserta indikator keseimbangan untuk Administrator dan Supervisor.
+- [x] Perluas konfigurasi sistem: nama bank, jam operasional, biaya admin, dan batas penarikan tanpa pesanan.
+- [x] Perbarui menu navigasi, dashboard Teller, dan halaman konfigurasi Administrator.
+FASE 9 — Verifikasi & Perbaikan Bug (Pengujian Skenario)
+- [x] Perbaiki kata terbilang Rupiah agar tidak menyisakan "Nol" berlebih (mis. "Lima Puluh Ribu Rupiah").
+- [x] Perbaiki down() migrasi daily_reports dan customers agar rollback berjalan (drop unique index sebelum kolom).
+- [x] Tambahkan pengujian integritas koreksi & kas, biaya admin, struk, pecahan uang, pencarian, registrasi, laporan keuangan, JSON, dan matriks otorisasi.
+- [x] Verifikasi migrate:fresh, migrate:reset (semua down), dan migrate (semua up) pada database uji.

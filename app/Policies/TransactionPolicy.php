@@ -25,6 +25,14 @@ class TransactionPolicy
         return $user?->role === 'teller';
     }
 
+    public function reverse($user, $transaction = null): bool
+    {
+        return $user?->role === 'supervisor'
+            && $transaction !== null
+            && $transaction->status === 'success'
+            && $transaction->type !== 'reversal';
+    }
+
     public function update($user, $transaction = null): bool
     {
         return false;

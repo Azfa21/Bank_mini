@@ -33,11 +33,11 @@ class CustomerSearchController extends Controller
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Masukkan nomor rekening atau nilai QR Code terlebih dahulu.',
+                    'message' => 'Masukkan nomor rekening, NIS, nama, atau nilai QR Code terlebih dahulu.',
                 ], 422);
             }
 
-            return back()->with('error', 'Masukkan nomor rekening atau nilai QR Code terlebih dahulu.');
+            return back()->with('error', 'Masukkan nomor rekening, NIS, nama, atau nilai QR Code terlebih dahulu.');
         }
 
         $account = Account::with('customer')
@@ -45,14 +45,7 @@ class CustomerSearchController extends Controller
             ->first();
 
         if ($account) {
-            if ($this->wantsJson($request)) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $account,
-                ]);
-            }
-
-            return redirect()->route('teller.customers.show', $account);
+            return $this->redirectToAccount($request, $account);
         }
 
         $customer = Customer::with('account')
@@ -60,24 +53,55 @@ class CustomerSearchController extends Controller
             ->first();
 
         if ($customer && $customer->account) {
+            return $this->redirectToAccount($request, $customer->account);
+        }
+
+        $results = Account::with('customer')
+            ->where('account_number', 'like', "%{$q}%")
+            ->orWhereHas('customer', function ($query) use ($q) {
+                $query->where('student_number', 'like', "%{$q}%")
+                    ->orWhere('full_name', 'like', "%{$q}%")
+                    ->orWhere('class_name', 'like', "%{$q}%");
+            })
+            ->orderBy('account_number')
+            ->limit(25)
+            ->get();
+
+        if ($results->count() === 1) {
+            return $this->redirectToAccount($request, $results->first());
+        }
+
+        if ($results->isNotEmpty()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => true,
-                    'data' => $customer->account,
+                    'data' => $results,
                 ]);
             }
 
-            return redirect()->route('teller.customers.show', $customer->account);
+            return view('teller.search-results', ['q' => $q, 'results' => $results]);
         }
 
         if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Rekening atau QR Code tidak ditemukan.',
+                'message' => 'Nasabah tidak ditemukan.',
             ], 404);
         }
 
-        return back()->with('error', 'Rekening atau QR Code tidak ditemukan.');
+        return back()->with('error', 'Nasabah tidak ditemukan.');
+    }
+
+    protected function redirectToAccount(Request $request, Account $account)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => $account,
+            ]);
+        }
+
+        return redirect()->route('teller.customers.show', $account);
     }
 
     public function show(Account $account)

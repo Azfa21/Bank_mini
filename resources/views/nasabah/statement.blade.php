@@ -88,26 +88,27 @@
                          <tr class="print:page-break-inside-avoid">
                              <td class="py-2 print:border print:border-gray-300">{{ $transaction->transaction_at->format('d/m/Y') }}</td>
                              <td class="py-2 print:border print:border-gray-300">
-                                 @if ($transaction->type === 'deposit')
-                                     Setoran tunai
-                                 @elseif ($transaction->type === 'withdrawal')
-                                     Penarikan tunai
-                                 @elseif ($transaction->recipient_account_id === $account->id)
-                                     Transfer masuk {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
-                                 @else
-                                     Transfer keluar {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
-                                 @endif
+                                 @php
+                                     $label = match ($transaction->type) {
+                                         'deposit' => 'Setoran tunai',
+                                         'withdrawal' => 'Penarikan tunai',
+                                         'transfer' => $transaction->recipient_account_id === $account->id ? 'Transfer masuk' : 'Transfer keluar',
+                                         'reversal' => 'Koreksi transaksi',
+                                         default => ucfirst($transaction->type),
+                                     };
+                                 @endphp
+                                 {{ $label }} {{ $transaction->notes ? '('.$transaction->notes.')' : '' }}
                                  <span class="block text-gray-400 font-mono">{{ $transaction->receipt_number }}</span>
                              </td>
                              <td class="py-2 text-right font-mono print:border print:border-gray-300">
-                                 @if ($transaction->type === 'deposit' || ($transaction->type === 'transfer' && $transaction->recipient_account_id === $account->id))
+                                 @if ($transaction->isCreditFor($account->id))
                                      {{ number_format($transaction->amount, 0, ',', '.') }}
                                  @else
                                      &nbsp;
                                  @endif
                              </td>
                              <td class="py-2 text-right font-mono print:border print:border-gray-300">
-                                 @if ($transaction->type === 'withdrawal' || ($transaction->type === 'transfer' && $transaction->account_id === $account->id))
+                                 @if (! $transaction->isCreditFor($account->id))
                                      {{ number_format($transaction->amount, 0, ',', '.') }}
                                  @else
                                      &nbsp;

@@ -42,12 +42,12 @@
                             <td class="px-5 py-3">{{ $transaction->transaction_at->format('d/m/Y H:i') }}</td>
                             <td class="px-5 py-3 font-mono">{{ $transaction->receipt_number }}</td>
                             <td class="px-5 py-3">
-                                <span class="text-xs px-2 py-1 rounded-full {{ $transaction->type === 'deposit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                    {{ $transaction->type === 'deposit' ? 'Setoran' : 'Penarikan' }}
+                                <span class="text-xs px-2 py-1 rounded-full {{ $transaction->isCreditFor($account->id) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                    {{ $transaction->typeLabel() }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-right font-mono {{ $transaction->type === 'deposit' ? 'text-green-600' : 'text-red-600' }}">
-                                {{ $transaction->type === 'deposit' ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                            <td class="px-5 py-3 text-right font-mono {{ $transaction->isCreditFor($account->id) ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $transaction->isCreditFor($account->id) ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                             </td>
                             <td class="px-5 py-3 text-right font-mono">Rp {{ number_format($transaction->balance_after, 0, ',', '.') }}</td>
                         </tr>

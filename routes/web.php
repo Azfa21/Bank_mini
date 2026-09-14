@@ -12,9 +12,11 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
 use App\Http\Controllers\Nasabah\MutasiController;
 use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\Supervisor\CorrectionController;
 use App\Http\Controllers\Supervisor\DashboardController as SupervisorDashboardController;
 use App\Http\Controllers\Supervisor\ReportController;
 use App\Http\Controllers\Teller\ClosingController;
+use App\Http\Controllers\Teller\CustomerRegistrationController;
 use App\Http\Controllers\Teller\CustomerSearchController;
 use App\Http\Controllers\Teller\PassbookController;
 use App\Http\Controllers\Teller\TransactionController;
@@ -54,6 +56,8 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('journals', [JournalController::class, 'index'])->name('journals.index');
     Route::get('reports/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('reports.general-ledger');
     Route::get('reports/trial-balance', [AccountingReportController::class, 'trialBalance'])->name('reports.trial-balance');
+    Route::get('reports/income-statement', [AccountingReportController::class, 'incomeStatement'])->name('reports.income-statement');
+    Route::get('reports/balance-sheet', [AccountingReportController::class, 'balanceSheet'])->name('reports.balance-sheet');
     Route::get('reports/export/{type?}', [AccountingReportController::class, 'exportCsv'])->name('reports.export');
 });
 
@@ -62,6 +66,8 @@ Route::middleware(['role:teller'])->prefix('teller')->as('teller.')->group(funct
 
     Route::get('/customers/search', [CustomerSearchController::class, 'search'])->name('customers.search');
     Route::get('/customers/lookup', [CustomerSearchController::class, 'lookup'])->name('customers.lookup');
+    Route::get('/customers/register', [CustomerRegistrationController::class, 'create'])->name('customers.register');
+    Route::post('/customers/register', [CustomerRegistrationController::class, 'store'])->name('customers.register.store');
     Route::get('/customers/{account}', [CustomerSearchController::class, 'show'])->name('customers.show');
 
     Route::get('/deposits/{account}', [TransactionController::class, 'createDeposit'])->name('deposits.create');
@@ -91,9 +97,13 @@ Route::middleware(['role:supervisor'])->prefix('supervisor')->group(function () 
     Route::post('/reports/{report}/approve', [ReportController::class, 'approve'])->name('supervisor.reports.approve');
     Route::post('/reports/{report}/reject', [ReportController::class, 'reject'])->name('supervisor.reports.reject');
 
+    Route::post('/transactions/{transaction}/reverse', [CorrectionController::class, 'store'])->name('supervisor.transactions.reverse');
+
     Route::get('/journals', [JournalController::class, 'index'])->name('supervisor.journals.index');
     Route::get('/reports-accounting/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('supervisor.reports.general-ledger');
     Route::get('/reports-accounting/trial-balance', [AccountingReportController::class, 'trialBalance'])->name('supervisor.reports.trial-balance');
+    Route::get('/reports-accounting/income-statement', [AccountingReportController::class, 'incomeStatement'])->name('supervisor.reports.income-statement');
+    Route::get('/reports-accounting/balance-sheet', [AccountingReportController::class, 'balanceSheet'])->name('supervisor.reports.balance-sheet');
     Route::get('/reports-accounting/export/{type?}', [AccountingReportController::class, 'exportCsv'])->name('supervisor.reports.export');
 });
 

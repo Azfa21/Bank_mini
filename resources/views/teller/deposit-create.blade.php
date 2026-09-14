@@ -30,7 +30,7 @@
             <div class="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 class="text-sm font-medium text-gray-900 mb-4">Data Setoran</h2>
 
-                <form method="POST" action="{{ route('teller.deposits.store', $account) }}" class="space-y-4">
+                <form method="POST" action="{{ route('teller.deposits.store', $account) }}" class="space-y-4" id="deposit-form">
                     @csrf
 
                     <div>
@@ -39,9 +39,15 @@
                         <x-input-error :message="$errors->first('slip_amount')" />
                     </div>
 
+                    <div class="border-t border-gray-100 pt-4">
+                        <p class="text-xs font-medium text-gray-600 mb-1">Rincian Uang Fisik Diterima (opsional)</p>
+                        <p class="text-xs text-gray-400 mb-3">Isi jumlah lembar/keping bila perlu; total dihitung otomatis.</p>
+                        <x-denomination-input />
+                    </div>
+
                     <div>
-                        <x-input-label for="physical_cash_amount" size="xs">Nominal Uang Fisik *</x-input-label>
-                        <x-input id="physical_cash_amount" name="physical_cash_amount" type="number" min="1" step="1" placeholder="Hitung ulang uang yang diterima" required />
+                        <x-input-label for="physical_cash_amount" size="xs">Nominal Uang Fisik (total) *</x-input-label>
+                        <x-input id="physical_cash_amount" name="physical_cash_amount" type="number" min="1" step="1" placeholder="Hitung ulang uang yang diterima" required data-denomination-total />
                         <x-input-error :message="$errors->first('physical_cash_amount')" />
                     </div>
 
@@ -54,3 +60,24 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const inputs = document.querySelectorAll('[data-denomination-input]');
+            const total = document.querySelector('[data-denomination-total]');
+            if (!total) return;
+
+            const compute = () => {
+                let sum = 0;
+                inputs.forEach((input) => {
+                    sum += (parseInt(input.value || '0', 10) || 0) * (parseInt(input.dataset.value, 10) || 0);
+                });
+                if (sum > 0) total.value = sum;
+            };
+
+            inputs.forEach((input) => input.addEventListener('input', compute));
+            compute();
+        })();
+    </script>
+@endpush

@@ -61,25 +61,17 @@
                                 <td class="px-5 py-3 text-gray-400">{{ $transactions->firstItem() + $index }}</td>
                                 <td class="px-5 py-3">{{ $transaction->transaction_at?->format('d/m/Y') }}</td>
                                 <td class="px-5 py-3">
-                                    <span class="text-xs px-2 py-1 rounded-full {{ $transaction->type === 'deposit' ? 'bg-green-100 text-green-700' : ($transaction->type === 'transfer' && $transaction->recipient_account_id === $account->id ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700') }}">
-                                        @if ($transaction->type === 'deposit')
-                                            Setoran
-                                        @elseif ($transaction->type === 'withdrawal')
-                                            Penarikan
-                                        @elseif ($transaction->type === 'transfer' && $transaction->recipient_account_id === $account->id)
-                                            Transfer Masuk
-                                        @else
-                                            Transfer Keluar
-                                        @endif
+                                    <span class="text-xs px-2 py-1 rounded-full {{ $transaction->isCreditFor($account->id) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        {{ $transaction->typeLabel() }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3 font-mono text-green-700">
-                                    @if ($transaction->type === 'deposit' || ($transaction->type === 'transfer' && $transaction->recipient_account_id === $account->id))
+                                    @if ($transaction->isCreditFor($account->id))
                                         Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                                     @endif
                                 </td>
                                 <td class="px-5 py-3 font-mono text-red-700">
-                                    @if ($transaction->type === 'withdrawal' || ($transaction->type === 'transfer' && $transaction->account_id === $account->id))
+                                    @if (! $transaction->isCreditFor($account->id))
                                         Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                                     @endif
                                 </td>

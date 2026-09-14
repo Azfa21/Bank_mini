@@ -9,6 +9,7 @@ use App\Models\JurnalAkuntansi;
 use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\CashDenomination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -23,6 +24,8 @@ class TransactionService
     public const ACCOUNT_CODE_VAULT = AccountingService::ACCOUNT_CODE_CASH_VAULT;
 
     public const ACCOUNT_CODE_SAVINGS = AccountingService::ACCOUNT_CODE_SAVINGS;
+
+    public const ACCOUNT_CODE_ADMIN_INCOME = AccountingService::ACCOUNT_CODE_ADMIN_INCOME;
 
     public function deposit(Account $account, array $data, User $teller): Transaction
     {
@@ -86,17 +89,29 @@ class TransactionService
             $config = SystemConfig::find('minimum_balance');
             $minimumBalance = (int) ($config->config_value ?? 10000);
 
+            $adminFee = SystemConfig::integer('admin_fee', 0);
+            $totalDeduction = $amount + $adminFee;
+
             $balanceBefore = (int) $locked->balance;
             if ($amount > $balanceBefore) {
                 throw new TransactionValidationException('Saldo tidak mencukupi.');
             }
 
-            $balanceAfter = $balanceBefore - $amount;
+            $maxWithoutOrder = SystemConfig::integer('max_withdrawal_without_order', 0);
+            if ($maxWithoutOrder > 0 && $amount > $maxWithoutOrder) {
+                throw new TransactionValidationException(
+                    'Nominal penarikan melebihi batas tanpa pesanan (Rp '.number_format($maxWithoutOrder).').'
+                );
+            }
+
+            $balanceAfter = $balanceBefore - $totalDeduction;
             if ($balanceAfter < $minimumBalance) {
                 throw new TransactionValidationException(
                     'Saldo setelah penarikan tidak boleh kurang dari Rp '.number_format($minimumBalance).'.'
                 );
             }
+
+            $data['admin_fee'] = $adminFee;
 
             $transaction = $this->createTransaction(
                 $locked,
@@ -282,29 +297,51 @@ class TransactionService
             'teller_id' => $teller->id,
             'type' => $type,
             'amount' => $amount,
+            'admin_fee' => (int) ($data['admin_fee'] ?? 0),
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
             'receipt_number' => $this->generateTransactionNumber(),
             'slip_number' => $data['slip_number'] ?? $this->generateSlipNumber(),
             'slip_amount' => isset($data['slip_amount']) ? (int) $data['slip_amount'] : null,
             'physical_cash_amount' => isset($data['physical_cash_amount']) ? (int) $data['physical_cash_amount'] : null,
+            'denomination_breakdown' => $this->normalizeBreakdown($data['denomination_breakdown'] ?? null),
             'notes' => $data['notes'] ?? null,
             'status' => 'success',
             'transaction_at' => now(),
         ]);
     }
 
+    /**
+     * @param  array<string, int|string|null>|null  $breakdown
+     * @return array<string, int>|null
+     */
+    protected function normalizeBreakdown(?array $breakdown): ?array
+    {
+        if ($breakdown === null) {
+            return null;
+        }
+
+        $normalized = CashDenomination::normalize($breakdown);
+
+        return $normalized === [] ? null : $normalized;
+    }
+
     protected function createJournalEntries(Transaction $transaction, string $type, int $amount): void
     {
+        $fee = (int) $transaction->admin_fee;
+
         $rows = match ($type) {
             'deposit' => [
                 ['account_code' => self::ACCOUNT_CODE_CASH, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Setoran tunai'],
                 ['account_code' => self::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Setoran tunai'],
             ],
-            default => [
-                ['account_code' => self::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Penarikan tunai'],
+            default => array_filter([
+                ['account_code' => self::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'debit', 'debit_amount' => $amount + $fee, 'credit_amount' => 0, 'description' => 'Penarikan tunai'],
                 ['account_code' => self::ACCOUNT_CODE_CASH, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Penarikan tunai'],
-            ],
+                $fee > 0
+                    ? ['account_code' => self::ACCOUNT_CODE_ADMIN_INCOME, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $fee, 'description' => 'Biaya administrasi penarikan']
+                    : null,
+            ]),
         };
 
         foreach ($rows as $index => $row) {

@@ -57,7 +57,7 @@
                             <td class="py-1 pr-1 text-gray-400">{{ $line }}</td>
                             <td class="py-1 pr-1">{{ $row->transaction_at?->format('d/m/Y') }}</td>
                             <td class="py-1 pr-1">
-                                {{ ucfirst($row->type) }}
+                                {{ $row->typeLabel() }}
                                 <span class="text-gray-500">{{ $row->receipt_number }}</span>
                                 @if ($row->type === 'transfer' && $row->recipient_account_id === $account->id)
                                     <span class="text-gray-500">(masuk)</span>
@@ -66,12 +66,12 @@
                                 @endif
                             </td>
                             <td class="py-1 text-right font-mono">
-                                @if ($row->type === 'deposit' || ($row->type === 'transfer' && $row->recipient_account_id === $account->id))
+                                @if ($row->isCreditFor($account->id))
                                     {{ number_format($row->amount, 0, ',', '.') }}
                                 @endif
                             </td>
                             <td class="py-1 text-right font-mono">
-                                @if ($row->type === 'withdrawal' || ($row->type === 'transfer' && $row->account_id === $account->id))
+                                @if (! $row->isCreditFor($account->id))
                                     {{ number_format($row->amount, 0, ',', '.') }}
                                 @endif
                             </td>

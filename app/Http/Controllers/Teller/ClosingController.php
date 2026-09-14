@@ -9,6 +9,7 @@ use App\Models\DailyReport;
 use App\Models\Transaction;
 use App\Services\AuditLogService;
 use App\Services\DailyReportService;
+use App\Support\CashDenomination;
 use Illuminate\Http\Request;
 
 class ClosingController extends Controller
@@ -56,10 +57,19 @@ class ClosingController extends Controller
         $this->authorize('create', DailyReport::class);
 
         $date = $request->validated('report_date');
-        $physicalCash = (int) $request->validated('physical_cash');
+
+        $denominations = $request->validated('denominations') ?? [];
+        $breakdownTotal = CashDenomination::total($denominations);
+
+        if ($breakdownTotal > 0) {
+            $physicalCash = $breakdownTotal;
+        } else {
+            $denominations = [];
+            $physicalCash = (int) ($request->validated('physical_cash') ?? 0);
+        }
 
         try {
-            $report = $this->reports->createReport($request->user(), $date, $physicalCash);
+            $report = $this->reports->createReport($request->user(), $date, $physicalCash, $denominations);
         } catch (TransactionValidationException $e) {
             AuditLogService::record('daily_report_creation_blocked', 'daily_report', null, [
                 'report_date' => $date,

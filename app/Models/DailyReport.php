@@ -16,8 +16,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $opening_balance
  * @property int $total_deposit
  * @property int $total_withdrawal
+ * @property int $total_admin_fee
  * @property int $closing_balance_system
  * @property int|null $closing_balance_physical
+ * @property array<string, int>|null $closing_breakdown
  * @property int|null $cash_difference
  * @property string $status
  * @property int|null $approved_by
@@ -39,8 +41,10 @@ class DailyReport extends Model
         'opening_balance',
         'total_deposit',
         'total_withdrawal',
+        'total_admin_fee',
         'closing_balance_system',
         'closing_balance_physical',
+        'closing_breakdown',
         'cash_difference',
         'status',
         'approved_by',
@@ -54,8 +58,10 @@ class DailyReport extends Model
         'opening_balance' => 'integer',
         'total_deposit' => 'integer',
         'total_withdrawal' => 'integer',
+        'total_admin_fee' => 'integer',
         'closing_balance_system' => 'integer',
         'closing_balance_physical' => 'integer',
+        'closing_breakdown' => 'array',
         'cash_difference' => 'integer',
         'approved_at' => 'datetime',
         'submitted_at' => 'datetime',
@@ -86,7 +92,7 @@ class DailyReport extends Model
         return Transaction::query()
             ->where('teller_id', $this->teller_id)
             ->whereDate('transaction_at', $this->report_date)
-            ->where('status', 'success')
+            ->whereIn('status', ['success', 'reversed'])
             ->orderBy('transaction_at')
             ->orderBy('id');
     }

@@ -22,7 +22,15 @@
                 <div class="border-t border-gray-100 mt-4 pt-4">
                     <p class="text-xs text-gray-500">Saldo Saat Ini</p>
                     <p class="text-xl font-semibold text-blue-600 mt-1">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
-                    <p class="text-xs text-gray-400 mt-1">Saldo minimum: Rp {{ number_format((int) (\App\Models\SystemConfig::find('minimum_balance')->config_value ?? 10000), 0, ',', '.') }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Saldo minimum: Rp {{ number_format((int) (\App\Models\SystemConfig::value('minimum_balance', 10000)), 0, ',', '.') }}</p>
+                    @php
+                        $adminFee = (int) \App\Models\SystemConfig::value('admin_fee', 0);
+                        $maxWithoutOrder = (int) \App\Models\SystemConfig::value('max_withdrawal_without_order', 0);
+                    @endphp
+                    <p class="text-xs text-gray-400 mt-1">Biaya admin penarikan: Rp {{ number_format($adminFee, 0, ',', '.') }}</p>
+                    @if ($maxWithoutOrder > 0)
+                        <p class="text-xs text-amber-600 mt-1">Batas penarikan tanpa pesanan: Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}</p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -38,6 +46,12 @@
                         <x-input-label for="amount" size="xs">Nominal Penarikan *</x-input-label>
                         <x-input id="amount" name="amount" type="number" min="1" step="1" placeholder="Contoh: 50000" required />
                         <x-input-error :message="$errors->first('amount')" />
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-4">
+                        <p class="text-xs font-medium text-gray-600 mb-1">Rincian Uang Tunai Diserahkan (opsional)</p>
+                        <p class="text-xs text-gray-400 mb-3">Bantu teller menghitung pecahan uang yang diberikan kepada nasabah.</p>
+                        <x-denomination-input />
                     </div>
 
                     <div>

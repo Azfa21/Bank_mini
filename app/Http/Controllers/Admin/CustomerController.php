@@ -7,11 +7,8 @@ use App\Http\Requests\Admin\ImportCustomersRequest;
 use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\UpdateCustomerRequest;
 use App\Models\Customer;
-use App\Services\AccountService;
 use App\Services\CustomerImportService;
-use App\Services\SequenceService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use App\Services\CustomerRegistrationService;
 use Illuminate\View\View;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -19,8 +16,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CustomerController extends Controller
 {
     public function __construct(
-        protected AccountService $accounts,
-        protected SequenceService $sequences,
+        protected CustomerRegistrationService $registrations,
         protected CustomerImportService $imports,
     ) {}
 
@@ -59,28 +55,12 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request)
     {
-        $customer = DB::transaction(function () use ($request) {
-            $year = now()->format('Y');
-
-            do {
-                $candidate = sprintf('%s%04d', $year, $this->sequences->next("NIS-{$year}"));
-            } while (Customer::where('student_number', $candidate)->exists());
-
-            $created = Customer::create([
-                'student_number' => $candidate,
-                'full_name' => $request->full_name,
-                'class_name' => $request->class_name,
-                'phone_number' => $request->phone_number,
-                'pin_hash' => $request->pin,
-                'qr_code_value' => Str::uuid()->toString(),
-                'created_by' => $request->user()->id,
-                'status' => 'active',
-            ]);
-
-            $this->accounts->openFor($created);
-
-            return $created;
-        });
+        $customer = $this->registrations->register([
+            'full_name' => $request->full_name,
+            'class_name' => $request->class_name,
+            'phone_number' => $request->phone_number,
+            'pin' => $request->pin,
+        ], $request->user()->id);
 
         if ($this->wantsJson($request)) {
             return response()->json([

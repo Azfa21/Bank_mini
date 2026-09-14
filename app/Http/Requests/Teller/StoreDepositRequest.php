@@ -18,6 +18,8 @@ class StoreDepositRequest extends FormRequest
             'slip_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'slip_amount' => ['required', 'integer', 'min:1'],
             'physical_cash_amount' => ['required', 'integer', 'min:1'],
+            'denomination_breakdown' => ['nullable', 'array'],
+            'denomination_breakdown.*' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

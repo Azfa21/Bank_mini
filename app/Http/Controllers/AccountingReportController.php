@@ -122,6 +122,58 @@ class AccountingReportController extends Controller
         ]);
     }
 
+    public function incomeStatement(Request $request)
+    {
+        $this->authorize('viewAny', JurnalAkuntansi::class);
+
+        $statement = $this->accounting->incomeStatement(
+            $request->input('date', now()->toDateString())
+        );
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => $statement,
+            ]);
+        }
+
+        return view('reports.income_statement', [
+            'date' => $statement['date'],
+            'incomes' => $statement['incomes'],
+            'expenses' => $statement['expenses'],
+            'totalIncome' => $statement['total_income'],
+            'totalExpense' => $statement['total_expense'],
+            'netIncome' => $statement['net_income'],
+        ]);
+    }
+
+    public function balanceSheet(Request $request)
+    {
+        $this->authorize('viewAny', JurnalAkuntansi::class);
+
+        $sheet = $this->accounting->balanceSheet(
+            $request->input('date', now()->toDateString())
+        );
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => $sheet,
+            ]);
+        }
+
+        return view('reports.balance_sheet', [
+            'date' => $sheet['date'],
+            'assets' => $sheet['assets'],
+            'liabilities' => $sheet['liabilities'],
+            'equity' => $sheet['equity'],
+            'totalAssets' => $sheet['total_assets'],
+            'totalLiabilities' => $sheet['total_liabilities'],
+            'totalEquity' => $sheet['total_equity'],
+            'isBalanced' => $sheet['is_balanced'],
+        ]);
+    }
+
     public function exportCsv(Request $request, string $type = 'journals'): StreamedResponse
     {
         $this->authorize('viewAny', JurnalAkuntansi::class);

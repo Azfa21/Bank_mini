@@ -174,7 +174,14 @@ class TransactionController extends Controller
     {
         $this->authorize('view', $transaction);
 
-        $transaction->load(['account.customer', 'recipientAccount.customer', 'teller']);
+        $transaction->load([
+            'account.customer',
+            'recipientAccount.customer',
+            'teller',
+            'journalEntries',
+            'reversalOf.account.customer',
+            'reversedBy',
+        ]);
 
         if ($this->wantsJson()) {
             return response()->json([

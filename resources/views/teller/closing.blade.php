@@ -52,6 +52,10 @@
                         <span class="text-gray-500">Total Penarikan</span>
                         <span class="font-mono text-red-600">− Rp {{ number_format($recap['total_withdrawal'], 0, ',', '.') }}</span>
                     </div>
+                    <div class="flex justify-between px-5 py-3">
+                        <span class="text-gray-500">Biaya Administrasi (jika ada)</span>
+                        <span class="font-mono text-gray-700">Rp {{ number_format($recap['total_admin_fee'], 0, ',', '.') }}</span>
+                    </div>
                     <div class="flex justify-between px-5 py-3 bg-gray-50 font-semibold">
                         <span class="text-gray-900">Saldo Akhir Sistem</span>
                         <span class="font-mono text-gray-900">Rp {{ number_format($recap['closing_balance_system'], 0, ',', '.') }}</span>
@@ -59,28 +63,30 @@
                 </div>
 
                 <div class="border-t border-gray-200 px-5 py-4">
-                    <p class="text-xs text-gray-500 mb-3">Hitung uang fisik di laci dan cocokkan dengan saldo akhir sistem. Jika terdapat selisih, laporan final tidak dapat dicetak.</p>
-                    <form method="POST" action="{{ route('teller.closing.store') }}" class="flex gap-3 items-end">
+                    <p class="text-xs text-gray-500 mb-3">Hitung rincian uang fisik per pecahan (kertas &amp; logam). Total dihitung otomatis dan harus sama dengan saldo akhir sistem.</p>
+                    <form method="POST" action="{{ route('teller.closing.store') }}" class="space-y-4" id="closing-form">
                         @csrf
                         <input type="hidden" name="report_date" value="{{ $date }}">
-                        <div class="flex-1 max-w-xs">
-                            <x-input-label for="physical_cash" size="xs">Uang Fisik di Laci *</x-input-label>
-                            <x-input id="physical_cash" name="physical_cash" type="number" min="0" step="1"
-                                placeholder="Contoh: 500000" required />
-                            <x-input-error :message="$errors->first('physical_cash')" />
+
+                        <x-denomination-input :selected="old('denominations', [])" />
+
+                        <div class="flex gap-3 items-end flex-wrap">
+                            <div class="flex-1 max-w-xs">
+                                <x-input-label for="physical_cash" size="xs">Total Uang Fisik di Laci (otomatis) *</x-input-label>
+                                <x-input id="physical_cash" name="physical_cash" type="number" min="0" step="1"
+                                    :value="old('physical_cash', 0)" :readonly="true" required data-denomination-total />
+                                <x-input-error :message="$errors->first('physical_cash')" />
+                            </div>
+                            <x-primary-button variant="green"
+                                onclick="this.disabled = true; this.form.submit();">
+                                Buat Laporan
+                            </x-primary-button>
                         </div>
-                        <x-primary-button variant="green"
-                            onclick="this.disabled = true; this.form.submit();">
-                            Buat Laporan
-                        </x-primary-button>
                     </form>
 
-                    @php
-                        $difference = (int) old('physical_cash') - $recap['closing_balance_system'];
-                    @endphp
                     @if (session('error'))
                         <div class="mt-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">
-                            <strong>Selisih kas terdeteksi.</strong> Periksa kembali uang fisik di laci.
+                            <strong>Selisih kas terdeteksi.</strong> Periksa kembali rincian uang fisik di laci. {{ session('error') }}
                         </div>
                     @endif
                 </div>
@@ -98,10 +104,10 @@
                             <li class="flex items-center justify-between text-sm">
                                 <div>
                                     <p class="font-mono text-xs text-gray-400">{{ $transaction->receipt_number }}</p>
-                                    <p class="text-gray-900">{{ $transaction->type === 'deposit' ? 'Setoran' : 'Penarikan' }}</p>
+                                    <p class="text-gray-900">{{ $transaction->typeLabel() }}</p>
                                 </div>
-                                <span class="font-mono {{ $transaction->type === 'deposit' ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $transaction->type === 'deposit' ? '+' : '−' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                                <span class="font-mono {{ $transaction->isCreditFor($transaction->account_id) ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $transaction->isCreditFor($transaction->account_id) ? '+' : '−' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                                 </span>
                             </li>
                         @endforeach
@@ -111,3 +117,27 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const inputs = document.querySelectorAll('[data-denomination-input]');
+            const total = document.querySelector('[data-denomination-total]');
+
+            const compute = () => {
+                let sum = 0;
+                inputs.forEach((input) => {
+                    const count = parseInt(input.value || '0', 10) || 0;
+                    const value = parseInt(input.dataset.value, 10) || 0;
+                    sum += count * value;
+                });
+                if (total) {
+                    total.value = sum;
+                }
+            };
+
+            inputs.forEach((input) => input.addEventListener('input', compute));
+            compute();
+        })();
+    </script>
+@endpush

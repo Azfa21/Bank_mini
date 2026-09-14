@@ -8,8 +8,11 @@ use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\CashDenomination;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;class DailyReportService
+use Illuminate\Support\Facades\DB;
+
+class DailyReportService
 {
     public function __construct(
         protected SequenceService $sequences,
@@ -19,50 +22,78 @@ use Illuminate\Support\Facades\DB;class DailyReportService
     {
         // Model brankas: setiap laporan yang disetujui menyapu seluruh kas laci ke brankas,
         // sehingga saldo awal = mutasi kas yang belum tersapu sebelum tanggal ini.
-        $totalDepositBefore = (int) Transaction::where('teller_id', $teller->id)
-            ->whereDate('transaction_at', '<', $date)
-            ->where('status', 'success')
-            ->where('type', 'deposit')
-            ->sum('amount');
-
-        $totalWithdrawalBefore = (int) Transaction::where('teller_id', $teller->id)
-            ->whereDate('transaction_at', '<', $date)
-            ->where('status', 'success')
-            ->where('type', 'withdrawal')
-            ->sum('amount');
+        $before = $this->cashFlow($teller, '<', $date);
+        $today = $this->cashFlow($teller, '=', $date);
 
         $sweptBefore = (int) DailyReport::where('teller_id', $teller->id)
             ->whereDate('report_date', '<', $date)
             ->where('status', 'approved')
             ->sum(DB::raw('COALESCE(closing_balance_physical, closing_balance_system)'));
 
-        $opening = $totalDepositBefore - $totalWithdrawalBefore - $sweptBefore;
+        $opening = $before['deposit'] - $before['withdrawal'] - $sweptBefore;
 
-        $totalDeposit = (int) Transaction::where('teller_id', $teller->id)
-            ->whereDate('transaction_at', $date)
-            ->where('status', 'success')
-            ->where('type', 'deposit')
-            ->sum('amount');
+        $systemEnding = $opening + $today['deposit'] - $today['withdrawal'];
 
-        $totalWithdrawal = (int) Transaction::where('teller_id', $teller->id)
+        $totalAdminFee = (int) Transaction::where('teller_id', $teller->id)
             ->whereDate('transaction_at', $date)
-            ->where('status', 'success')
+            ->whereIn('status', ['success', 'reversed'])
             ->where('type', 'withdrawal')
-            ->sum('amount');
-
-        $systemEnding = $opening + $totalDeposit - $totalWithdrawal;
+            ->sum('admin_fee');
 
         return [
             'opening_balance' => $opening,
-            'total_deposit' => $totalDeposit,
-            'total_withdrawal' => $totalWithdrawal,
+            'total_deposit' => $today['deposit'],
+            'total_withdrawal' => $today['withdrawal'],
+            'total_admin_fee' => $totalAdminFee,
             'closing_balance_system' => $systemEnding,
         ];
     }
 
-    public function createReport(User $teller, string $date, int $physicalCash): DailyReport
+    /**
+     * Arus kas laci berdasarkan transaksi setoran/penarikan termasuk koreksi
+     * (jurnal pembalik) yang memengaruhi uang tunai.
+     *
+     * @return array{deposit: int, withdrawal: int}
+     */
+    protected function cashFlow(User $teller, string $operator, string $date): array
     {
-        return DB::transaction(function () use ($teller, $date, $physicalCash) {
+        $activeStatuses = ['success', 'reversed'];
+
+        $depositQuery = Transaction::where('teller_id', $teller->id)
+            ->where('type', 'deposit')
+            ->whereIn('status', $activeStatuses)
+            ->whereDate('transaction_at', $operator, $date);
+
+        $withdrawalQuery = Transaction::where('teller_id', $teller->id)
+            ->where('type', 'withdrawal')
+            ->whereIn('status', $activeStatuses)
+            ->whereDate('transaction_at', $operator, $date);
+
+        $deposit = (int) $depositQuery->sum('amount');
+        $withdrawal = (int) $withdrawalQuery->sum('amount');
+
+        // Koreksi penarikan mengembalikan uang tunai ke laci (bertambah seperti setoran),
+        // koreksi setoran mengeluarkan uang tunai dari laci (berkurang seperti penarikan).
+        $deposit += (int) Transaction::where('teller_id', $teller->id)
+            ->where('type', 'reversal')
+            ->where('status', 'success')
+            ->whereHas('reversalOf', fn ($q) => $q->where('type', 'withdrawal'))
+            ->whereDate('transaction_at', $operator, $date)
+            ->sum('amount');
+
+        $withdrawal += (int) Transaction::where('teller_id', $teller->id)
+            ->where('type', 'reversal')
+            ->where('status', 'success')
+            ->whereHas('reversalOf', fn ($q) => $q->where('type', 'deposit'))
+            ->whereDate('transaction_at', $operator, $date)
+            ->sum('amount');
+
+        return ['deposit' => $deposit, 'withdrawal' => $withdrawal];
+    }
+
+    public function createReport(User $teller, string $date, int $physicalCash, array $breakdown = []): DailyReport
+    {
+        return DB::transaction(function () use ($teller, $date, $physicalCash, $breakdown) {
             $recap = $this->recap($teller, $date);
 
             $cashDifference = $physicalCash - $recap['closing_balance_system'];
@@ -93,6 +124,8 @@ use Illuminate\Support\Facades\DB;class DailyReportService
                 ? $report->report_number
                 : $this->generateReportNumber($date);
 
+            $normalizedBreakdown = CashDenomination::normalize($breakdown);
+
             $values = [
                 'report_number' => $reportNumber,
                 'teller_id' => $teller->id,
@@ -100,8 +133,10 @@ use Illuminate\Support\Facades\DB;class DailyReportService
                 'opening_balance' => $recap['opening_balance'],
                 'total_deposit' => $recap['total_deposit'],
                 'total_withdrawal' => $recap['total_withdrawal'],
+                'total_admin_fee' => $recap['total_admin_fee'],
                 'closing_balance_system' => $recap['closing_balance_system'],
                 'closing_balance_physical' => $physicalCash,
+                'closing_breakdown' => $normalizedBreakdown === [] ? null : $normalizedBreakdown,
                 'cash_difference' => $cashDifference,
                 'status' => 'submitted',
                 'approved_by' => null,

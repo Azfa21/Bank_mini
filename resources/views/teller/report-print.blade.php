@@ -62,6 +62,10 @@
                 <span class="text-gray-500">Total Penarikan</span>
                 <span class="font-mono text-red-600">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</span>
             </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Biaya Administrasi</span>
+                <span class="font-mono">Rp {{ number_format($report->total_admin_fee, 0, ',', '.') }}</span>
+            </div>
             <div class="flex justify-between font-semibold">
                 <span class="text-gray-900">Saldo Akhir Sistem</span>
                 <span class="font-mono text-gray-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</span>
@@ -77,6 +81,45 @@
                 </span>
             </div>
         </div>
+
+        @if ($report->closing_breakdown)
+            <div class="border-t border-dashed border-gray-300 pt-4">
+                <p class="text-xs font-medium text-gray-700 mb-2">Rincian Uang Kertas &amp; Logam</p>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-gray-500">
+                            <th class="py-1">Pecahan</th>
+                            <th class="py-1 text-center">Jumlah</th>
+                            <th class="py-1 text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach (\App\Support\CashDenomination::GROUPS as $group => $info)
+                            @php $hasGroup = collect($info['values'])->contains(fn ($v) => isset($report->closing_breakdown[$group.'_'.$v])); @endphp
+                            @if ($hasGroup)
+                                <tr class="bg-gray-50">
+                                    <td colspan="3" class="py-1 text-xs font-semibold text-gray-600">{{ $info['label'] }}</td>
+                                </tr>
+                                @foreach ($info['values'] as $value)
+                                    @php $key = $group.'_'.$value; @endphp
+                                    @if (isset($report->closing_breakdown[$key]))
+                                        <tr>
+                                            <td class="py-1">{{ \App\Support\CashDenomination::label($value) }}</td>
+                                            <td class="py-1 text-center font-mono">{{ $report->closing_breakdown[$key] }} lembar/keping</td>
+                                            <td class="py-1 text-right font-mono">Rp {{ number_format($value * $report->closing_breakdown[$key], 0, ',', '.') }}</td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+                            @endif
+                        @endforeach
+                        <tr class="font-semibold">
+                            <td class="py-1" colspan="2">Total</td>
+                            <td class="py-1 text-right font-mono">Rp {{ number_format($report->closing_balance_physical ?? 0, 0, ',', '.') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        @endif
 
         @if ($report->status === 'approved' && $report->approver)
             <div class="border-t border-dashed border-gray-300 mt-4 pt-4 text-xs text-gray-500 space-y-1">

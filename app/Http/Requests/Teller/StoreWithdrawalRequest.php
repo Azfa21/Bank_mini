@@ -18,6 +18,8 @@ class StoreWithdrawalRequest extends FormRequest
             'slip_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'amount' => ['required', 'integer', 'min:1'],
             'pin' => ['required', 'digits:6'],
+            'denomination_breakdown' => ['nullable', 'array'],
+            'denomination_breakdown.*' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

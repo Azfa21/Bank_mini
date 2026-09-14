@@ -42,6 +42,7 @@ return new class extends Migration
 
         Schema::table('customers', function (Blueprint $table) {
             $table->dropForeign(['created_by']);
+            $table->dropUnique(['qr_code_value']);
             $table->dropColumn(['class_name', 'phone_number', 'qr_code_value']);
             $table->foreign('created_by')
                 ->references('id')

@@ -27,4 +27,18 @@ class SystemConfig extends Model
         'config_key',
         'config_value',
     ];
+
+    public static function value(string $key, mixed $default = null): mixed
+    {
+        $value = static::query()->whereKey($key)->value('config_value');
+
+        return $value ?? $default;
+    }
+
+    public static function integer(string $key, int $default = 0): int
+    {
+        $value = static::value($key);
+
+        return $value === null || $value === '' ? $default : (int) $value;
+    }
 }

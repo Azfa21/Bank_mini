@@ -28,19 +28,25 @@ class SystemConfigController extends Controller
         $this->authorize('update', SystemConfig::class);
 
         $validated = request()->validate([
+            'bank_name' => ['required', 'string', 'max:100'],
+            'operational_hours' => ['nullable', 'string', 'max:100'],
             'minimum_balance' => ['required', 'integer', 'min:0'],
+            'admin_fee' => ['required', 'integer', 'min:0'],
+            'max_withdrawal_without_order' => ['required', 'integer', 'min:0'],
         ]);
 
-        $config = SystemConfig::updateOrCreate(
-            ['config_key' => 'minimum_balance'],
-            ['config_value' => (string) $validated['minimum_balance']]
-        );
+        foreach ($validated as $key => $value) {
+            SystemConfig::updateOrCreate(
+                ['config_key' => $key],
+                ['config_value' => (string) ($value ?? '')]
+            );
+        }
 
         if ($this->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Konfigurasi berhasil disimpan.',
-                'data' => $config,
+                'data' => SystemConfig::all(),
             ]);
         }
 

@@ -12,17 +12,25 @@ class AccountingService
 
     public const ACCOUNT_CODE_SAVINGS = '201';
 
+    public const ACCOUNT_CODE_ADMIN_INCOME = '401';
+
+    public const ACCOUNT_CODE_OPERATING_EXPENSE = '501';
+
     /**
      * @var array{
-     *     101: array{name: string, normal: string},
-     *     102: array{name: string, normal: string},
-     *     201: array{name: string, normal: string}
+     *     101: array{name: string, normal: string, type: string},
+     *     102: array{name: string, normal: string, type: string},
+     *     201: array{name: string, normal: string, type: string},
+     *     401: array{name: string, normal: string, type: string},
+     *     501: array{name: string, normal: string, type: string}
      * }
      */
     public const CHART_OF_ACCOUNTS = [
-        self::ACCOUNT_CODE_CASH_TELLER => ['name' => 'Kas Teller (Laci Loket)', 'normal' => 'debit'],
-        self::ACCOUNT_CODE_CASH_VAULT => ['name' => 'Kas Brankas Utama (Khazanah)', 'normal' => 'debit'],
-        self::ACCOUNT_CODE_SAVINGS => ['name' => 'Tabungan Nasabah (Simpanan Siswa)', 'normal' => 'credit'],
+        self::ACCOUNT_CODE_CASH_TELLER => ['name' => 'Kas Teller (Laci Loket)', 'normal' => 'debit', 'type' => 'asset'],
+        self::ACCOUNT_CODE_CASH_VAULT => ['name' => 'Kas Brankas Utama (Khazanah)', 'normal' => 'debit', 'type' => 'asset'],
+        self::ACCOUNT_CODE_SAVINGS => ['name' => 'Tabungan Nasabah (Simpanan Siswa)', 'normal' => 'credit', 'type' => 'liability'],
+        self::ACCOUNT_CODE_ADMIN_INCOME => ['name' => 'Pendapatan Administrasi', 'normal' => 'credit', 'type' => 'income'],
+        self::ACCOUNT_CODE_OPERATING_EXPENSE => ['name' => 'Beban Operasional Bank Mini', 'normal' => 'debit', 'type' => 'expense'],
     ];
 
     public function accountName(string $accountCode): string
@@ -39,7 +47,9 @@ class AccountingService
      *     balances: array{
      *         101: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
      *         102: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
-     *         201: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int}
+     *         201: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
+     *         401: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
+     *         501: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int}
      *     },
      *     grand_debit: int,
      *     grand_credit: int,
@@ -91,6 +101,116 @@ class AccountingService
             'grand_debit' => $grandDebit,
             'grand_credit' => $grandCredit,
             'is_balanced' => $grandDebit === $grandCredit,
+        ];
+    }
+
+    /**
+     * Laporan Laba Rugi (pendapatan - beban) sampai tanggal tertentu.
+     *
+     * @return array{
+     *     date: string,
+     *     incomes: array<int, array{name: string, amount: int}>,
+     *     expenses: array<int, array{name: string, amount: int}>,
+     *     total_income: int,
+     *     total_expense: int,
+     *     net_income: int
+     * }
+     */
+    public function incomeStatement(?string $date = null): array
+    {
+        $trial = $this->trialBalance($date);
+
+        $incomes = [];
+        $expenses = [];
+        $totalIncome = 0;
+        $totalExpense = 0;
+
+        foreach (self::CHART_OF_ACCOUNTS as $code => $info) {
+            $balance = $trial['balances'][$code];
+
+            if ($info['type'] === 'income') {
+                $amount = (int) $balance['net_credit'] - (int) $balance['net_debit'];
+                $incomes[$code] = ['name' => $info['name'], 'amount' => $amount];
+                $totalIncome += $amount;
+            }
+
+            if ($info['type'] === 'expense') {
+                $amount = (int) $balance['net_debit'] - (int) $balance['net_credit'];
+                $expenses[$code] = ['name' => $info['name'], 'amount' => $amount];
+                $totalExpense += $amount;
+            }
+        }
+
+        return [
+            'date' => $trial['date'],
+            'incomes' => $incomes,
+            'expenses' => $expenses,
+            'total_income' => $totalIncome,
+            'total_expense' => $totalExpense,
+            'net_income' => $totalIncome - $totalExpense,
+        ];
+    }
+
+    /**
+     * Laporan Neraca (aset = kewajiban + ekuitas) sampai tanggal tertentu.
+     *
+     * @return array{
+     *     date: string,
+     *     assets: array<int, array{name: string, amount: int}>,
+     *     liabilities: array<int, array{name: string, amount: int}>,
+     *     equity: array<int, array{name: string, amount: int}>,
+     *     total_assets: int,
+     *     total_liabilities: int,
+     *     total_equity: int,
+     *     is_balanced: bool
+     * }
+     */
+    public function balanceSheet(?string $date = null): array
+    {
+        $trial = $this->trialBalance($date);
+
+        $assets = [];
+        $liabilities = [];
+        $totalAssets = 0;
+        $totalLiabilities = 0;
+        $netIncome = 0;
+
+        foreach (self::CHART_OF_ACCOUNTS as $code => $info) {
+            $balance = $trial['balances'][$code];
+
+            if ($info['type'] === 'asset') {
+                $amount = (int) $balance['net_debit'] - (int) $balance['net_credit'];
+                $assets[$code] = ['name' => $info['name'], 'amount' => $amount];
+                $totalAssets += $amount;
+            }
+
+            if ($info['type'] === 'liability') {
+                $amount = (int) $balance['net_credit'] - (int) $balance['net_debit'];
+                $liabilities[$code] = ['name' => $info['name'], 'amount' => $amount];
+                $totalLiabilities += $amount;
+            }
+
+            if ($info['type'] === 'income') {
+                $netIncome += (int) $balance['net_credit'] - (int) $balance['net_debit'];
+            }
+
+            if ($info['type'] === 'expense') {
+                $netIncome -= (int) $balance['net_debit'] - (int) $balance['net_credit'];
+            }
+        }
+
+        $equity = [(int) self::ACCOUNT_CODE_ADMIN_INCOME => ['name' => 'Laba Periode Berjalan', 'amount' => $netIncome]];
+        $totalEquity = $netIncome;
+
+        return [
+            'date' => $trial['date'],
+            'assets' => $assets,
+            'liabilities' => $liabilities,
+            'equity' => $equity,
+            'total_assets' => $totalAssets,
+            'total_liabilities' => $totalLiabilities,
+            'total_equity' => $totalEquity,
+            'is_balanced' => $totalAssets === ($totalLiabilities + $totalEquity),
         ];
     }
 }

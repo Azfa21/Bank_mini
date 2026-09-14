@@ -37,6 +37,16 @@ Aplikasi client-server untuk operasional Bank Mini Sekolah yang mencakup pengelo
 - Double-entry automatic journal: Kas (101) & Tabungan (201).
 - Atomic database transaction dengan mekanisme rollback otomatis jika terjadi kegagalan.
 
+### 6. Penyempurnaan Berbasis Riset Pengguna (FASE 9)
+- **Rincian Uang Kertas & Logam**: input pecahan per lembar/keping pada setoran, penarikan, dan penutupan kas; total dihitung otomatis.
+- **Biaya Administrasi**: biaya per penarikan yang dicatat sebagai pendapatan (akun 401) dan tampil pada struk & laporan harian.
+- **Struk Lengkap**: nama bank, nomor referensi jurnal, terbilang Rupiah, biaya admin, total, saldo sebelum/sesudah, dan status transaksi.
+- **Jurnal Koreksi/Pembalik**: Supervisor dapat mengoreksi transaksi dengan jurnal pembalik dan pemulihan saldo.
+- **Pencarian Cepat**: cari nasabah berdasarkan nomor rekening, NIS, nama lengkap, atau QR Code.
+- **Registrasi Didampingi Teller**: Teller dapat mendaftarkan nasabah baru, nomor rekening dibuat otomatis.
+- **Laporan Laba Rugi & Neraca**: laporan keuangan lengkap untuk Administrator dan Supervisor.
+- **Konfigurasi Produk**: nama bank, jam operasional, biaya admin, dan batas penarikan tanpa pesanan.
+
 ---
 
 ## 🛠️ Panduan Menjalankan Aplikasi
