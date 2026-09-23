@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Exceptions\TransactionValidationException;
+use App\Mail\ResetOtpMail;
 use App\Services\TransactionService;
+use Illuminate\Support\Facades\Mail;
 use Tests\Feature\Teller\TellerTestCase;
 
 class PinRateLimitTest extends TellerTestCase
@@ -98,14 +100,29 @@ class PinRateLimitTest extends TellerTestCase
             'locked_until' => now()->addMinutes(15),
         ]);
 
+        Mail::fake();
+
         $this->from(route('password.request'))
-            ->post(route('password.nasabah.reset'), [
-                'student_number' => $this->nasabah->student_number,
-                'class_name' => $this->nasabah->class_name,
-                'pin' => '999999',
-                'pin_confirmation' => '999999',
+            ->post(route('password.otp.request'), [
+                'account_type' => 'nasabah',
+                'email' => $this->nasabah->email,
             ])
-            ->assertRedirect(route('login'));
+            ->assertSessionHas('otp_sent', true);
+
+        $code = null;
+        Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail) use (&$code): bool {
+            $code = $mail->code;
+
+            return true;
+        });
+
+        $this->post(route('password.reset.submit'), [
+            'account_type' => 'nasabah',
+            'email' => $this->nasabah->email,
+            'otp' => $code,
+            'pin' => '999999',
+            'pin_confirmation' => '999999',
+        ])->assertRedirect(route('login'));
 
         $customer = $this->nasabah->refresh();
 

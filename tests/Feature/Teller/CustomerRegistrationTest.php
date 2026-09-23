@@ -22,6 +22,7 @@ class CustomerRegistrationTest extends TellerTestCase
                 'full_name' => 'Budi Santoso',
                 'class_name' => 'VII A',
                 'phone_number' => '081234567890',
+                'email' => 'budi.santoso@example.test',
                 'pin' => '654321',
             ])
             ->assertRedirect(route('teller.customers.register'))
@@ -43,6 +44,7 @@ class CustomerRegistrationTest extends TellerTestCase
             ->post(route('teller.customers.register.store'), [
                 'full_name' => 'Budi Santoso',
                 'class_name' => 'VII A',
+                'email' => 'budi.santoso@example.test',
                 'pin' => '123',
             ])
             ->assertSessionHasErrors('pin');
@@ -56,6 +58,7 @@ class CustomerRegistrationTest extends TellerTestCase
             ->post(route('teller.customers.register.store'), [
                 'full_name' => 'Budi Santoso',
                 'class_name' => 'VII A',
+                'email' => 'budi.santoso@example.test',
                 'pin' => '654321',
             ])
             ->assertRedirect(route('login'));

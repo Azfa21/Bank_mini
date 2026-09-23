@@ -29,6 +29,7 @@ class CustomerRegistrationController extends Controller
             'full_name' => $request->validated('full_name'),
             'class_name' => $request->validated('class_name'),
             'phone_number' => $request->validated('phone_number'),
+            'email' => $request->validated('email'),
             'pin' => $request->validated('pin'),
         ], $request->user()->id);
 

@@ -63,7 +63,7 @@ class CustomerImportService
 
     /**
      * @param  array<int, string|false|null>  $headers
-     * @return array{nis: int, nama: int, kelas: ?int, no_hp: ?int}
+     * @return array{nis: int, nama: int, kelas: ?int, no_hp: ?int, email: int}
      */
     private function mapHeaders(array $headers): array
     {
@@ -78,10 +78,11 @@ class CustomerImportService
             'nama' => array_search('nama', $normalized, true),
             'kelas' => array_search('kelas', $normalized, true),
             'no_hp' => array_search('no_hp', $normalized, true),
+            'email' => array_search('email', $normalized, true),
         ];
 
-        if ($columns['nis'] === false || $columns['nama'] === false) {
-            throw new InvalidArgumentException('Header CSV harus memuat kolom "nis" dan "nama".');
+        if ($columns['nis'] === false || $columns['nama'] === false || $columns['email'] === false) {
+            throw new InvalidArgumentException('Header CSV harus memuat kolom "nis", "nama", dan "email".');
         }
 
         return [
@@ -89,18 +90,20 @@ class CustomerImportService
             'nama' => (int) $columns['nama'],
             'kelas' => $columns['kelas'] === false ? null : (int) $columns['kelas'],
             'no_hp' => $columns['no_hp'] === false ? null : (int) $columns['no_hp'],
+            'email' => (int) $columns['email'],
         ];
     }
 
     /**
      * @param  resource  $handle
-     * @param  array{nis: int, nama: int, kelas: ?int, no_hp: ?int}  $columns
+     * @param  array{nis: int, nama: int, kelas: ?int, no_hp: ?int, email: int}  $columns
      * @return array{imported: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}
      */
     private function processRows($handle, string $delimiter, array $columns, int $actorId): array
     {
         $summary = ['imported' => 0, 'skipped' => 0, 'failed' => 0, 'issues' => []];
         $seenNis = [];
+        $seenEmail = [];
         $buffer = [];
 
         $rowNumber = 1;
@@ -112,12 +115,13 @@ class CustomerImportService
             $nama = isset($raw[$columns['nama']]) ? trim((string) $raw[$columns['nama']]) : '';
             $kelas = $columns['kelas'] !== null && isset($raw[$columns['kelas']]) ? trim((string) $raw[$columns['kelas']]) : '';
             $noHp = $columns['no_hp'] !== null && isset($raw[$columns['no_hp']]) ? trim((string) $raw[$columns['no_hp']]) : '';
+            $email = isset($raw[$columns['email']]) ? mb_strtolower(trim((string) $raw[$columns['email']])) : '';
 
-            if ($nis === '' && $nama === '' && $kelas === '' && $noHp === '') {
+            if ($nis === '' && $nama === '' && $kelas === '' && $noHp === '' && $email === '') {
                 continue;
             }
 
-            $error = $this->validateRow($nis, $nama, $kelas, $noHp, $seenNis);
+            $error = $this->validateRow($nis, $nama, $kelas, $noHp, $email, $seenNis, $seenEmail);
 
             if ($error !== null) {
                 $summary['failed']++;
@@ -127,7 +131,8 @@ class CustomerImportService
             }
 
             $seenNis[$nis] = true;
-            $buffer[] = compact('nis', 'nama', 'kelas', 'noHp');
+            $seenEmail[$email] = true;
+            $buffer[] = compact('nis', 'nama', 'kelas', 'noHp', 'email');
 
             if (count($buffer) >= self::CHUNK_SIZE) {
                 $this->flushBuffer($buffer, $actorId, $summary);
@@ -140,7 +145,7 @@ class CustomerImportService
         return $summary;
     }
 
-    private function validateRow(string $nis, string $nama, string $kelas, string $noHp, array $seenNis): ?string
+    private function validateRow(string $nis, string $nama, string $kelas, string $noHp, string $email, array $seenNis, array $seenEmail): ?string
     {
         if ($nis === '') {
             return 'Kolom nis wajib diisi.';
@@ -162,19 +167,35 @@ class CustomerImportService
             return 'Kolom nama melebihi 100 karakter.';
         }
 
-        if (mb_strlen($kelas) > 30) {
+        if ($kelas !== '' && mb_strlen($kelas) > 30) {
             return 'Kolom kelas melebihi 30 karakter.';
         }
 
-        if (mb_strlen($noHp) > 20) {
+        if ($noHp !== '' && mb_strlen($noHp) > 20) {
             return 'Kolom no_hp melebihi 20 karakter.';
+        }
+
+        if ($email === '') {
+            return 'Kolom email wajib diisi.';
+        }
+
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return "Format email {$email} tidak valid.";
+        }
+
+        if (mb_strlen($email) > 255) {
+            return 'Kolom email melebihi 255 karakter.';
+        }
+
+        if (isset($seenEmail[$email])) {
+            return "Email {$email} duplikat di dalam file.";
         }
 
         return null;
     }
 
     /**
-     * @param  array<int, array{nis: string, nama: string, kelas: string, noHp: string}>  $buffer
+     * @param  array<int, array{nis: string, nama: string, kelas: string, noHp: string, email: string}>  $buffer
      * @param  array{imported: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}  $summary
      */
     private function flushBuffer(array &$buffer, int $actorId, array &$summary): void
@@ -189,10 +210,22 @@ class CustomerImportService
                 ->pluck('student_number')
                 ->all();
 
+            $existingEmails = Customer::query()
+                ->whereIn('email', array_column($buffer, 'email'))
+                ->pluck('email')
+                ->all();
+
             foreach ($buffer as $entry) {
                 if (in_array($entry['nis'], $existing, true)) {
                     $summary['skipped']++;
                     $this->reportIssue($summary, null, "NIS {$entry['nis']} sudah terdaftar.");
+
+                    continue;
+                }
+
+                if (in_array($entry['email'], $existingEmails, true)) {
+                    $summary['skipped']++;
+                    $this->reportIssue($summary, null, "Email {$entry['email']} sudah terdaftar.");
 
                     continue;
                 }
@@ -202,6 +235,7 @@ class CustomerImportService
                     'full_name' => $entry['nama'],
                     'class_name' => $entry['kelas'] !== '' ? $entry['kelas'] : null,
                     'phone_number' => $entry['noHp'] !== '' ? $entry['noHp'] : null,
+                    'email' => $entry['email'],
                     'pin_hash' => '123456',
                     'qr_code_value' => Str::uuid()->toString(),
                     'created_by' => $actorId,

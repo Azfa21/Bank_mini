@@ -13,6 +13,7 @@ class RegistrationEdgeCasesTest extends TellerTestCase
             ->post(route('teller.customers.register.store'), [
                 'full_name' => $name,
                 'class_name' => 'VII B',
+                'email' => strtolower(str_replace(' ', '.', $name)).'@example.test',
                 'pin' => $pin,
             ])
             ->assertRedirect(route('teller.customers.register'));
@@ -51,11 +52,11 @@ class RegistrationEdgeCasesTest extends TellerTestCase
         $this->assertAuthenticatedAs($customer, 'nasabah');
     }
 
-    public function test_registration_requires_name_class_and_pin(): void
+    public function test_registration_requires_name_class_email_and_pin(): void
     {
         $this->actingAsTeller()
             ->post(route('teller.customers.register.store'), [])
-            ->assertSessionHasErrors(['full_name', 'class_name', 'pin']);
+            ->assertSessionHasErrors(['full_name', 'class_name', 'email', 'pin']);
 
         $this->assertSame(1, Customer::count());
     }
@@ -66,6 +67,7 @@ class RegistrationEdgeCasesTest extends TellerTestCase
             ->postJson(route('teller.customers.register.store'), [
                 'full_name' => 'Budi Santoso',
                 'class_name' => 'VII B',
+                'email' => 'budi.santoso@example.test',
                 'pin' => '112233',
             ])
             ->assertCreated()

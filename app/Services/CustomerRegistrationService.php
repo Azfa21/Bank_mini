@@ -14,7 +14,7 @@ class CustomerRegistrationService
     ) {}
 
     /**
-     * @param  array{full_name: string, class_name: string, phone_number?: string|null, pin: string}  $data
+     * @param  array{full_name: string, class_name: string, phone_number?: string|null, email?: string|null, pin: string}  $data
      */
     public function register(array $data, ?int $createdBy = null): Customer
     {
@@ -30,6 +30,7 @@ class CustomerRegistrationService
                 'full_name' => $data['full_name'],
                 'class_name' => $data['class_name'],
                 'phone_number' => $data['phone_number'] ?? null,
+                'email' => isset($data['email']) ? mb_strtolower(trim((string) $data['email'])) : null,
                 'pin_hash' => $data['pin'],
                 'qr_code_value' => Str::uuid()->toString(),
                 'created_by' => $createdBy,

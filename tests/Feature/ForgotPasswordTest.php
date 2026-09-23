@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ResetOtpMail;
 use App\Models\Customer;
+use App\Models\PasswordResetOtp;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ForgotPasswordTest extends TestCase
@@ -26,8 +30,11 @@ class ForgotPasswordTest extends TestCase
     {
         parent::setUp();
 
+        $this->withoutMiddleware(ThrottleRequests::class);
+
         $this->admin = User::create([
             'username' => 'admin',
+            'email' => 'admin@example.test',
             'password_hash' => Hash::make('password123'),
             'full_name' => 'Administrator Bank',
             'role' => 'admin',
@@ -36,6 +43,7 @@ class ForgotPasswordTest extends TestCase
 
         $this->teller = User::create([
             'username' => 'teller1',
+            'email' => 'budi.santoso@example.test',
             'password_hash' => Hash::make('password123'),
             'full_name' => 'Budi Santoso',
             'role' => 'teller',
@@ -44,6 +52,7 @@ class ForgotPasswordTest extends TestCase
 
         $this->blockedUser = User::create([
             'username' => 'teller_blokir',
+            'email' => 'agus.blokir@example.test',
             'password_hash' => Hash::make('password123'),
             'full_name' => 'Agus Blokir',
             'role' => 'teller',
@@ -55,6 +64,7 @@ class ForgotPasswordTest extends TestCase
             'full_name' => 'Ani Pertiwi',
             'class_name' => 'X RPL 1',
             'phone_number' => '081234567890',
+            'email' => 'ani.pertiwi@example.test',
             'pin_hash' => Hash::make('123456'),
             'qr_code_value' => 'qr-test-2023001',
             'created_by' => $this->admin->id,
@@ -66,11 +76,34 @@ class ForgotPasswordTest extends TestCase
             'full_name' => 'Joko Blokir',
             'class_name' => 'X RPL 2',
             'phone_number' => '081234567891',
+            'email' => 'joko.blokir@example.test',
             'pin_hash' => Hash::make('123456'),
             'qr_code_value' => 'qr-test-2023002',
             'created_by' => $this->admin->id,
             'status' => 'blocked',
         ]);
+    }
+
+    private function requestOtpCode(string $accountType, string $email): string
+    {
+        Mail::fake();
+
+        $this->post('/forgot-password/request-otp', [
+            'account_type' => $accountType,
+            'email' => $email,
+        ])->assertSessionHasNoErrors();
+
+        $code = null;
+
+        Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail) use (&$code): bool {
+            $code = $mail->code;
+
+            return true;
+        });
+
+        $this->assertNotNull($code, 'Kode OTP seharusnya dikirim ke email.');
+
+        return (string) $code;
     }
 
     public function test_forgot_password_page_can_be_rendered(): void
@@ -79,15 +112,72 @@ class ForgotPasswordTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Pemulihan Kredensial');
-        $response->assertSee('Pegawai / Staff');
-        $response->assertSee('Nasabah / Siswa');
+        $response->assertSee('Pegawai');
+        $response->assertSee('Nasabah');
     }
 
-    public function test_staff_can_reset_password_with_valid_identity(): void
+    public function test_staff_request_otp_sends_email(): void
     {
-        $response = $this->post('/forgot-password/staff', [
-            'username' => 'teller1',
-            'full_name' => 'Budi Santoso',
+        Mail::fake();
+
+        $response = $this->post('/forgot-password/request-otp', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+        ]);
+
+        $response->assertSessionHas('otp_sent', true);
+        $response->assertSessionHas('success');
+
+        Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail): bool {
+            return $mail->hasTo('budi.santoso@example.test') && $mail->purpose === 'password';
+        });
+
+        $this->assertDatabaseHas('password_reset_otps', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', ['action' => 'password_reset_otp_requested']);
+    }
+
+    public function test_staff_request_otp_fails_when_email_not_registered(): void
+    {
+        Mail::fake();
+
+        $response = $this->post('/forgot-password/request-otp', [
+            'account_type' => 'staff',
+            'email' => 'tidak.ada@example.test',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        Mail::assertNothingSent();
+
+        $this->assertDatabaseHas('audit_logs', ['action' => 'password_reset_otp_request_failed']);
+    }
+
+    public function test_staff_request_otp_fails_when_account_is_blocked(): void
+    {
+        Mail::fake();
+
+        $response = $this->post('/forgot-password/request-otp', [
+            'account_type' => 'staff',
+            'email' => 'agus.blokir@example.test',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        Mail::assertNothingSent();
+
+        $this->assertDatabaseHas('audit_logs', ['action' => 'password_reset_otp_request_blocked']);
+    }
+
+    public function test_staff_can_reset_password_with_valid_otp(): void
+    {
+        $code = $this->requestOtpCode('staff', 'budi.santoso@example.test');
+
+        $response = $this->post('/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => $code,
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ]);
@@ -97,7 +187,6 @@ class ForgotPasswordTest extends TestCase
 
         $this->assertTrue(Hash::check('newpassword123', $this->teller->fresh()->password_hash));
 
-        // Can login with new password
         $loginResponse = $this->post('/login', [
             'identifier' => 'teller1',
             'secret' => 'newpassword123',
@@ -105,7 +194,6 @@ class ForgotPasswordTest extends TestCase
         $loginResponse->assertRedirect(route('teller.dashboard'));
         $this->assertAuthenticated('web');
 
-        // Audit log exists
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'password_reset_success',
             'entity_name' => 'user',
@@ -113,81 +201,112 @@ class ForgotPasswordTest extends TestCase
         ]);
     }
 
-    public function test_staff_reset_fails_when_full_name_does_not_match(): void
+    public function test_staff_reset_fails_with_wrong_otp(): void
     {
-        $response = $this->post('/forgot-password/staff', [
-            'username' => 'teller1',
-            'full_name' => 'Nama Yang Salah',
+        $this->requestOtpCode('staff', 'budi.santoso@example.test');
+
+        $response = $this->post('/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => '000000',
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ]);
 
-        $response->assertSessionHasErrors('username');
+        $response->assertSessionHasErrors('otp');
         $this->assertTrue(Hash::check('password123', $this->teller->fresh()->password_hash));
 
-        $this->assertDatabaseHas('audit_logs', [
-            'action' => 'password_reset_failed',
-            'entity_name' => 'user',
-        ]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'password_reset_otp_failed']);
     }
 
-    public function test_staff_reset_fails_when_user_does_not_exist(): void
+    public function test_staff_reset_fails_when_otp_expired(): void
     {
-        $response = $this->post('/forgot-password/staff', [
-            'username' => 'nonexistent_user',
-            'full_name' => 'Siapa Saja',
+        $code = $this->requestOtpCode('staff', 'budi.santoso@example.test');
+
+        PasswordResetOtp::query()->update(['expires_at' => now()->subMinute()]);
+
+        $response = $this->post('/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => $code,
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ]);
 
-        $response->assertSessionHasErrors('username');
+        $response->assertSessionHasErrors('otp');
+        $this->assertTrue(Hash::check('password123', $this->teller->fresh()->password_hash));
     }
 
-    public function test_staff_reset_fails_when_account_is_blocked(): void
+    public function test_staff_reset_locks_after_max_otp_attempts(): void
     {
-        $response = $this->post('/forgot-password/staff', [
-            'username' => 'teller_blokir',
-            'full_name' => 'Agus Blokir',
+        $code = $this->requestOtpCode('staff', 'budi.santoso@example.test');
+
+        foreach (range(1, 5) as $attempt) {
+            $this->post('/forgot-password/reset', [
+                'account_type' => 'staff',
+                'email' => 'budi.santoso@example.test',
+                'otp' => '000000',
+                'password' => 'newpassword123',
+                'password_confirmation' => 'newpassword123',
+            ])->assertSessionHasErrors('otp');
+        }
+
+        $this->post('/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => $code,
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
-        ]);
+        ])->assertSessionHasErrors('otp');
 
-        $response->assertSessionHasErrors('username');
-        $this->assertTrue(Hash::check('password123', $this->blockedUser->fresh()->password_hash));
-
-        $this->assertDatabaseHas('audit_logs', [
-            'action' => 'password_reset_blocked',
-            'entity_name' => 'user',
-            'entity_id' => $this->blockedUser->id,
-        ]);
+        $this->assertTrue(Hash::check('password123', $this->teller->fresh()->password_hash));
     }
 
     public function test_staff_reset_validates_password_rules(): void
     {
-        // Too short (< 8 chars)
-        $responseShort = $this->post('/forgot-password/staff', [
-            'username' => 'teller1',
-            'full_name' => 'Budi Santoso',
+        $code = $this->requestOtpCode('staff', 'budi.santoso@example.test');
+
+        $responseShort = $this->post('/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => $code,
             'password' => 'short',
             'password_confirmation' => 'short',
         ]);
         $responseShort->assertSessionHasErrors('password');
 
-        // Mismatched confirmation
-        $responseMismatch = $this->post('/forgot-password/staff', [
-            'username' => 'teller1',
-            'full_name' => 'Budi Santoso',
+        $responseMismatch = $this->post('/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => $code,
             'password' => 'newpassword123',
             'password_confirmation' => 'different123',
         ]);
         $responseMismatch->assertSessionHasErrors('password');
     }
 
-    public function test_nasabah_can_reset_pin_with_valid_identity(): void
+    public function test_nasabah_request_otp_sends_pin_email(): void
     {
-        $response = $this->post('/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'X RPL 1',
+        Mail::fake();
+
+        $this->post('/forgot-password/request-otp', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+        ])->assertSessionHas('otp_sent', true);
+
+        Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail): bool {
+            return $mail->hasTo('ani.pertiwi@example.test') && $mail->purpose === 'pin';
+        });
+    }
+
+    public function test_nasabah_can_reset_pin_with_valid_otp(): void
+    {
+        $code = $this->requestOtpCode('nasabah', 'ani.pertiwi@example.test');
+
+        $response = $this->post('/forgot-password/reset', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+            'otp' => $code,
             'pin' => '654321',
             'pin_confirmation' => '654321',
         ]);
@@ -197,7 +316,6 @@ class ForgotPasswordTest extends TestCase
 
         $this->assertTrue(Hash::check('654321', $this->nasabah->fresh()->pin_hash));
 
-        // Can login with new PIN
         $loginResponse = $this->post('/login', [
             'identifier' => '2023001',
             'secret' => '654321',
@@ -205,7 +323,6 @@ class ForgotPasswordTest extends TestCase
         $loginResponse->assertRedirect(route('nasabah.dashboard'));
         $this->assertAuthenticated('nasabah');
 
-        // Audit log exists
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'pin_reset_success',
             'entity_name' => 'customer',
@@ -213,38 +330,18 @@ class ForgotPasswordTest extends TestCase
         ]);
     }
 
-    public function test_nasabah_reset_fails_when_class_name_does_not_match(): void
-    {
-        $response = $this->post('/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'XII TKJ 3',
-            'pin' => '654321',
-            'pin_confirmation' => '654321',
-        ]);
-
-        $response->assertSessionHasErrors('student_number');
-        $this->assertTrue(Hash::check('123456', $this->nasabah->fresh()->pin_hash));
-
-        $this->assertDatabaseHas('audit_logs', [
-            'action' => 'pin_reset_failed',
-            'entity_name' => 'customer',
-        ]);
-    }
-
     public function test_nasabah_reset_fails_when_account_is_blocked(): void
     {
-        $response = $this->post('/forgot-password/nasabah', [
-            'student_number' => '2023002',
-            'class_name' => 'X RPL 2',
-            'pin' => '654321',
-            'pin_confirmation' => '654321',
+        $response = $this->post('/forgot-password/request-otp', [
+            'account_type' => 'nasabah',
+            'email' => 'joko.blokir@example.test',
         ]);
 
-        $response->assertSessionHasErrors('student_number');
+        $response->assertSessionHasErrors('email');
         $this->assertTrue(Hash::check('123456', $this->blockedNasabah->fresh()->pin_hash));
 
         $this->assertDatabaseHas('audit_logs', [
-            'action' => 'pin_reset_blocked',
+            'action' => 'pin_reset_otp_request_blocked',
             'entity_name' => 'customer',
             'entity_id' => $this->blockedNasabah->id,
         ]);
@@ -252,85 +349,96 @@ class ForgotPasswordTest extends TestCase
 
     public function test_nasabah_reset_validates_pin_rules(): void
     {
-        // Not 6 digits (e.g. 4 digits)
-        $responseShort = $this->post('/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'X RPL 1',
+        $code = $this->requestOtpCode('nasabah', 'ani.pertiwi@example.test');
+
+        $responseShort = $this->post('/forgot-password/reset', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+            'otp' => $code,
             'pin' => '1234',
             'pin_confirmation' => '1234',
         ]);
         $responseShort->assertSessionHasErrors('pin');
 
-        // Non-numeric
-        $responseNonNumeric = $this->post('/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'X RPL 1',
+        $responseNonNumeric = $this->post('/forgot-password/reset', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+            'otp' => $code,
             'pin' => 'abcdef',
             'pin_confirmation' => 'abcdef',
         ]);
         $responseNonNumeric->assertSessionHasErrors('pin');
 
-        // Mismatched confirmation
-        $responseMismatch = $this->post('/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'X RPL 1',
+        $responseMismatch = $this->post('/forgot-password/reset', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+            'otp' => $code,
             'pin' => '654321',
             'pin_confirmation' => '111111',
         ]);
         $responseMismatch->assertSessionHasErrors('pin');
     }
 
-    public function test_api_staff_reset_endpoint_success_and_error_json(): void
+    public function test_api_staff_otp_and_reset_endpoints_return_json(): void
     {
-        $successResponse = $this->postJson('/api/forgot-password/staff', [
-            'username' => 'teller1',
-            'full_name' => 'Budi Santoso',
+        Mail::fake();
+
+        $this->postJson('/api/forgot-password/request-otp', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+        ])->assertOk()->assertJson(['success' => true]);
+
+        $code = null;
+        Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail) use (&$code): bool {
+            $code = $mail->code;
+
+            return true;
+        });
+
+        $this->postJson('/api/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'budi.santoso@example.test',
+            'otp' => $code,
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
-        ]);
+        ])->assertOk()->assertJson(['success' => true]);
 
-        $successResponse->assertOk();
-        $successResponse->assertJson([
-            'success' => true,
-        ]);
-
-        $errorResponse = $this->postJson('/api/forgot-password/staff', [
-            'username' => 'teller1',
-            'full_name' => 'Wrong Name',
+        $errorResponse = $this->postJson('/api/forgot-password/reset', [
+            'account_type' => 'staff',
+            'email' => 'tidak.ada@example.test',
+            'otp' => '000000',
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ]);
 
         $errorResponse->assertStatus(422);
-        $errorResponse->assertJson([
-            'success' => false,
-        ]);
+        $errorResponse->assertJson(['success' => false]);
     }
 
-    public function test_api_nasabah_reset_endpoint_success_and_error_json(): void
+    public function test_mobile_forgot_pin_endpoints_work(): void
     {
-        $successResponse = $this->postJson('/api/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'X RPL 1',
+        Mail::fake();
+
+        $this->postJson('/api/mobile/forgot-pin/request-otp', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+        ])->assertOk()->assertJson(['success' => true]);
+
+        $code = null;
+        Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail) use (&$code): bool {
+            $code = $mail->code;
+
+            return true;
+        });
+
+        $this->postJson('/api/mobile/forgot-pin/reset', [
+            'account_type' => 'nasabah',
+            'email' => 'ani.pertiwi@example.test',
+            'otp' => $code,
             'pin' => '654321',
             'pin_confirmation' => '654321',
-        ]);
+        ])->assertOk()->assertJson(['success' => true]);
 
-        $successResponse->assertOk();
-        $successResponse->assertJson([
-            'success' => true,
-        ]);
-
-        $errorResponse = $this->postJson('/api/forgot-password/nasabah', [
-            'student_number' => '2023001',
-            'class_name' => 'Wrong Class',
-            'pin' => '654321',
-            'pin_confirmation' => '654321',
-        ]);
-
-        $errorResponse->assertStatus(422);
-        $errorResponse->assertJson([
-            'success' => false,
-        ]);
+        $this->assertTrue(Hash::check('654321', $this->nasabah->fresh()->pin_hash));
     }
 }

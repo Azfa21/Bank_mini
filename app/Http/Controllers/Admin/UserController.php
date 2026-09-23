@@ -53,6 +53,7 @@ class UserController extends Controller
         $user = User::create([
             'full_name' => $request->full_name,
             'username' => $request->username,
+            'email' => $request->email,
             'password_hash' => $request->password,
             'role' => $request->role,
             'status' => $request->status,
@@ -80,7 +81,7 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $data = $request->only(['full_name', 'username', 'role', 'status']);
+        $data = $request->only(['full_name', 'username', 'email', 'role', 'status']);
 
         $violation = $this->minimumRoleViolation(
             $user,

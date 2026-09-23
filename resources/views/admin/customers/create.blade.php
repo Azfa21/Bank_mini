@@ -5,16 +5,16 @@
 
 @section('content')
     <div class="max-w-lg">
-        <h1 class="text-xl font-semibold text-gray-900 mb-1">Tambah Nasabah Baru</h1>
-        <p class="text-sm text-gray-500 mb-6">Profil siswa akan otomatis mendapat rekening tabungan.</p>
+        <h1 class="text-xl font-semibold text-stone-900 mb-1">Tambah Nasabah Baru</h1>
+        <p class="text-sm text-stone-500 mb-6">Profil siswa akan otomatis mendapat rekening tabungan.</p>
 
         <x-form-errors />
 
-        <form method="POST" action="{{ route('admin.customers.store') }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form method="POST" action="{{ route('admin.customers.store') }}" class="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
             @csrf
             <div>
                 <x-input-label>Nomor Siswa</x-input-label>
-                <p class="text-sm text-gray-500">Dibuat otomatis oleh sistem setelah nasabah disimpan.</p>
+                <p class="text-sm text-stone-500">Dibuat otomatis oleh sistem setelah nasabah disimpan.</p>
             </div>
             <div>
                 <x-input-label for="full_name">Nama Lengkap</x-input-label>
@@ -29,6 +29,10 @@
                     <x-input-label for="phone_number">No. HP</x-input-label>
                     <x-input id="phone_number" name="phone_number" />
                 </div>
+            </div>
+            <div>
+                <x-input-label for="email">Email</x-input-label>
+                <x-input id="email" name="email" type="email" required placeholder="Untuk verifikasi reset PIN" />
             </div>
             <div>
                 <x-input-label for="pin">PIN (6 digit)</x-input-label>

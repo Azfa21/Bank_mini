@@ -59,6 +59,7 @@ class CustomerController extends Controller
             'full_name' => $request->full_name,
             'class_name' => $request->class_name,
             'phone_number' => $request->phone_number,
+            'email' => $request->email,
             'pin' => $request->pin,
         ], $request->user()->id);
 
@@ -80,7 +81,7 @@ class CustomerController extends Controller
 
     public function update(UpdateCustomerRequest $request, Customer $customer)
     {
-        $data = $request->only(['student_number', 'full_name', 'class_name', 'phone_number', 'status']);
+        $data = $request->only(['student_number', 'full_name', 'class_name', 'phone_number', 'email', 'status']);
 
         if ($request->filled('pin')) {
             $data['pin_hash'] = $request->pin;
@@ -158,9 +159,9 @@ class CustomerController extends Controller
             $handle = fopen('php://output', 'wb');
 
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, ['nis', 'nama', 'kelas', 'no_hp']);
-            fputcsv($handle, ['20260001', 'Budi Santoso', 'VII A', '081234567001']);
-            fputcsv($handle, ['20260002', 'Citra Lestari', 'VII B', '081234567002']);
+            fputcsv($handle, ['nis', 'nama', 'kelas', 'no_hp', 'email']);
+            fputcsv($handle, ['20260001', 'Budi Santoso', 'VII A', '081234567001', 'budi.santoso@example.test']);
+            fputcsv($handle, ['20260002', 'Citra Lestari', 'VII B', '081234567002', 'citra.lestari@example.test']);
 
             fclose($handle);
         }, 'template-import-nasabah.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

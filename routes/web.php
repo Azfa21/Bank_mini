@@ -32,8 +32,8 @@ Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:l
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotForm'])->name('password.request');
-Route::post('/forgot-password/staff', [ForgotPasswordController::class, 'resetStaffPassword'])->middleware('throttle:forgot-password')->name('password.staff.reset');
-Route::post('/forgot-password/nasabah', [ForgotPasswordController::class, 'resetNasabahPin'])->middleware('throttle:forgot-password')->name('password.nasabah.reset');
+Route::post('/forgot-password/request-otp', [ForgotPasswordController::class, 'requestOtp'])->middleware('throttle:forgot-password')->name('password.otp.request');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetCredential'])->middleware('throttle:forgot-password')->name('password.reset.submit');
 
 Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');

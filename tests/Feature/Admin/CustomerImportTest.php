@@ -42,10 +42,10 @@ class CustomerImportTest extends TellerTestCase
         $response = $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.import'), [
                 'file' => $this->csv(
-                    "nis,nama,kelas,no_hp\n"
-                    ."20260001,Budi Santoso,VII A,081234567001\n"
-                    ."20260002,Citra Lestari,VII B,\n"
-                    ."20260003,Dewi Anggraini,VII C,\n"
+                    "nis,nama,kelas,no_hp,email\n"
+                    ."20260001,Budi Santoso,VII A,081234567001,budi@example.test\n"
+                    ."20260002,Citra Lestari,VII B,,citra@example.test\n"
+                    ."20260003,Dewi Anggraini,VII C,,dewi@example.test\n"
                 ),
             ])
             ->assertRedirect(route('admin.customers.import.form'));
@@ -87,11 +87,11 @@ class CustomerImportTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.import'), [
                 'file' => $this->csv(
-                    "nis,nama,kelas,no_hp\n"
-                    ."20260001,Duplikat Database,VII A,\n"
-                    ."20260002,Baru Pertama,VII B,\n"
-                    ."20260003,Baru Kedua,VII C,\n"
-                    ."20260003,Duplikat File,VII D,\n"
+                    "nis,nama,kelas,no_hp,email\n"
+                    ."20260001,Duplikat Database,VII A,,duplikat.db@example.test\n"
+                    ."20260002,Baru Pertama,VII B,,baru.pertama@example.test\n"
+                    ."20260003,Baru Kedua,VII C,,baru.kedua@example.test\n"
+                    ."20260003,Duplikat File,VII D,,duplikat.file@example.test\n"
                 ),
             ])
             ->assertRedirect(route('admin.customers.import.form'))
@@ -113,10 +113,10 @@ class CustomerImportTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.import'), [
                 'file' => $this->csv(
-                    "nis,nama,kelas,no_hp\n"
-                    .",Nama Tanpa Nis,VII A,\n"
-                    ."20260001,Budi Kelas Panjang,KELAS-INI-SANGAT-PANJANG-SEKALI-LHO,\n"
-                    ."20260002,,Tanpa Nama,\n"
+                    "nis,nama,kelas,no_hp,email\n"
+                    .",Nama Tanpa Nis,VII A,,tanpa.nis@example.test\n"
+                    ."20260001,Budi Kelas Panjang,KELAS-INI-SANGAT-PANJANG-SEKALI-LHO,,kelas.panjang@example.test\n"
+                    ."20260002,,Tanpa Nama,,tanpa.nama@example.test\n"
                 ),
             ])
             ->assertRedirect(route('admin.customers.import.form'))
@@ -139,8 +139,8 @@ class CustomerImportTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.import'), [
                 'file' => $this->csv(
-                    "nis;nama;kelas;no_hp\n"
-                    ."20260011;Semi Kolon;VII C;081234567011\n"
+                    "nis;nama;kelas;no_hp;email\n"
+                    ."20260011;Semi Kolon;VII C;081234567011;semi.kolon@example.test\n"
                 ),
             ])
             ->assertRedirect(route('admin.customers.import.form'))
@@ -162,7 +162,7 @@ class CustomerImportTest extends TellerTestCase
                 'file' => $this->csv("nomor_induk,nama_lengkap\n20260001,Budi\n"),
             ])
             ->assertRedirect()
-            ->assertSessionHas('error', 'Header CSV harus memuat kolom "nis" dan "nama".');
+            ->assertSessionHas('error', 'Header CSV harus memuat kolom "nis", "nama", dan "email".');
 
         $this->assertDatabaseCount('customers', 1);
     }
@@ -192,8 +192,8 @@ class CustomerImportTest extends TellerTestCase
         $content = preg_replace('/^\xEF\xBB\xBF/', '', $response->streamedContent());
         $lines = explode("\n", trim((string) $content));
 
-        $this->assertSame(['nis', 'nama', 'kelas', 'no_hp'], str_getcsv($lines[0]));
-        $this->assertSame(['20260001', 'Budi Santoso', 'VII A', '081234567001'], str_getcsv($lines[1]));
+        $this->assertSame(['nis', 'nama', 'kelas', 'no_hp', 'email'], str_getcsv($lines[0]));
+        $this->assertSame(['20260001', 'Budi Santoso', 'VII A', '081234567001', 'budi.santoso@example.test'], str_getcsv($lines[1]));
     }
 
     public function test_manual_creation_avoids_collision_with_imported_nis(): void
@@ -203,9 +203,9 @@ class CustomerImportTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.import'), [
                 'file' => $this->csv(
-                    "nis,nama,kelas,no_hp\n"
-                    .$year."0001,Siswa Impor Satu,VII A,\n"
-                    .$year."0002,Siswa Impor Dua,VII B,\n"
+                    "nis,nama,kelas,no_hp,email\n"
+                    .$year."0001,Siswa Impor Satu,VII A,,impor.satu@example.test\n"
+                    .$year."0002,Siswa Impor Dua,VII B,,impor.dua@example.test\n"
                 ),
             ])
             ->assertSessionHas('import_summary');
@@ -213,6 +213,7 @@ class CustomerImportTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
                 'full_name' => 'Nasabah Manual',
+                'email' => 'nasabah.manual@example.test',
                 'pin' => '123456',
             ])
             ->assertRedirect(route('admin.customers.index'));

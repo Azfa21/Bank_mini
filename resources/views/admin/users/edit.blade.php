@@ -5,12 +5,12 @@
 
 @section('content')
     <div class="max-w-lg">
-        <h1 class="text-xl font-semibold text-gray-900 mb-1">Ubah Pengguna</h1>
-        <p class="text-sm text-gray-500 mb-6">Perbarui data akun <strong>{{ $user->full_name }}</strong>.</p>
+        <h1 class="text-xl font-semibold text-stone-900 mb-1">Ubah Pengguna</h1>
+        <p class="text-sm text-stone-500 mb-6">Perbarui data akun <strong>{{ $user->full_name }}</strong>.</p>
 
         <x-form-errors />
 
-        <form method="POST" action="{{ route('admin.users.update', $user) }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form method="POST" action="{{ route('admin.users.update', $user) }}" class="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
             @csrf @method('PUT')
             <div>
                 <x-input-label for="full_name">Nama Lengkap</x-input-label>
@@ -21,7 +21,11 @@
                 <x-input id="username" name="username" :value="$user->username" required />
             </div>
             <div>
-                <x-input-label for="password">Password <span class="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
+                <x-input-label for="email">Email</x-input-label>
+                <x-input id="email" name="email" type="email" :value="$user->email" required placeholder="Untuk verifikasi lupa password" />
+            </div>
+            <div>
+                <x-input-label for="password">Password <span class="text-stone-500 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
                 <x-input id="password" name="password" type="password" minlength="6" />
             </div>
             <div class="grid grid-cols-2 gap-4">

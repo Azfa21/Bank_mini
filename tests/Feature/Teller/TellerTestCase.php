@@ -30,6 +30,7 @@ abstract class TellerTestCase extends TestCase
 
         $this->admin = User::create([
             'username' => 'admin',
+            'email' => 'admin@example.test',
             'password_hash' => Hash::make('password'),
             'full_name' => 'Admin',
             'role' => 'admin',
@@ -38,6 +39,7 @@ abstract class TellerTestCase extends TestCase
 
         $this->teller = User::create([
             'username' => 'teller1',
+            'email' => 'teller1@example.test',
             'password_hash' => Hash::make('password'),
             'full_name' => 'Teller Satu',
             'role' => 'teller',
@@ -46,6 +48,7 @@ abstract class TellerTestCase extends TestCase
 
         $this->supervisor = User::create([
             'username' => 'supervisor1',
+            'email' => 'supervisor1@example.test',
             'password_hash' => Hash::make('password'),
             'full_name' => 'Supervisor Satu',
             'role' => 'supervisor',
@@ -57,6 +60,7 @@ abstract class TellerTestCase extends TestCase
             'full_name' => 'Ani Wijaya',
             'class_name' => 'X RPL 1',
             'phone_number' => '081234567001',
+            'email' => 'ani.wijaya@example.test',
             'pin_hash' => Hash::make('123456'),
             'qr_code_value' => 'qr-test-1',
             'created_by' => $this->admin->id,

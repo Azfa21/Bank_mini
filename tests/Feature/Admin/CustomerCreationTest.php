@@ -27,6 +27,7 @@ class CustomerCreationTest extends TellerTestCase
                 'full_name' => 'Budi Santoso',
                 'class_name' => 'VII A',
                 'phone_number' => '081234567777',
+                'email' => 'budi.santoso@example.test',
                 'pin' => '123456',
             ])
             ->assertRedirect(route('admin.customers.index'));
@@ -48,6 +49,7 @@ class CustomerCreationTest extends TellerTestCase
             $this->actingAs($this->admin, 'web')
                 ->post(route('admin.customers.store'), [
                     'full_name' => $name,
+                    'email' => strtolower(str_replace(' ', '.', $name)).'@example.test',
                     'pin' => '123456',
                 ])
                 ->assertRedirect(route('admin.customers.index'));
@@ -98,6 +100,7 @@ class CustomerCreationTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
                 'full_name' => 'Eko Prasetyo',
+                'email' => 'eko.prasetyo@example.test',
                 'pin' => '123456',
             ])
             ->assertRedirect(route('admin.customers.index'));
@@ -113,6 +116,7 @@ class CustomerCreationTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
                 'full_name' => 'Fajar Nugroho',
+                'email' => 'fajar.nugroho@example.test',
                 'pin' => '123456',
             ])
             ->assertRedirect(route('admin.customers.index'));
@@ -149,6 +153,7 @@ class CustomerCreationTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('admin.customers.store'), [
                 'full_name' => 'Gagal Buat',
+                'email' => 'gagal.buat@example.test',
                 'pin' => '123456',
             ])
             ->assertServerError();

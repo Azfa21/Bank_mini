@@ -5,12 +5,12 @@
 
 @section('content')
     <div class="max-w-lg">
-        <h1 class="text-xl font-semibold text-gray-900 mb-1">Tambah Pengguna Baru</h1>
-        <p class="text-sm text-gray-500 mb-6">Buat akun untuk Administrator, Teller, atau Supervisor.</p>
+        <h1 class="text-xl font-semibold text-stone-900 mb-1">Tambah Pengguna Baru</h1>
+        <p class="text-sm text-stone-500 mb-6">Buat akun untuk Administrator, Teller, atau Supervisor.</p>
 
         <x-form-errors />
 
-        <form method="POST" action="{{ route('admin.users.store') }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form method="POST" action="{{ route('admin.users.store') }}" class="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
             @csrf
             <div>
                 <x-input-label for="full_name">Nama Lengkap</x-input-label>
@@ -19,6 +19,10 @@
             <div>
                 <x-input-label for="username">Username</x-input-label>
                 <x-input id="username" name="username" required />
+            </div>
+            <div>
+                <x-input-label for="email">Email</x-input-label>
+                <x-input id="email" name="email" type="email" required placeholder="Untuk verifikasi lupa password" />
             </div>
             <div>
                 <x-input-label for="password">Password</x-input-label>

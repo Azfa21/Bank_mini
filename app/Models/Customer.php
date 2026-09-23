@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property string $full_name
  * @property string|null $class_name
  * @property string|null $phone_number
+ * @property string|null $email
  * @property string $pin_hash
  * @property string $qr_code_value
  * @property int|null $created_by
@@ -32,6 +33,7 @@ class Customer extends Authenticatable
         'full_name',
         'class_name',
         'phone_number',
+        'email',
         'pin_hash',
         'qr_code_value',
         'created_by',

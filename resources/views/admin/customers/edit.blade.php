@@ -5,12 +5,12 @@
 
 @section('content')
     <div class="max-w-lg">
-        <h1 class="text-xl font-semibold text-gray-900 mb-1">Ubah Nasabah</h1>
-        <p class="text-sm text-gray-500 mb-6">Perbarui data <strong>{{ $customer->full_name }}</strong>.</p>
+        <h1 class="text-xl font-semibold text-stone-900 mb-1">Ubah Nasabah</h1>
+        <p class="text-sm text-stone-500 mb-6">Perbarui data <strong>{{ $customer->full_name }}</strong>.</p>
 
         <x-form-errors />
 
-        <form method="POST" action="{{ route('admin.customers.update', $customer) }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form method="POST" action="{{ route('admin.customers.update', $customer) }}" class="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
             @csrf @method('PUT')
             <div>
                 <x-input-label for="student_number">Nomor Siswa</x-input-label>
@@ -31,7 +31,11 @@
                 </div>
             </div>
             <div>
-                <x-input-label for="pin">PIN Baru <span class="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
+                <x-input-label for="email">Email</x-input-label>
+                <x-input id="email" name="email" type="email" :value="$customer->email" required placeholder="Untuk verifikasi reset PIN" />
+            </div>
+            <div>
+                <x-input-label for="pin">PIN Baru <span class="text-stone-500 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
                 <x-input id="pin" name="pin" type="password" pattern="\d{6}" maxlength="6" />
             </div>
             <div>

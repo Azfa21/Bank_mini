@@ -8,6 +8,9 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\JournalController;
+use App\Http\Controllers\Mobile\AuthController as MobileAuthController;
+use App\Http\Controllers\Mobile\DashboardController as MobileDashboardController;
+use App\Http\Controllers\Mobile\MutasiController as MobileMutasiController;
 use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
 use App\Http\Controllers\Nasabah\MutasiController;
 use App\Http\Controllers\Supervisor\ReportController;
@@ -20,8 +23,23 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:login')->name('api.login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('api.logout');
 
-Route::post('/forgot-password/staff', [ForgotPasswordController::class, 'resetStaffPassword'])->middleware('throttle:forgot-password')->name('api.password.staff.reset');
-Route::post('/forgot-password/nasabah', [ForgotPasswordController::class, 'resetNasabahPin'])->middleware('throttle:forgot-password')->name('api.password.nasabah.reset');
+Route::post('/forgot-password/request-otp', [ForgotPasswordController::class, 'requestOtp'])->middleware('throttle:forgot-password')->name('api.password.otp.request');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetCredential'])->middleware('throttle:forgot-password')->name('api.password.reset.submit');
+
+Route::prefix('mobile')->group(function () {
+    Route::post('/login', [MobileAuthController::class, 'login'])->middleware('throttle:login')->name('api.mobile.login');
+    Route::post('/forgot-pin/request-otp', [ForgotPasswordController::class, 'requestOtp'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-pin.request');
+    Route::post('/forgot-pin/reset', [ForgotPasswordController::class, 'resetCredential'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-pin.reset');
+
+    Route::middleware('mobile.auth')->group(function () {
+        Route::post('/logout', [MobileAuthController::class, 'logout'])->name('api.mobile.logout');
+        Route::get('/me', [MobileAuthController::class, 'me'])->name('api.mobile.me');
+        Route::get('/dashboard', [MobileDashboardController::class, 'index'])->name('api.mobile.dashboard');
+        Route::get('/card', [MobileDashboardController::class, 'card'])->name('api.mobile.card');
+        Route::get('/mutasi', [MobileMutasiController::class, 'index'])->name('api.mobile.mutasi');
+        Route::get('/statement', [MobileMutasiController::class, 'statement'])->name('api.mobile.statement');
+    });
+});
 
 Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
