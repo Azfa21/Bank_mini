@@ -18,7 +18,7 @@ class PinRateLimitTest extends TellerTestCase
     public function test_wrong_pin_increments_failed_attempts(): void
     {
         try {
-            $this->service()->verifyCustomerPin($this->nasabah, '000001', 'penarikan', $this->teller->id);
+            $this->service()->verifySaverPin($this->nasabah, '000001', 'penarikan', $this->teller->id);
         } catch (TransactionValidationException $e) {
             $this->assertStringContainsString('PIN nasabah salah', $e->getMessage());
         }
@@ -30,7 +30,7 @@ class PinRateLimitTest extends TellerTestCase
     {
         foreach (['000001', '000002', '000003'] as $pin) {
             try {
-                $this->service()->verifyCustomerPin($this->nasabah, $pin, 'penarikan', $this->teller->id);
+                $this->service()->verifySaverPin($this->nasabah, $pin, 'penarikan', $this->teller->id);
             } catch (TransactionValidationException $e) {
                 // expected
             }
@@ -56,7 +56,7 @@ class PinRateLimitTest extends TellerTestCase
         ]);
 
         try {
-            $this->service()->verifyCustomerPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
+            $this->service()->verifySaverPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
             $this->fail('Seharusnya transaksi ditolak karena PIN terkunci.');
         } catch (TransactionValidationException $e) {
             $this->assertStringContainsString('terkunci sementara', $e->getMessage());
@@ -70,7 +70,7 @@ class PinRateLimitTest extends TellerTestCase
             'locked_until' => null,
         ]);
 
-        $this->service()->verifyCustomerPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
+        $this->service()->verifySaverPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
 
         $customer = $this->nasabah->refresh();
 
@@ -85,7 +85,7 @@ class PinRateLimitTest extends TellerTestCase
             'locked_until' => now()->subMinute(),
         ]);
 
-        $this->service()->verifyCustomerPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
+        $this->service()->verifySaverPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
 
         $customer = $this->nasabah->refresh();
 

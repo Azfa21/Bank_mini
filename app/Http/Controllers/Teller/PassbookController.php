@@ -11,7 +11,7 @@ class PassbookController extends Controller
 {
     public function show(Account $account)
     {
-        $account->load('customer');
+        $account->load('saver');
 
         $transactions = Transaction::where('account_id', $account->id)
             ->where('status', 'success')
@@ -34,7 +34,7 @@ class PassbookController extends Controller
 
     public function print(Account $account, Request $request)
     {
-        $account->load('customer');
+        $account->load('saver');
 
         $startLine = max(1, min(20, (int) $request->input('start_line', 1)));
         $limit = 20 - $startLine + 1;

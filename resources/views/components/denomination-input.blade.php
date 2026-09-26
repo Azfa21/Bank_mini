@@ -7,22 +7,23 @@
 
 <div class="space-y-4" data-denomination-root>
     @foreach (CashDenomination::GROUPS as $group => $info)
-        <div>
-            <p class="text-xs font-medium text-gray-600">{{ $info['label'] }}</p>
-            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <fieldset>
+            <legend class="text-[13px] font-semibold text-stone-700">{{ $info['label'] }}</legend>
+            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 @foreach ($info['values'] as $value)
                     @php $key = $group.'_'.$value; @endphp
-                    <label class="flex items-center gap-2 border border-gray-200 rounded-lg px-2 py-1.5">
-                        <span class="text-xs text-gray-500 w-20 shrink-0">{{ CashDenomination::label($value) }}</span>
-                        <input type="number" min="0" step="1"
+                    <label class="flex items-center gap-3 border border-stone-200 rounded-xl px-3 py-2 min-h-[52px] focus-within:border-brand-800 focus-within:ring-2 focus-within:ring-brand-800/20 has-[:focus-visible]:border-brand-800">
+                        <span class="text-[13px] font-medium text-stone-700 w-24 shrink-0">{{ CashDenomination::label($value) }}</span>
+                        <input type="number" min="0" step="1" inputmode="numeric"
                             name="{{ $name }}[{{ $key }}]"
                             value="{{ $valueOf($key) }}"
+                            aria-label="Jumlah {{ CashDenomination::label($value) }}"
                             data-denomination-input
                             data-value="{{ $value }}"
-                            class="w-full border-0 p-0 text-sm focus:ring-0" />
+                            class="w-full min-h-[44px] border-0 p-0 text-[15px] tnum text-stone-900 focus:ring-0" />
                     </label>
                 @endforeach
             </div>
-        </div>
+        </fieldset>
     @endforeach
 </div>

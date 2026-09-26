@@ -19,8 +19,8 @@ class ClosingTest extends TellerTestCase
         $this->actingAsTeller()
             ->get(route('teller.closing.index'))
             ->assertOk()
-            ->assertSee('Penutupan Kas')
-            ->assertSee('Saldo Akhir Sistem');
+            ->assertSee('Penutupan kas')
+            ->assertSee('Saldo akhir sistem');
     }
 
     public function test_recap_shows_correct_totals(): void
@@ -103,6 +103,35 @@ class ClosingTest extends TellerTestCase
             'entity_name' => 'daily_report',
             'entity_id' => $report->id,
         ]);
+    }
+
+    public function test_create_report_allows_negative_opening_balance(): void
+    {
+        Transaction::create([
+            'account_id' => $this->account->id,
+            'teller_id' => $this->teller->id,
+            'type' => 'withdrawal',
+            'amount' => 5000,
+            'balance_before' => 25000,
+            'balance_after' => 20000,
+            'receipt_number' => 'TRX-20260802-0006',
+            'status' => 'success',
+            'transaction_at' => now()->subDay(),
+        ]);
+
+        $this->actingAsTeller()
+            ->post(route('teller.closing.store'), [
+                'report_date' => now()->toDateString(),
+                'physical_cash' => 0,
+                'difference_note' => 'Laci kosong, saldo sistem negatif dari penarikan.',
+            ])
+            ->assertRedirect();
+
+        $report = DailyReport::firstOrFail();
+
+        $this->assertSame(-5000, $report->opening_balance);
+        $this->assertSame(-5000, $report->closing_balance_system);
+        $this->assertSame(5000, $report->cash_difference);
     }
 
     public function test_create_report_rejects_when_cash_differs(): void

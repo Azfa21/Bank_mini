@@ -1,58 +1,73 @@
 @extends('layouts.app')
 
-@section('title', 'Konfigurasi Sistem — Bank Mini')
+@section('title', 'Konfigurasi Sistem  EBank Mini')
 @section('section', 'Administrator · Konfigurasi')
 
 @section('content')
-    <div class="max-w-lg">
-        <h1 class="text-xl font-semibold text-gray-900 mb-1">Konfigurasi Sistem</h1>
-        <p class="text-sm text-gray-500 mb-6">Pengaturan global Bank Mini.</p>
+    <div>
+        <p class="text-xs font-semibold text-brand-900">PENGATURAN GLOBAL</p>
+        <h1 class="text-2xl font-bold text-stone-900 mt-1">Konfigurasi sistem</h1>
+        <p class="text-sm text-stone-600 mt-1 mb-5">Perubahan langsung dipakai loket, struk, dan validasi penarikan.</p>
 
-        @if (session('success'))
-            <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">{{ session('success') }}</div>
-        @endif
-
-        <form method="POST" action="{{ route('admin.config.update') }}" class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form method="POST" action="{{ route('admin.config.update') }}" class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6 space-y-5" id="config-form">
             @csrf @method('PUT')
 
             <div>
-                <x-input-label for="bank_name">Nama Bank Mini *</x-input-label>
-                <x-input id="bank_name" name="bank_name" :value="$configs->get('bank_name')->config_value ?? 'Bank Mini Sekolah'" required />
-                <p class="text-xs text-gray-400 mt-1">Ditampilkan pada struk transaksi dan laporan.</p>
+                <x-input-label for="bank_name">Nama bank mini wajib</x-input-label>
+                <x-input id="bank_name" name="bank_name" :value="$configs->get('bank_name')->config_value ?? 'Bank Mini Sekolah'" required
+                    aria-describedby="bank-name-help" />
+                <p id="bank-name-help" class="text-[13px] text-stone-600 mt-1.5">Tampil di struk, laporan, dan kartu penabung.</p>
                 <x-input-error :message="$errors->first('bank_name')" />
             </div>
 
             <div>
-                <x-input-label for="operational_hours">Jam Buka Operasional</x-input-label>
-                <x-input name="operational_hours" id="operational_hours" :value="$configs->get('operational_hours')->config_value ?? '07.30 - 14.00 WIB'" />
-                <p class="text-xs text-gray-400 mt-1">Informasi jam layanan yang ditampilkan pada dashboard.</p>
+                <x-input-label for="operational_hours">Jam layanan loket</x-input-label>
+                <x-input name="operational_hours" id="operational_hours" :value="$configs->get('operational_hours')->config_value ?? '07.30 - 14.00 WIB'"
+                    aria-describedby="hours-help" />
+                <p id="hours-help" class="text-[13px] text-stone-600 mt-1.5">Tampil di dashboard Teller dan footer.</p>
                 <x-input-error :message="$errors->first('operational_hours')" />
             </div>
 
-            <div>
-                <x-input-label for="minimum_balance">Saldo Mengendap Minimum (Rp) *</x-input-label>
-                <x-input id="minimum_balance" name="minimum_balance" type="number" :value="$configs->get('minimum_balance')->config_value ?? 10000" min="0" required />
-                <p class="text-xs text-gray-400 mt-1">Penarikan tidak boleh menghasilkan saldo di bawah nilai ini.</p>
-                <x-input-error :message="$errors->first('minimum_balance')" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <x-input-label for="minimum_balance">Saldo mengendap (Rp) wajib</x-input-label>
+                    <x-input id="minimum_balance" name="minimum_balance" type="number" inputmode="numeric" :value="$configs->get('minimum_balance')->config_value ?? 10000" min="0" required
+                        aria-describedby="min-help" />
+                    <p id="min-help" class="text-[13px] text-stone-600 mt-1.5">Sisa penarikan tidak boleh di bawah ini.</p>
+                    <x-input-error :message="$errors->first('minimum_balance')" />
+                </div>
+
+                <div>
+                    <x-input-label for="admin_fee">Biaya admin per penarikan (Rp) wajib</x-input-label>
+                    <x-input id="admin_fee" name="admin_fee" type="number" inputmode="numeric" :value="$configs->get('admin_fee')->config_value ?? 0" min="0" required
+                        aria-describedby="fee-help" />
+                    <p id="fee-help" class="text-[13px] text-stone-600 mt-1.5">Masuk akun 401. Isi 0 bila gratis.</p>
+                    <x-input-error :message="$errors->first('admin_fee')" />
+                </div>
             </div>
 
             <div>
-                <x-input-label for="admin_fee">Biaya Administrasi per Penarikan (Rp) *</x-input-label>
-                <x-input id="admin_fee" name="admin_fee" type="number" :value="$configs->get('admin_fee')->config_value ?? 0" min="0" required />
-                <p class="text-xs text-gray-400 mt-1">Biaya ini dicatat sebagai pendapatan (akun 401). Isi 0 jika tidak ada biaya.</p>
-                <x-input-error :message="$errors->first('admin_fee')" />
-            </div>
-
-            <div>
-                <x-input-label for="max_withdrawal_without_order">Batas Maksimal Penarikan Tanpa Pesanan (Rp) *</x-input-label>
-                <x-input id="max_withdrawal_without_order" name="max_withdrawal_without_order" type="number" :value="$configs->get('max_withdrawal_without_order')->config_value ?? 0" min="0" required />
-                <p class="text-xs text-gray-400 mt-1">Penarikan di atas nilai ini ditolak. Isi 0 untuk menonaktifkan batas.</p>
+                <x-input-label for="max_withdrawal_without_order">Batas penarikan tanpa pesanan (Rp) wajib</x-input-label>
+                <x-input id="max_withdrawal_without_order" name="max_withdrawal_without_order" type="number" inputmode="numeric" :value="$configs->get('max_withdrawal_without_order')->config_value ?? 0" min="0" required
+                    aria-describedby="limit-help" />
+                <p id="limit-help" class="text-[13px] text-stone-600 mt-1.5">Di atas batas ini transaksi ditolak. Isi 0 untuk nonaktif.</p>
                 <x-input-error :message="$errors->first('max_withdrawal_without_order')" />
             </div>
 
-            <div class="pt-2">
-                <x-primary-button>Simpan Konfigurasi</x-primary-button>
+            <div>
+                <x-input-label for="min_deposit_to_activate">Setoran minimal aktivasi anggota (Rp) wajib</x-input-label>
+                <x-input id="min_deposit_to_activate" name="min_deposit_to_activate" type="number" inputmode="numeric" :value="$configs->get('min_deposit_to_activate')->config_value ?? 10000" min="0" required
+                    aria-describedby="activate-help" />
+                <p id="activate-help" class="text-[13px] text-stone-600 mt-1.5">Anggota otomatis menjadi penabung setelah setoran minimal ini.</p>
+                <x-input-error :message="$errors->first('min_deposit_to_activate')" />
+            </div>
+
+            <div class="pt-1">
+                <x-primary-button id="config-submit" data-loading-text="Menyimpan..." class="w-full sm:w-auto sm:min-w-[220px]">
+                    Simpan konfigurasi
+                </x-primary-button>
             </div>
         </form>
     </div>
+
 @endsection

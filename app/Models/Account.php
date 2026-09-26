@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $account_number
- * @property int $customer_id
+ * @property int $saver_id
  * @property int $balance
  * @property int $opening_balance
  * @property int $minimum_balance
@@ -27,7 +27,7 @@ class Account extends Model
 
     protected $fillable = [
         'account_number',
-        'customer_id',
+        'saver_id',
         'balance',
         'opening_balance',
         'minimum_balance',
@@ -50,10 +50,10 @@ class Account extends Model
         return (int) $this->attributes['balance'];
     }
 
-    /** @return BelongsTo<Customer, $this> */
-    public function customer(): BelongsTo
+    /** @return BelongsTo<Saver, $this> */
+    public function saver(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Saver::class, 'saver_id')->withTrashed();
     }
 
     /** @return HasMany<Transaction, $this> */

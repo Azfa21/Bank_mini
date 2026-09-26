@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 
 class AccountService
 {
@@ -17,7 +17,7 @@ class AccountService
         protected SequenceService $sequences,
     ) {}
 
-    public function openFor(Customer $customer, int $minimumBalance = self::DEFAULT_MINIMUM_BALANCE): Account
+    public function openFor(Saver $saver, int $minimumBalance = self::DEFAULT_MINIMUM_BALANCE): Account
     {
         $academicYear = now()->format('Y').'/'.(now()->format('Y') + 1);
 
@@ -28,7 +28,7 @@ class AccountService
 
         return Account::create([
             'account_number' => self::ACCOUNT_NUMBER_PREFIX.$startYear.$endYear.str_pad((string) $ordinal, self::ORDINAL_PAD, '0', STR_PAD_LEFT),
-            'customer_id' => $customer->id,
+            'saver_id' => $saver->id,
             'balance' => 0,
             'opening_balance' => 0,
             'minimum_balance' => $minimumBalance,

@@ -147,33 +147,6 @@ class AccountingReportController extends Controller
         ]);
     }
 
-    public function balanceSheet(Request $request)
-    {
-        $this->authorize('viewAny', JurnalAkuntansi::class);
-
-        $sheet = $this->accounting->balanceSheet(
-            $request->input('date', now()->toDateString())
-        );
-
-        if ($this->wantsJson($request)) {
-            return response()->json([
-                'success' => true,
-                'data' => $sheet,
-            ]);
-        }
-
-        return view('reports.balance_sheet', [
-            'date' => $sheet['date'],
-            'assets' => $sheet['assets'],
-            'liabilities' => $sheet['liabilities'],
-            'equity' => $sheet['equity'],
-            'totalAssets' => $sheet['total_assets'],
-            'totalLiabilities' => $sheet['total_liabilities'],
-            'totalEquity' => $sheet['total_equity'],
-            'isBalanced' => $sheet['is_balanced'],
-        ]);
-    }
-
     public function exportCsv(Request $request, string $type = 'journals'): StreamedResponse
     {
         $this->authorize('viewAny', JurnalAkuntansi::class);

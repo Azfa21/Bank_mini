@@ -1,5 +1,5 @@
-@props(['href'])
+@props(['href' => '#'])
 
-<a {{ $attributes->merge(['href' => $href, 'class' => 'text-sm text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50']) }}>
+<a href="{{ $href }}" {{ $attributes->merge(['class' => 'inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors']) }}>
     {{ $slot }}
 </a>

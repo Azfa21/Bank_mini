@@ -3,7 +3,7 @@
 namespace Tests\Feature\Teller;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use Illuminate\Support\Facades\Hash;
 
 class SearchEdgeCasesTest extends TellerTestCase
@@ -14,7 +14,7 @@ class SearchEdgeCasesTest extends TellerTestCase
         string $accountNumber,
         string $className = 'X RPL 2'
     ): Account {
-        $customer = Customer::create([
+        $customer = Saver::create([
             'student_number' => $studentNumber,
             'full_name' => $name,
             'class_name' => $className,
@@ -26,7 +26,7 @@ class SearchEdgeCasesTest extends TellerTestCase
 
         return Account::create([
             'account_number' => $accountNumber,
-            'customer_id' => $customer->id,
+            'saver_id' => $customer->id,
             'balance' => 0,
             'opening_balance' => 0,
             'minimum_balance' => 10000,
@@ -41,7 +41,7 @@ class SearchEdgeCasesTest extends TellerTestCase
         $this->createCustomerWithAccount('Budi Santoso', '2023010', '2026/2027-010', 'X RPL 1');
 
         $this->actingAsTeller()
-            ->get(route('teller.customers.lookup', ['q' => 'X RPL 1']))
+            ->get(route('teller.members.lookup', ['q' => 'X RPL 1']))
             ->assertOk()
             ->assertSee('Hasil Pencarian')
             ->assertSee('Ani Wijaya')
@@ -51,8 +51,8 @@ class SearchEdgeCasesTest extends TellerTestCase
     public function test_search_is_case_insensitive(): void
     {
         $this->actingAsTeller()
-            ->get(route('teller.customers.lookup', ['q' => 'ani wijaya']))
-            ->assertRedirect(route('teller.customers.show', $this->account));
+            ->get(route('teller.members.lookup', ['q' => 'ani wijaya']))
+            ->assertRedirect(route('teller.members.show', $this->account));
     }
 
     public function test_search_limits_results_to_twenty_five(): void
@@ -66,7 +66,7 @@ class SearchEdgeCasesTest extends TellerTestCase
         }
 
         $response = $this->actingAsTeller()
-            ->get(route('teller.customers.lookup', ['q' => 'Siswa']))
+            ->get(route('teller.members.lookup', ['q' => 'Siswa']))
             ->assertOk()
             ->assertSee('Hasil Pencarian');
 
@@ -76,7 +76,7 @@ class SearchEdgeCasesTest extends TellerTestCase
     public function test_lookup_json_returns_single_account(): void
     {
         $this->actingAsTeller()
-            ->getJson(route('teller.customers.lookup', ['q' => '2023001']))
+            ->getJson(route('teller.members.lookup', ['q' => '2023001']))
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.account_number', '2026/2027-001');
@@ -87,7 +87,7 @@ class SearchEdgeCasesTest extends TellerTestCase
         $this->createCustomerWithAccount('Anisah Putri', '2023011', '2026/2027-011');
 
         $this->actingAsTeller()
-            ->getJson(route('teller.customers.lookup', ['q' => 'Ani']))
+            ->getJson(route('teller.members.lookup', ['q' => 'Ani']))
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonCount(2, 'data');

@@ -9,6 +9,7 @@ use App\Models\CashTransfer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -83,89 +84,98 @@ class UserController extends Controller
 
         $data = $request->only(['full_name', 'username', 'email', 'role', 'status']);
 
-        $violation = $this->minimumRoleViolation(
-            $user,
-            $data['role'] ?? $user->role,
-            ($data['status'] ?? $user->status) === 'active',
-        );
+        return DB::transaction(function () use ($request, $data, $user) {
+            $user = User::query()->findOrFail($user->id);
+            $violation = $this->minimumRoleViolation(
+                $user,
+                $data['role'] ?? $user->role,
+                ($data['status'] ?? $user->status) === 'active',
+            );
 
-        if ($violation !== null) {
-            return $this->reject("Perubahan akun ditolak karena {$violation}.");
-        }
+            if ($violation !== null) {
+                return $this->reject("Perubahan akun ditolak karena {$violation}.");
+            }
 
-        if ($request->filled('password')) {
-            $data['password_hash'] = $request->password;
-        }
+            if ($request->filled('password')) {
+                $data['password_hash'] = $request->password;
+            }
 
-        $user->update($data);
+            $user->update($data);
 
-        if ($this->wantsJson($request)) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Akun pengguna berhasil diperbarui.',
-                'data' => $user->fresh(),
-            ]);
-        }
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Akun pengguna berhasil diperbarui.',
+                    'data' => $user->fresh(),
+                ]);
+            }
 
-        return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil diperbarui.');
+            return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil diperbarui.');
+        }, 3);
     }
 
     public function destroy(User $user)
     {
         $this->authorize('delete', $user);
 
-        if ($user->id === auth('web')->id()) {
-            return $this->reject('Anda tidak dapat menghapus akun Anda sendiri.');
-        }
+        return DB::transaction(function () use ($user) {
+            $user = User::query()->findOrFail($user->id);
+            if ($user->id === auth('web')->id()) {
+                return $this->reject('Anda tidak dapat menghapus akun Anda sendiri.');
+            }
 
-        if ($violation = $this->minimumRoleViolation($user, null, false)) {
-            return $this->reject("Penghapusan akun ditolak karena {$violation}.");
-        }
+            if ($violation = $this->minimumRoleViolation($user, null, false)) {
+                return $this->reject("Penghapusan akun ditolak karena {$violation}.");
+            }
 
-        if ($this->hasRelatedRecords($user)) {
-            return $this->reject('Akun pengguna tidak dapat dihapus karena masih memiliki data terkait (nasabah/transaksi/laporan).');
-        }
+            if ($this->hasRelatedRecords($user)) {
+                return $this->reject('Akun pengguna tidak dapat dihapus karena masih memiliki data terkait (nasabah/transaksi/laporan).');
+            }
 
-        $user->delete();
+            $user->delete();
 
-        if ($this->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Akun pengguna berhasil dihapus.',
-            ]);
-        }
+            if ($this->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Akun pengguna berhasil dihapus.',
+                ]);
+            }
 
-        return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil dihapus.');
+            return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil dihapus.');
+        }, 3);
     }
 
     public function toggleStatus(User $user)
     {
         $this->authorize('update', $user);
 
-        if ($user->status === 'active') {
-            if ($violation = $this->minimumRoleViolation($user, $user->role, false)) {
-                return $this->reject("Pemblokiran akun ditolak karena {$violation}.");
+        return DB::transaction(function () use ($user) {
+            $user = User::query()->findOrFail($user->id);
+            if ($user->status === 'active') {
+                if ($violation = $this->minimumRoleViolation($user, $user->role, false)) {
+                    return $this->reject("Pemblokiran akun ditolak karena {$violation}.");
+                }
             }
-        }
 
-        $user->update(['status' => $user->status === 'active' ? 'blocked' : 'active']);
+            $user->update(['status' => $user->status === 'active' ? 'blocked' : 'active']);
 
-        $label = $user->status === 'active' ? 'diaktifkan' : 'diblokir';
+            $label = $user->status === 'active' ? 'diaktifkan' : 'diblokir';
 
-        if ($this->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Akun {$user->full_name} berhasil {$label}.",
-                'data' => $user->fresh(),
-            ]);
-        }
+            if ($this->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Akun {$user->full_name} berhasil {$label}.",
+                    'data' => $user->fresh(),
+                ]);
+            }
 
-        return redirect()->route('admin.users.index')->with('success', "Akun {$user->full_name} berhasil {$label}.");
+            return redirect()->route('admin.users.index')->with('success', "Akun {$user->full_name} berhasil {$label}.");
+        }, 3);
     }
 
     private function hasRelatedRecords(User $user): bool
     {
-        return $user->customers()->exists()
+        return $user->savers()->exists()
             || $user->transactions()->exists()
             || $user->dailyReports()->exists()
             || $user->approvedReports()->exists()
@@ -186,7 +196,8 @@ class UserController extends Controller
                 ->where('role', $role)
                 ->where('status', 'active')
                 ->where('id', '!=', $user->id)
-                ->exists();
+                ->lockForUpdate()
+                ->first() !== null;
 
             if (! $hasOtherActive) {
                 return sprintf('minimal harus tersisa 1 %s aktif', self::ROLE_LABELS[$role]);

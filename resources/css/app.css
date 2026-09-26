@@ -1,11 +1,93 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Alasan: terakota tanah liat sebagai identitas buku tabungan sekolah, hangat dan tidak generik. */
+    --color-brand-50: #fbf4ef;
+    --color-brand-100: #f5e4d9;
+    --color-brand-200: #eac8b4;
+    --color-brand-300: #dca88c;
+    --color-brand-400: #cb8362;
+    --color-brand-500: #b96a45;
+    --color-brand-600: #a45434;
+    --color-brand-700: #8e4428;
+    --color-brand-800: #743722;
+    --color-brand-900: #5e2d1c;
+    --color-brand-950: #401d11;
+    /* Alasan: zaitun menandai makna positif (kredit, status aktif) agar tetap beda dari aksen terakota. */
+    --color-olive-50: #f4f5ec;
+    --color-olive-100: #e7ead4;
+    --color-olive-200: #cfd5ac;
+    --color-olive-500: #7c8a4a;
+    --color-olive-600: #697540;
+    --color-olive-700: #566136;
+    --color-olive-800: #454d2c;
+    /* Alasan: kertas pasir hangat agar angka loket terbaca lama tanpa silau. */
+    --color-paper: #f7f1e8;
+    --color-ink: #2a2018;
+    --color-ink-soft: #57534e;
+}
+
+:root {
+    color-scheme: light;
+}
+
+body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    text-rendering: optimizeLegibility;
+}
+
+/* Alasan: indikator fokus harus terlihat keyboard di semua tema dan komponen. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-brand-800);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* Alasan: target sentuh loket minimal 44px agar bisa dipakai cepat dengan jari. */
+:where(button, a, input, select, textarea) {
+    min-height: 0;
+}
+:where(button, a).tap-target,
+:where(button, input, select).tap-target {
+    min-height: 44px;
+}
+
+/* Alasan: angka Rupiah sejajar seperti kolom buku kas, mudah dipindai teller. */
+.tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+}
+
+/* Alasan: motif identitas buku kas, satu garis tegas di atas kartu utama. */
+.ledger-rule {
+    border-top: 3px solid var(--color-brand-800);
+}
+
+/* Alasan: hormati pengguna yang mematikan animasi, gerak hanya hover. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Alasan: tab pemulihan kredensial butuh status aktif yang jelas tanpa inline style (CSP). */
+.tab-btn.active {
+    border-bottom: 2px solid var(--color-brand-700);
+    color: var(--color-brand-700);
+    font-weight: 600;
+}
+.tab-btn:not(.active) {
+    border-bottom: 2px solid transparent;
+    color: #78716c;
 }
 
 @media print {
@@ -19,6 +101,8 @@
         color: black !important;
     }
 
+    header,
+    footer,
     nav,
     main .mb-6 {
         display: none !important;

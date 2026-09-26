@@ -126,7 +126,7 @@ class AdminFeeTest extends TellerTestCase
         $this->actingAsTeller()
             ->get(route('teller.closing.print', $report))
             ->assertOk()
-            ->assertSee('Biaya Administrasi')
+            ->assertSee('Biaya admin')
             ->assertSee('Rp 2.000');
     }
 }

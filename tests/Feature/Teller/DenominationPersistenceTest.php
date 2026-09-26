@@ -72,7 +72,7 @@ class DenominationPersistenceTest extends TellerTestCase
         $this->actingAsTeller()
             ->get(route('teller.transactions.receipt', $transaction))
             ->assertOk()
-            ->assertSee('Rincian Uang Tunai')
+            ->assertSee('Rincian uang tunai')
             ->assertSee('Rp 50.000');
     }
 }

@@ -2,41 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\Account;
-use App\Models\Customer;
 use App\Models\JurnalAkuntansi;
 use App\Models\SystemConfig;
 use App\Services\AccountingService;
 use App\Services\TransactionService;
-use Illuminate\Support\Facades\Hash;
 use Tests\Feature\Teller\TellerTestCase;
 
 class AccountingStatementsTest extends TellerTestCase
 {
-    protected function createZeroOpeningAccount(): Account
-    {
-        $customer = Customer::create([
-            'student_number' => '2023777',
-            'full_name' => 'Nasabah Baru',
-            'class_name' => 'X RPL 9',
-            'pin_hash' => Hash::make('123456'),
-            'qr_code_value' => 'qr-zero-opening',
-            'created_by' => $this->admin->id,
-            'status' => 'active',
-        ]);
-
-        return Account::create([
-            'account_number' => '2026/2027-777',
-            'customer_id' => $customer->id,
-            'balance' => 0,
-            'opening_balance' => 0,
-            'minimum_balance' => 10000,
-            'academic_year' => '2026/2027',
-            'status' => 'active',
-            'opened_at' => now(),
-        ]);
-    }
-
     public function test_income_statement_calculates_net_income(): void
     {
         SystemConfig::updateOrCreate(['config_key' => 'admin_fee'], ['config_value' => '2000']);
@@ -121,34 +94,12 @@ class AccountingStatementsTest extends TellerTestCase
             ->assertSee('Rp 1.000');
     }
 
-    public function test_balance_sheet_is_balanced_for_fully_journalized_account(): void
-    {
-        $account = $this->createZeroOpeningAccount();
-
-        app(TransactionService::class)->deposit($account, [
-            'slip_number' => 'SLIP-BS-001',
-            'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
-        ], $this->teller);
-
-        $sheet = app(AccountingService::class)->balanceSheet();
-
-        $this->assertSame(100000, $sheet['total_assets']);
-        $this->assertSame(100000, $sheet['total_liabilities']);
-        $this->assertTrue($sheet['is_balanced']);
-    }
-
     public function test_statements_accept_date_filter(): void
     {
         $this->actingAs($this->admin, 'web')
             ->get(route('admin.reports.income-statement', ['date' => now()->toDateString()]))
             ->assertOk()
             ->assertSee('Laporan Laba Rugi');
-
-        $this->actingAs($this->admin, 'web')
-            ->get(route('admin.reports.balance-sheet', ['date' => now()->toDateString()]))
-            ->assertOk()
-            ->assertSee('Neraca');
     }
 
     public function test_statements_return_json(): void
@@ -158,18 +109,5 @@ class AccountingStatementsTest extends TellerTestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonStructure(['data' => ['total_income', 'net_income']]);
-
-        $this->actingAs($this->admin, 'web')
-            ->getJson(route('admin.reports.balance-sheet'))
-            ->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonStructure(['data' => ['total_assets', 'total_liabilities', 'is_balanced']]);
-    }
-
-    public function test_nasabah_cannot_open_balance_sheet(): void
-    {
-        $this->actingAs($this->nasabah, 'nasabah')
-            ->get(route('admin.reports.balance-sheet'))
-            ->assertRedirect(route('login'));
     }
 }

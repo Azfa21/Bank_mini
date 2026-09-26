@@ -3,7 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Hash;
 use Tests\Feature\Teller\TellerTestCase;
@@ -13,47 +13,49 @@ class CustomerBlockTest extends TellerTestCase
     public function test_admin_can_block_and_unblock_customer(): void
     {
         $this->actingAs($this->admin, 'web')
-            ->patch(route('admin.customers.toggle-status', $this->nasabah))
-            ->assertRedirect(route('admin.customers.index'))
-            ->assertSessionHas('success', 'Nasabah Ani Wijaya berhasil diblokir.');
+            ->patch(route('admin.savers.toggle-status', $this->nasabah))
+            ->assertRedirect(route('admin.savers.index'))
+            ->assertSessionHas('success', 'Penabung Ani Wijaya berhasil diblokir.');
 
-        $this->assertDatabaseHas('customers', ['id' => $this->nasabah->id, 'status' => 'blocked']);
+        $this->assertDatabaseHas('savers', ['id' => $this->nasabah->id, 'status' => 'blocked']);
 
         $this->actingAs($this->admin, 'web')
-            ->patch(route('admin.customers.toggle-status', $this->nasabah))
-            ->assertRedirect(route('admin.customers.index'))
-            ->assertSessionHas('success', 'Nasabah Ani Wijaya berhasil diaktifkan.');
+            ->patch(route('admin.savers.toggle-status', $this->nasabah))
+            ->assertRedirect(route('admin.savers.index'))
+            ->assertSessionHas('success', 'Penabung Ani Wijaya berhasil diaktifkan.');
 
-        $this->assertDatabaseHas('customers', ['id' => $this->nasabah->id, 'status' => 'active']);
+        $this->assertDatabaseHas('savers', ['id' => $this->nasabah->id, 'status' => 'active']);
     }
 
     public function test_toggle_status_via_api_returns_json(): void
     {
         $this->actingAs($this->admin, 'web')
-            ->patchJson("/api/admin/customers/{$this->nasabah->id}/toggle-status")
+            ->patchJson("/api/admin/savers/{$this->nasabah->id}/toggle-status")
             ->assertOk()
             ->assertJson([
                 'success' => true,
-                'message' => 'Nasabah Ani Wijaya berhasil diblokir.',
+                'message' => 'Penabung Ani Wijaya berhasil diblokir.',
             ]);
 
-        $this->assertDatabaseHas('customers', ['id' => $this->nasabah->id, 'status' => 'blocked']);
+        $this->assertDatabaseHas('savers', ['id' => $this->nasabah->id, 'status' => 'blocked']);
     }
 
     public function test_non_admin_cannot_toggle_customer_status(): void
     {
         $this->actingAsTeller()
-            ->patchJson("/api/admin/customers/{$this->nasabah->id}/toggle-status")
+            ->patchJson("/api/admin/savers/{$this->nasabah->id}/toggle-status")
             ->assertForbidden();
     }
 
-    public function test_customer_delete_endpoint_is_removed(): void
+    public function test_admin_can_soft_delete_saver_and_keep_history(): void
     {
         $this->actingAs($this->admin, 'web')
-            ->delete("/admin/customers/{$this->nasabah->id}")
-            ->assertStatus(405);
+            ->delete(route('admin.savers.destroy', $this->nasabah))
+            ->assertRedirect(route('admin.savers.index'))
+            ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('customers', ['id' => $this->nasabah->id]);
+        $this->assertSoftDeleted('savers', ['id' => $this->nasabah->id]);
+        $this->assertDatabaseHas('accounts', ['id' => $this->account->id, 'status' => 'closed']);
     }
 
     public function test_deposit_rejected_for_blocked_customer(): void
@@ -115,7 +117,7 @@ class CustomerBlockTest extends TellerTestCase
     public function test_transfer_to_blocked_destination_is_rejected(): void
     {
         $destination = $this->createDestination();
-        $destination->customer->update(['status' => 'blocked']);
+        $destination->saver->update(['status' => 'blocked']);
 
         $this->actingAsTeller()
             ->post(route('teller.transfers.store', $this->account), [
@@ -134,7 +136,7 @@ class CustomerBlockTest extends TellerTestCase
 
     private function createDestination(): Account
     {
-        $customer = Customer::create([
+        $customer = Saver::create([
             'student_number' => '2023002',
             'full_name' => 'Budi Santoso',
             'class_name' => 'X RPL 2',
@@ -147,7 +149,7 @@ class CustomerBlockTest extends TellerTestCase
 
         return Account::create([
             'account_number' => '2026/2027-002',
-            'customer_id' => $customer->id,
+            'saver_id' => $customer->id,
             'balance' => 10000,
             'opening_balance' => 10000,
             'minimum_balance' => 10000,

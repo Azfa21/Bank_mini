@@ -3,66 +3,57 @@
 namespace Tests\Feature\Teller;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Member;
+use App\Models\Saver;
 
 class CustomerRegistrationTest extends TellerTestCase
 {
     public function test_teller_can_open_registration_form(): void
     {
         $this->actingAsTeller()
-            ->get(route('teller.customers.register'))
+            ->get(route('teller.members.register'))
             ->assertOk()
-            ->assertSee('Registrasi Nasabah');
+            ->assertSee('Registrasi Anggota');
     }
 
-    public function test_teller_registers_customer_and_account(): void
+    public function test_teller_registers_member_without_account(): void
     {
         $this->actingAsTeller()
-            ->post(route('teller.customers.register.store'), [
+            ->post(route('teller.members.register.store'), [
                 'full_name' => 'Budi Santoso',
-                'class_name' => 'VII A',
-                'phone_number' => '081234567890',
-                'email' => 'budi.santoso@example.test',
-                'pin' => '654321',
+                'graduation_year' => '2026',
             ])
-            ->assertRedirect(route('teller.customers.register'))
+            ->assertRedirect(route('teller.members.register'))
             ->assertSessionHas('success');
 
-        $this->assertSame(2, Customer::count());
-        $this->assertSame(2, Account::count());
+        $this->assertSame(1, Member::count());
+        $this->assertSame(1, Saver::count());
+        $this->assertSame(1, Account::count());
 
-        $customer = Customer::where('full_name', 'Budi Santoso')->firstOrFail();
-        $this->assertNotNull($customer->account);
-        $this->assertNotNull($customer->student_number);
+        $member = Member::where('full_name', 'Budi Santoso')->firstOrFail();
+        $this->assertNotNull($member->nis);
+        $this->assertSame(Member::STATUS_ACCOUNT_INACTIVE, $member->status);
 
-        $this->assertDatabaseHas('audit_logs', ['action' => 'customer_registered']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'member_registered']);
     }
 
-    public function test_registration_requires_six_digit_pin(): void
+    public function test_registration_requires_full_name(): void
     {
         $this->actingAsTeller()
-            ->post(route('teller.customers.register.store'), [
-                'full_name' => 'Budi Santoso',
-                'class_name' => 'VII A',
-                'email' => 'budi.santoso@example.test',
-                'pin' => '123',
-            ])
-            ->assertSessionHasErrors('pin');
+            ->post(route('teller.members.register.store'), [])
+            ->assertSessionHasErrors('full_name');
 
-        $this->assertSame(1, Customer::count());
+        $this->assertSame(0, Member::count());
     }
 
     public function test_admin_cannot_use_teller_registration(): void
     {
         $this->actingAs($this->admin, 'web')
-            ->post(route('teller.customers.register.store'), [
+            ->post(route('teller.members.register.store'), [
                 'full_name' => 'Budi Santoso',
-                'class_name' => 'VII A',
-                'email' => 'budi.santoso@example.test',
-                'pin' => '654321',
             ])
             ->assertRedirect(route('login'));
 
-        $this->assertSame(1, Customer::count());
+        $this->assertSame(0, Member::count());
     }
 }

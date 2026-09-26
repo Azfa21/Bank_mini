@@ -2,8 +2,8 @@
 
 @php
     $sizes = [
-        'xs' => 'block text-xs font-medium text-gray-600 mb-1',
-        'sm' => 'block text-sm font-medium text-gray-700 mb-1',
+        'xs' => 'block text-[13px] font-semibold text-stone-700 mb-1.5',
+        'sm' => 'block text-sm font-semibold text-stone-800 mb-1.5',
     ];
 @endphp
 

@@ -18,7 +18,7 @@ class JournalController extends Controller
             ? route('admin.journals.index')
             : route('supervisor.journals.index');
         $journals = JurnalAkuntansi::query()
-            ->with('transaction.account.customer')
+            ->with('transaction.account.saver')
             ->when($request->input('transaction_number'), function ($query, $number) {
                 $query->whereHas('transaction', fn ($q) => $q->where('receipt_number', 'like', "%{$number}%"));
             })

@@ -2,77 +2,52 @@
 
 namespace Tests\Feature\Teller;
 
-use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Member;
 
 class RegistrationEdgeCasesTest extends TellerTestCase
 {
-    protected function register(string $name, string $pin = '112233'): void
+    protected function register(string $name): void
     {
         $this->actingAsTeller()
-            ->post(route('teller.customers.register.store'), [
+            ->post(route('teller.members.register.store'), [
                 'full_name' => $name,
-                'class_name' => 'VII B',
-                'email' => strtolower(str_replace(' ', '.', $name)).'@example.test',
-                'pin' => $pin,
+                'graduation_year' => '2026',
             ])
-            ->assertRedirect(route('teller.customers.register'));
+            ->assertRedirect(route('teller.members.register'));
     }
 
-    public function test_registration_generates_unique_nis_and_account_numbers(): void
+    public function test_registration_generates_unique_nis(): void
     {
         $this->register('Budi Santoso');
         $this->register('Citra Lestari');
 
-        $this->assertSame(3, Customer::count());
-        $this->assertSame(3, Account::count());
+        $this->assertSame(2, Member::count());
 
         $this->assertSame(
-            Customer::pluck('student_number')->unique()->count(),
-            Customer::count()
-        );
-
-        $this->assertSame(
-            Account::pluck('account_number')->unique()->count(),
-            Account::count()
+            Member::pluck('nis')->unique()->count(),
+            Member::count()
         );
     }
 
-    public function test_new_customer_can_login_with_pin(): void
-    {
-        $this->register('Budi Santoso', '445566');
-
-        $customer = Customer::where('full_name', 'Budi Santoso')->firstOrFail();
-
-        $this->post(route('login.submit'), [
-            'identifier' => $customer->student_number,
-            'secret' => '445566',
-        ])->assertRedirect(route('nasabah.dashboard'));
-
-        $this->assertAuthenticatedAs($customer, 'nasabah');
-    }
-
-    public function test_registration_requires_name_class_email_and_pin(): void
+    public function test_registration_requires_full_name(): void
     {
         $this->actingAsTeller()
-            ->post(route('teller.customers.register.store'), [])
-            ->assertSessionHasErrors(['full_name', 'class_name', 'email', 'pin']);
+            ->post(route('teller.members.register.store'), [])
+            ->assertSessionHasErrors(['full_name']);
 
-        $this->assertSame(1, Customer::count());
+        $this->assertSame(0, Member::count());
     }
 
-    public function test_registration_json_returns_created_account(): void
+    public function test_registration_json_returns_created_member(): void
     {
         $this->actingAsTeller()
-            ->postJson(route('teller.customers.register.store'), [
+            ->postJson(route('teller.members.register.store'), [
                 'full_name' => 'Budi Santoso',
-                'class_name' => 'VII B',
-                'email' => 'budi.santoso@example.test',
-                'pin' => '112233',
+                'graduation_year' => '2026',
             ])
             ->assertCreated()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.full_name', 'Budi Santoso')
-            ->assertJsonPath('data.account.account_number', fn ($value) => is_string($value) && $value !== '');
+            ->assertJsonPath('data.nis', fn ($value) => is_string($value) && $value !== '');
     }
 }

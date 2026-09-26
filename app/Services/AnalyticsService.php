@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +35,7 @@ class AnalyticsService
             'total_savings' => $savings,
             'liquidity_ratio_percent' => $liquidityRatio,
             'total_accounts' => Account::where('status', 'active')->count(),
-            'total_customers' => Customer::where('status', 'active')->count(),
+            'total_savers' => Saver::where('status', 'active')->count(),
             'total_users' => User::where('status', 'active')->count(),
         ];
     }
@@ -79,18 +79,18 @@ class AnalyticsService
             ->get();
 
         $accounts = Account::query()
-            ->with('customer')
+            ->with('saver')
             ->whereIn('id', $totals->pluck('account_id'))
             ->get()
             ->keyBy('id');
 
         return $totals->map(fn ($row) => [
             'name' => $accounts->has($row->account_id)
-                ? ($accounts[$row->account_id]->customer->full_name ?? '—')
-                : '—',
+                ? ($accounts[$row->account_id]->saver->full_name ?? '-')
+                : '-',
             'account_number' => $accounts->has($row->account_id)
                 ? $accounts[$row->account_id]->account_number
-                : '—',
+                : '-',
             'total' => (int) $row->total,
         ]);
     }
@@ -112,8 +112,8 @@ class AnalyticsService
 
         return $totals->map(fn ($row) => [
             'name' => $tellers->has($row->teller_id)
-                ? ($tellers[$row->teller_id]->full_name ?? '—')
-                : '—',
+                ? ($tellers[$row->teller_id]->full_name ?? '-')
+                : '-',
             'total_transactions' => (int) $row->total_transactions,
             'total_amount' => (int) $row->total_amount,
         ]);

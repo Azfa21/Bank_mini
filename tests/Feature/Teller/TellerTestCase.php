@@ -3,7 +3,7 @@
 namespace Tests\Feature\Teller;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,7 +20,7 @@ abstract class TellerTestCase extends TestCase
 
     protected User $supervisor;
 
-    protected Customer $nasabah;
+    protected Saver $nasabah;
 
     protected Account $account;
 
@@ -55,7 +55,7 @@ abstract class TellerTestCase extends TestCase
             'status' => 'active',
         ]);
 
-        $this->nasabah = Customer::create([
+        $this->nasabah = Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani Wijaya',
             'class_name' => 'X RPL 1',
@@ -69,7 +69,7 @@ abstract class TellerTestCase extends TestCase
 
         $this->account = Account::create([
             'account_number' => '2026/2027-001',
-            'customer_id' => $this->nasabah->id,
+            'saver_id' => $this->nasabah->id,
             'balance' => 25000,
             'opening_balance' => 25000,
             'minimum_balance' => 10000,

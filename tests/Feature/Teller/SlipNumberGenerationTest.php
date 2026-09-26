@@ -3,7 +3,7 @@
 namespace Tests\Feature\Teller;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use Illuminate\Support\Facades\Hash;
@@ -88,7 +88,7 @@ class SlipNumberGenerationTest extends TellerTestCase
 
     private function createDestination(): Account
     {
-        $customer = Customer::create([
+        $customer = Saver::create([
             'student_number' => '2023002',
             'full_name' => 'Budi Santoso',
             'class_name' => 'X RPL 2',
@@ -101,7 +101,7 @@ class SlipNumberGenerationTest extends TellerTestCase
 
         return Account::create([
             'account_number' => '2026/2027-002',
-            'customer_id' => $customer->id,
+            'saver_id' => $customer->id,
             'balance' => 10000,
             'opening_balance' => 10000,
             'minimum_balance' => 10000,

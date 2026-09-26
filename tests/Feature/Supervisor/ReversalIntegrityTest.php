@@ -3,9 +3,9 @@
 namespace Tests\Feature\Supervisor;
 
 use App\Models\Account;
-use App\Models\Customer;
 use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
+use App\Models\Saver;
 use App\Models\Transaction;
 use App\Services\ReversalService;
 use App\Services\TransactionService;
@@ -16,7 +16,7 @@ class ReversalIntegrityTest extends TellerTestCase
 {
     protected function createAccount(string $name, string $studentNumber, string $accountNumber, int $balance = 0, int $minimumBalance = 10000): Account
     {
-        $customer = Customer::create([
+        $customer = Saver::create([
             'student_number' => $studentNumber,
             'full_name' => $name,
             'class_name' => 'X RPL 3',
@@ -28,7 +28,7 @@ class ReversalIntegrityTest extends TellerTestCase
 
         return Account::create([
             'account_number' => $accountNumber,
-            'customer_id' => $customer->id,
+            'saver_id' => $customer->id,
             'balance' => $balance,
             'opening_balance' => $balance,
             'minimum_balance' => $minimumBalance,
@@ -196,6 +196,12 @@ class ReversalIntegrityTest extends TellerTestCase
 
     public function test_supervisor_report_page_renders_correction_rows(): void
     {
+        $deposit = app(TransactionService::class)->deposit($this->account, [
+            'slip_number' => 'SLIP-RENDER-001',
+            'slip_amount' => 50000,
+            'physical_cash_amount' => 50000,
+        ], $this->teller);
+
         $report = DailyReport::create([
             'report_number' => 'RPT-RENDER-0001',
             'teller_id' => $this->teller->id,
@@ -209,12 +215,6 @@ class ReversalIntegrityTest extends TellerTestCase
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
-
-        $deposit = app(TransactionService::class)->deposit($this->account, [
-            'slip_number' => 'SLIP-RENDER-001',
-            'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
-        ], $this->teller);
 
         app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Dikoreksi untuk pengujian tampilan.');
 

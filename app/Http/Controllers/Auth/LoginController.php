@@ -69,7 +69,7 @@ class LoginController extends Controller
 
             if ($nasabah->status !== 'active') {
                 Auth::guard('nasabah')->logout();
-                AuditLogService::record('login_blocked', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
+                AuditLogService::record('login_blocked', 'saver', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
                 if ($this->wantsJson($request)) {
                     return response()->json(['success' => false, 'message' => 'Akun Anda diblokir.'], 403);
@@ -79,7 +79,7 @@ class LoginController extends Controller
             }
 
             $request->session()->regenerate();
-            AuditLogService::record('login_success', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
+            AuditLogService::record('login_success', 'saver', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
             if ($this->wantsJson($request)) {
                 return response()->json([
@@ -114,7 +114,7 @@ class LoginController extends Controller
         if ($staffId !== null) {
             AuditLogService::record('logout', 'user', $staffId, [], $staffId);
         } elseif ($nasabah !== null) {
-            AuditLogService::record('logout', 'customer', $nasabah->id, ['student_number' => $nasabah->student_number]);
+            AuditLogService::record('logout', 'saver', $nasabah->id, ['student_number' => $nasabah->student_number]);
         }
 
         Auth::guard('web')->logout();

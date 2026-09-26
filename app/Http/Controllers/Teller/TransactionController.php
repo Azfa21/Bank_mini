@@ -20,7 +20,7 @@ class TransactionController extends Controller
 
     public function createDeposit(Account $account)
     {
-        $account->load('customer');
+        $account->load('saver');
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -60,7 +60,7 @@ class TransactionController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Setoran tunai berhasil disimpan.',
-                'data' => $transaction->load(['account.customer', 'teller']),
+                'data' => $transaction->load(['account.saver', 'teller']),
             ], 201);
         }
 
@@ -69,7 +69,7 @@ class TransactionController extends Controller
 
     public function createWithdrawal(Account $account)
     {
-        $account->load('customer');
+        $account->load('saver');
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -108,7 +108,7 @@ class TransactionController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Penarikan tunai berhasil disimpan.',
-                'data' => $transaction->load(['account.customer', 'teller']),
+                'data' => $transaction->load(['account.saver', 'teller']),
             ], 201);
         }
 
@@ -117,7 +117,7 @@ class TransactionController extends Controller
 
     public function createTransfer(Account $account)
     {
-        $account->load('customer');
+        $account->load('saver');
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -163,7 +163,7 @@ class TransactionController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Transfer saldo berhasil diproses.',
-                'data' => $transaction->load(['account.customer', 'recipientAccount.customer', 'teller']),
+                'data' => $transaction->load(['account.saver', 'recipientAccount.saver', 'teller']),
             ], 201);
         }
 
@@ -175,11 +175,11 @@ class TransactionController extends Controller
         $this->authorize('view', $transaction);
 
         $transaction->load([
-            'account.customer',
-            'recipientAccount.customer',
+            'account.saver',
+            'recipientAccount.saver',
             'teller',
             'journalEntries',
-            'reversalOf.account.customer',
+            'reversalOf.account.saver',
             'reversedBy',
         ]);
 

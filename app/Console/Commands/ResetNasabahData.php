@@ -5,10 +5,11 @@ namespace App\Console\Commands;
 use App\Models\Account;
 use App\Models\AuditLog;
 use App\Models\CashTransfer;
-use App\Models\Customer;
 use App\Models\DailyReport;
 use App\Models\DocumentSequence;
 use App\Models\JurnalAkuntansi;
+use App\Models\Member;
+use App\Models\Saver;
 use App\Models\Transaction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,8 @@ class ResetNasabahData extends Command
             'cash_transfers' => CashTransfer::class,
             'daily_reports' => DailyReport::class,
             'accounts' => Account::class,
-            'customers' => Customer::class,
+            'savers' => Saver::class,
+            'members' => Member::class,
             'document_sequences' => DocumentSequence::class,
             'audit_logs' => AuditLog::class,
         ];

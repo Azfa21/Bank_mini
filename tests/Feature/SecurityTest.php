@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +15,7 @@ class SecurityTest extends TestCase
 
     protected User $admin;
 
-    protected Customer $nasabah;
+    protected Saver $nasabah;
 
     protected function setUp(): void
     {
@@ -29,7 +29,7 @@ class SecurityTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->nasabah = Customer::create([
+        $this->nasabah = Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani',
             'pin_hash' => Hash::make('123456'),
@@ -57,7 +57,7 @@ class SecurityTest extends TestCase
 
     public function test_blocked_nasabah_cannot_login(): void
     {
-        Customer::create([
+        Saver::create([
             'student_number' => '2023999',
             'full_name' => 'Blocked Nasabah',
             'pin_hash' => Hash::make('123456'),

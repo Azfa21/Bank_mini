@@ -3,9 +3,10 @@
 namespace Tests\Feature;
 
 use App\Mail\ResetOtpMail;
-use App\Models\Customer;
 use App\Models\PasswordResetOtp;
+use App\Models\Saver;
 use App\Models\User;
+use App\Services\MobileTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Hash;
@@ -22,9 +23,9 @@ class ForgotPasswordTest extends TestCase
 
     protected User $blockedUser;
 
-    protected Customer $nasabah;
+    protected Saver $nasabah;
 
-    protected Customer $blockedNasabah;
+    protected Saver $blockedNasabah;
 
     protected function setUp(): void
     {
@@ -59,7 +60,7 @@ class ForgotPasswordTest extends TestCase
             'status' => 'blocked',
         ]);
 
-        $this->nasabah = Customer::create([
+        $this->nasabah = Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani Pertiwi',
             'class_name' => 'X RPL 1',
@@ -71,7 +72,7 @@ class ForgotPasswordTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->blockedNasabah = Customer::create([
+        $this->blockedNasabah = Saver::create([
             'student_number' => '2023002',
             'full_name' => 'Joko Blokir',
             'class_name' => 'X RPL 2',
@@ -302,6 +303,15 @@ class ForgotPasswordTest extends TestCase
     public function test_nasabah_can_reset_pin_with_valid_otp(): void
     {
         $code = $this->requestOtpCode('nasabah', 'ani.pertiwi@example.test');
+        $tokens = app(MobileTokenService::class);
+        $firstMobileToken = $tokens->issue($this->nasabah, 'existing-device')['plain'];
+        $secondMobileToken = $tokens->issue($this->nasabah, 'other-device')['plain'];
+
+        foreach ([$firstMobileToken, $secondMobileToken] as $mobileToken) {
+            $this->withToken($mobileToken)
+                ->getJson(route('api.mobile.me'))
+                ->assertOk();
+        }
 
         $response = $this->post('/forgot-password/reset', [
             'account_type' => 'nasabah',
@@ -315,6 +325,13 @@ class ForgotPasswordTest extends TestCase
         $response->assertSessionHas('success');
 
         $this->assertTrue(Hash::check('654321', $this->nasabah->fresh()->pin_hash));
+        $this->assertDatabaseMissing('mobile_tokens', ['saver_id' => $this->nasabah->id]);
+
+        foreach ([$firstMobileToken, $secondMobileToken] as $mobileToken) {
+            $this->withToken($mobileToken)
+                ->getJson(route('api.mobile.me'))
+                ->assertUnauthorized();
+        }
 
         $loginResponse = $this->post('/login', [
             'identifier' => '2023001',
@@ -325,7 +342,7 @@ class ForgotPasswordTest extends TestCase
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'pin_reset_success',
-            'entity_name' => 'customer',
+            'entity_name' => 'saver',
             'entity_id' => $this->nasabah->id,
         ]);
     }
@@ -342,7 +359,7 @@ class ForgotPasswordTest extends TestCase
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'pin_reset_otp_request_blocked',
-            'entity_name' => 'customer',
+            'entity_name' => 'saver',
             'entity_id' => $this->blockedNasabah->id,
         ]);
     }

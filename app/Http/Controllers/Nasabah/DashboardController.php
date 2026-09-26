@@ -53,7 +53,7 @@ class DashboardController extends Controller
                 ->with('error', 'Anda belum memiliki rekening aktif.');
         }
 
-        $account->load('customer');
+        $account->load('saver');
 
         if ($this->wantsJson()) {
             return response()->json([

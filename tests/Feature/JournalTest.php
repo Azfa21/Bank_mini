@@ -14,7 +14,7 @@ class JournalTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->get(route('admin.journals.index'))
             ->assertOk()
-            ->assertSee('Audit Jurnal Akuntansi');
+            ->assertSee('Audit jurnal');
     }
 
     public function test_supervisor_can_access_journal_audit(): void
@@ -22,7 +22,7 @@ class JournalTest extends TellerTestCase
         $this->actingAs($this->supervisor, 'web')
             ->get(route('supervisor.journals.index'))
             ->assertOk()
-            ->assertSee('Audit Jurnal Akuntansi');
+            ->assertSee('Audit jurnal');
     }
 
     public function test_teller_cannot_access_journal_audit(): void

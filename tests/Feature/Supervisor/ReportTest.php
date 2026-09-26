@@ -59,7 +59,7 @@ class ReportTest extends TestCase
         $this->actingAs($this->supervisor, 'web')
             ->get(route('supervisor.reports.index'))
             ->assertOk()
-            ->assertSee('Laporan Harian Teller')
+            ->assertSee('Laporan harian Teller')
             ->assertSee($this->report->report_number);
     }
 

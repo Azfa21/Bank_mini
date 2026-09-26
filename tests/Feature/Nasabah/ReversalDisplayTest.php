@@ -3,7 +3,7 @@
 namespace Tests\Feature\Nasabah;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Services\ReversalService;
 use App\Services\TransactionService;
 use Illuminate\Support\Facades\Hash;
@@ -61,7 +61,7 @@ class ReversalDisplayTest extends NasabahTestCase
 
     public function test_recipient_sees_transfer_reversal_as_debit(): void
     {
-        $recipient = Customer::create([
+        $recipient = Saver::create([
             'student_number' => '2023900',
             'full_name' => 'Dewi Penerima',
             'class_name' => 'X RPL 4',
@@ -73,7 +73,7 @@ class ReversalDisplayTest extends NasabahTestCase
 
         $recipientAccount = Account::create([
             'account_number' => '2026/2027-900',
-            'customer_id' => $recipient->id,
+            'saver_id' => $recipient->id,
             'balance' => 0,
             'opening_balance' => 0,
             'minimum_balance' => 10000,

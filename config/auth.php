@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\User;
 
 return [
@@ -46,7 +46,7 @@ return [
 
         'nasabah' => [
             'driver' => 'session',
-            'provider' => 'customers',
+            'provider' => 'savers',
         ],
     ],
 
@@ -73,9 +73,9 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
-        'customers' => [
+        'savers' => [
             'driver' => 'eloquent',
-            'model' => Customer::class,
+            'model' => Saver::class,
         ],
     ],
 

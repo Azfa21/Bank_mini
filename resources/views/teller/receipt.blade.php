@@ -18,144 +18,145 @@
     $total = (int) $transaction->amount + (int) $transaction->admin_fee;
 @endphp
 
-@section('title', 'Struk Transaksi — Bank Mini')
+@section('title', 'Struk Transaksi  EBank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">Hasil Transaksi</h1>
-            <p class="text-sm text-gray-500 mt-1">Transaksi berhasil diproses dan tercatat final.</p>
+            <p class="text-xs font-semibold text-brand-900">TRANSAKSI TERSIMPAN</p>
+            <h1 class="text-2xl font-bold text-stone-900 mt-1">Struk {{ $transaction->receipt_number }}</h1>
+            <p class="text-sm text-stone-600 mt-1">Status final dan terkunci. Serahkan struk ke penabung.</p>
         </div>
-        <div class="flex gap-2 print:hidden">
-            <button onclick="window.print()" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Cetak Struk
+        <div class="flex flex-wrap gap-2.5 print:hidden">
+            <button type="button" data-print class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors">
+                Cetak struk
             </button>
-            <a href="{{ route('teller.customers.show', $transaction->account_id) }}" class="text-sm border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
-                Transaksi Baru
+            <a href="{{ route('teller.members.show', $transaction->account_id) }}" class="inline-flex items-center justify-center min-h-[48px] px-4 text-sm font-semibold text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100">
+                Transaksi baru
             </a>
-            <a href="{{ route('teller.customers.search') }}" class="text-sm border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
-                Pencarian
+            <a href="{{ route('teller.members.search') }}" class="inline-flex items-center justify-center min-h-[48px] px-4 text-sm font-semibold text-stone-700 rounded-xl hover:bg-stone-100">
+                Cari penabung
             </a>
         </div>
     </div>
 
     @if ($transaction->isReversed())
-        <div class="max-w-md mx-auto mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 print:hidden">
-            Transaksi ini telah <strong>dikoreksi</strong> oleh {{ $transaction->reversedBy->full_name ?? 'Supervisor' }}
+        <div role="alert" class="max-w-md mx-auto mb-4 bg-red-50 border border-red-200 text-red-800 text-sm rounded-2xl p-4 print:hidden">
+            Transaksi ini sudah <strong>dikoreksi</strong> oleh {{ $transaction->reversedBy->full_name ?? 'Supervisor' }}
             {{ $transaction->reversed_at?->format('d/m/Y H:i') }}. Alasan: {{ $transaction->reversal_reason }}
         </div>
     @endif
 
-    <div class="print-sheet max-w-md mx-auto bg-white rounded-xl border border-gray-200 p-6" id="receipt">
-        <div class="text-center border-b border-dashed border-gray-300 pb-4">
-            <div class="w-10 h-10 bg-blue-600 rounded-lg mx-auto flex items-center justify-center mb-2">
+    <div class="print-sheet max-w-md mx-auto bg-white rounded-2xl border border-stone-200 p-6" id="receipt">
+        <div class="text-center border-b border-dashed border-stone-300 pb-4">
+            <div class="w-11 h-11 bg-brand-800 rounded-xl mx-auto flex items-center justify-center mb-2" aria-hidden="true">
                 <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 21V3h18v18H3Zm4-4h10M7 11h10"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-6 9 6M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9m-4 6H8"/>
                 </svg>
             </div>
-            <p class="font-semibold text-gray-900">{{ $bankName }}</p>
-            <p class="text-xs text-gray-500">Struk Transaksi Loket</p>
+            <p class="font-bold text-stone-900">{{ $bankName }}</p>
+            <p class="text-[13px] text-stone-600">Struk transaksi loket</p>
             @if ($transaction->isReversal())
-                <p class="text-xs font-semibold text-red-600 mt-1">JURNAL PEMBALIK</p>
+                <p class="text-[13px] font-bold text-red-800 mt-1">JURNAL PEMBALIK</p>
             @endif
         </div>
 
-        <div class="py-4 space-y-2 text-sm">
-            <div class="flex justify-between">
-                <span class="text-gray-500">Nomor Struk</span>
-                <span class="font-mono font-medium">{{ $transaction->receipt_number }}</span>
+        <dl class="py-4 space-y-2 text-sm">
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">Nomor struk</dt>
+                <dd class="tnum font-semibold text-right">{{ $transaction->receipt_number }}</dd>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">No. Referensi Jurnal</span>
-                <span class="font-mono">{{ $transaction->journalEntries->first()?->journal_number ?? '—' }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">Referensi jurnal</dt>
+                <dd class="tnum text-right">{{ $transaction->journalEntries->first()?->journal_number ?? 'Belum ada' }}</dd>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Tanggal &amp; Waktu</span>
-                <span>{{ $transaction->transaction_at->format('d/m/Y H:i') }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">Tanggal</dt>
+                <dd class="tnum text-right">{{ $transaction->transaction_at->format('d/m/Y H:i') }}</dd>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Jenis Transaksi</span>
-                <span>{{ $typeLabel }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">Jenis</dt>
+                <dd class="text-right font-medium">{{ $typeLabel }}</dd>
             </div>
             @if ($transaction->reversalOf)
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Koreksi dari</span>
-                    <span class="font-mono">{{ $transaction->reversalOf->receipt_number }}</span>
+                <div class="flex justify-between gap-3">
+                    <dt class="text-stone-600">Koreksi dari</dt>
+                    <dd class="tnum text-right">{{ $transaction->reversalOf->receipt_number }}</dd>
                 </div>
             @endif
-            <div class="flex justify-between">
-                <span class="text-gray-500">No. Rekening</span>
-                <span class="font-mono">{{ $transaction->account->account_number }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">No. rekening</dt>
+                <dd class="tnum text-right">{{ $transaction->account->account_number }}</dd>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Nasabah</span>
-                <span>{{ $transaction->account->customer->full_name }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">Penabung</dt>
+                <dd class="text-right font-medium">{{ $transaction->account->saver->full_name }}</dd>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">No. Siswa</span>
-                <span class="font-mono">{{ $transaction->account->customer->student_number }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">No. siswa</dt>
+                <dd class="tnum text-right">{{ $transaction->account->saver->student_number }}</dd>
             </div>
             @if ($transaction->recipientAccount)
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Rekening Tujuan</span>
-                    <span class="font-mono">{{ $transaction->recipientAccount->account_number }}</span>
+                <div class="flex justify-between gap-3">
+                    <dt class="text-stone-600">Rekening tujuan</dt>
+                    <dd class="tnum text-right">{{ $transaction->recipientAccount->account_number }}</dd>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Penerima</span>
-                    <span>{{ $transaction->recipientAccount->customer?->full_name ?? '—' }}</span>
+                <div class="flex justify-between gap-3">
+                    <dt class="text-stone-600">Penerima</dt>
+                    <dd class="text-right">{{ $transaction->recipientAccount->saver?->full_name ?? 'Belum ada' }}</dd>
                 </div>
             @endif
-            <div class="flex justify-between">
-                <span class="text-gray-500">No. Slip</span>
-                <span class="font-mono">{{ $transaction->slip_number ?? '—' }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">No. slip</dt>
+                <dd class="tnum text-right">{{ $transaction->slip_number ?? 'Belum ada' }}</dd>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Teller</span>
-                <span>{{ $transaction->teller->full_name }}</span>
+            <div class="flex justify-between gap-3">
+                <dt class="text-stone-600">Teller</dt>
+                <dd class="text-right">{{ $transaction->teller->full_name }}</dd>
             </div>
-        </div>
+        </dl>
 
-        <div class="border-t border-dashed border-gray-300 pt-4 space-y-2 text-sm">
-            <div class="flex justify-between">
-                <span class="text-gray-500">Nominal</span>
-                <span class="font-semibold {{ $isCredit ? 'text-green-600' : 'text-red-600' }}">
+        <div class="border-t border-dashed border-stone-300 pt-4 space-y-2 text-sm">
+            <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Nominal</span>
+                <span class="tnum font-bold {{ $isCredit ? 'text-brand-900' : 'text-red-800' }}">
                     {{ $isCredit ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                 </span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Biaya Administrasi</span>
-                <span class="font-mono">Rp {{ number_format($transaction->admin_fee, 0, ',', '.') }}</span>
+            <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Biaya admin</span>
+                <span class="tnum">Rp {{ number_format($transaction->admin_fee, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Total</span>
-                <span class="font-mono font-medium">Rp {{ number_format($total, 0, ',', '.') }}</span>
+            <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Total</span>
+                <span class="tnum font-semibold">Rp {{ number_format($total, 0, ',', '.') }}</span>
             </div>
-            <p class="text-xs text-gray-500 italic">Terbilang: {{ Terbilang::rupiah($total) }}</p>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Saldo Sebelum</span>
-                <span class="font-mono">Rp {{ number_format($transaction->balance_before, 0, ',', '.') }}</span>
+            <p class="text-[13px] text-stone-600 italic">Terbilang: {{ Terbilang::rupiah($total) }}</p>
+            <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Saldo sebelum</span>
+                <span class="tnum">Rp {{ number_format($transaction->balance_before, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Saldo Sesudah</span>
-                <span class="font-mono font-semibold text-gray-900">Rp {{ number_format($transaction->balance_after, 0, ',', '.') }}</span>
+            <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Saldo sesudah</span>
+                <span class="tnum font-bold text-stone-900">Rp {{ number_format($transaction->balance_after, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Status Transaksi</span>
-                <span class="font-medium uppercase">{{ $transaction->status }}</span>
+            <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Status</span>
+                <span class="font-semibold">{{ strtoupper($transaction->status) }}</span>
             </div>
         </div>
 
         @if ($transaction->denomination_breakdown)
-            <div class="border-t border-dashed border-gray-300 pt-4 mt-4">
-                <p class="text-xs font-medium text-gray-700 mb-1">Rincian Uang Tunai</p>
-                <div class="text-xs text-gray-600 space-y-0.5">
+            <div class="border-t border-dashed border-stone-300 pt-4 mt-4">
+                <p class="text-[13px] font-semibold text-stone-700 mb-1.5">Rincian uang tunai</p>
+                <div class="text-[13px] text-stone-700 space-y-1">
                     @foreach ($transaction->denomination_breakdown as $key => $count)
                         @php $value = CashDenomination::valueOf((string) $key); @endphp
                         @if ($value !== null)
-                            <div class="flex justify-between">
-                                <span>{{ CashDenomination::label($value) }} × {{ $count }}</span>
-                                <span class="font-mono">Rp {{ number_format($value * $count, 0, ',', '.') }}</span>
+                            <div class="flex justify-between gap-3">
+                                <span>{{ CashDenomination::label($value) }} ÁE{{ $count }}</span>
+                                <span class="tnum">Rp {{ number_format($value * $count, 0, ',', '.') }}</span>
                             </div>
                         @endif
                     @endforeach
@@ -163,18 +164,18 @@
             </div>
         @endif
 
-        <div class="border-t border-dashed border-gray-300 mt-4 pt-4">
-            <div class="flex justify-between text-xs text-gray-500">
+        <div class="border-t border-dashed border-stone-300 mt-4 pt-4">
+            <div class="flex justify-between text-[13px] text-stone-600">
                 <span>Dilayani oleh</span>
                 <span>{{ $transaction->teller->full_name }}</span>
             </div>
-            <p class="text-center text-xs text-gray-400 mt-4">Simpan struk ini sebagai bukti transaksi.</p>
+            <p class="text-center text-[13px] text-stone-500 mt-4">Simpan struk ini sebagai bukti transaksi.</p>
         </div>
     </div>
 
     @unless ($transaction->isReversed())
-        <div class="max-w-md mx-auto mt-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg p-3 print:hidden">
-            Transaksi berstatus <strong>{{ $transaction->status }}</strong> dan telah terkunci. Transaksi tidak dapat diubah atau dihapus.
+        <div role="status" class="max-w-md mx-auto mt-4 bg-brand-50 border border-brand-200 text-brand-900 text-sm rounded-2xl p-4 print:hidden">
+            Transaksi <strong>{{ $transaction->status }}</strong> dan terkunci. Tidak bisa diubah atau dihapus Teller.
         </div>
     @endunless
 @endsection

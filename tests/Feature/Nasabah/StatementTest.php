@@ -3,7 +3,7 @@
 namespace Tests\Feature\Nasabah;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Services\TransactionService;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,7 +11,7 @@ class StatementTest extends NasabahTestCase
 {
     private TransactionService $service;
 
-    private Customer $otherCustomer;
+    private Saver $otherCustomer;
 
     private Account $otherAccount;
 
@@ -21,7 +21,7 @@ class StatementTest extends NasabahTestCase
 
         $this->service = app(TransactionService::class);
 
-        $this->otherCustomer = Customer::create([
+        $this->otherCustomer = Saver::create([
             'student_number' => '2023002',
             'full_name' => 'Beno',
             'class_name' => 'X RPL 2',
@@ -33,7 +33,7 @@ class StatementTest extends NasabahTestCase
 
         $this->otherAccount = Account::create([
             'account_number' => '2026/2027-002',
-            'customer_id' => $this->otherCustomer->id,
+            'saver_id' => $this->otherCustomer->id,
             'balance' => 0,
             'opening_balance' => 0,
             'minimum_balance' => 10000,
@@ -69,7 +69,7 @@ class StatementTest extends NasabahTestCase
         $response = $this->actingAsNasabah()
             ->get(route('nasabah.statement'))
             ->assertOk()
-            ->assertSee('Rekening Koran (e-Statement)')
+            ->assertSee('Rekening Koran Nasabah (e-Statement)')
             ->assertSee($this->account->account_number)
             ->assertSee('Total Setoran: Rp 100.000')
             ->assertSee('Total Penarikan: Rp 30.000')
@@ -137,7 +137,7 @@ class StatementTest extends NasabahTestCase
 
     public function test_nasabah_without_account_gets_404(): void
     {
-        $orphanCustomer = Customer::create([
+        $orphanCustomer = Saver::create([
             'student_number' => '2023099',
             'full_name' => 'Tanpa Rekening',
             'pin_hash' => Hash::make('123456'),

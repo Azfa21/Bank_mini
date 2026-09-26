@@ -19,7 +19,7 @@ class EnsureRole
                 return $next($request);
             }
 
-            AuditLogService::record('access_denied', 'customer', $nasabah->id, [
+            AuditLogService::record('access_denied', 'saver', $nasabah->id, [
                 'path' => $request->path(),
                 'roles' => $roles,
                 'student_number' => $nasabah->student_number,

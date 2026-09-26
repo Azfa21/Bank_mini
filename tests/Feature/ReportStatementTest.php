@@ -39,26 +39,12 @@ class ReportStatementTest extends TellerTestCase
             ->assertSee('Rp 2.000');
     }
 
-    public function test_admin_can_open_balance_sheet(): void
-    {
-        $this->actingAs($this->admin, 'web')
-            ->get(route('admin.reports.balance-sheet'))
-            ->assertOk()
-            ->assertSee('Neraca')
-            ->assertSee('Total Aset');
-    }
-
-    public function test_supervisor_can_open_both_statements(): void
+    public function test_supervisor_can_open_income_statement(): void
     {
         $this->actingAs($this->supervisor, 'web')
             ->get(route('supervisor.reports.income-statement'))
             ->assertOk()
             ->assertSee('Laporan Laba Rugi');
-
-        $this->actingAs($this->supervisor, 'web')
-            ->get(route('supervisor.reports.balance-sheet'))
-            ->assertOk()
-            ->assertSee('Neraca');
     }
 
     public function test_nasabah_cannot_open_statements(): void

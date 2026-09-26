@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Exceptions\TransactionValidationException;
 use App\Models\Account;
-use App\Models\Customer;
 use App\Models\JurnalAkuntansi;
+use App\Models\Saver;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +19,7 @@ class TransferTransactionTest extends TellerTestCase
     {
         parent::setUp();
 
-        $recipient = Customer::create([
+        $recipient = Saver::create([
             'student_number' => '2023002',
             'full_name' => 'Budi Santoso',
             'class_name' => 'X RPL 1',
@@ -32,7 +32,7 @@ class TransferTransactionTest extends TellerTestCase
 
         $this->destination = Account::create([
             'account_number' => '2026/2027-002',
-            'customer_id' => $recipient->id,
+            'saver_id' => $recipient->id,
             'balance' => 5000,
             'opening_balance' => 5000,
             'minimum_balance' => 10000,

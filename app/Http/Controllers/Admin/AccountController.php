@@ -11,7 +11,7 @@ class AccountController extends Controller
     {
         $this->authorize('view', $account);
 
-        $account->load('customer');
+        $account->load('saver');
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -27,7 +27,7 @@ class AccountController extends Controller
     {
         $this->authorize('view', $account);
 
-        $account->load('customer');
+        $account->load('saver');
 
         if ($this->wantsJson()) {
             return response()->json([

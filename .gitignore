@@ -10,16 +10,20 @@
 /.idea
 /.nova
 /.phpunit.cache
+/.security-probes/
 /.vscode
 /.zed
 /auth.json
+/Form Responses 1.html
 /node_modules
 /public/build
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
 /storage/*.key
+/storage/framework/testing.sqlite
 /storage/pail
+/strix_runs/
 /vendor
 _ide_helper.php
 Homestead.json

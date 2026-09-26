@@ -15,6 +15,7 @@ class SystemConfigTest extends TellerTestCase
                 'minimum_balance' => 15000,
                 'admin_fee' => 2500,
                 'max_withdrawal_without_order' => 500000,
+                'min_deposit_to_activate' => 20000,
             ])
             ->assertRedirect(route('admin.config.edit'));
 
@@ -23,6 +24,7 @@ class SystemConfigTest extends TellerTestCase
         $this->assertDatabaseHas('system_configs', ['config_key' => 'minimum_balance', 'config_value' => '15000']);
         $this->assertDatabaseHas('system_configs', ['config_key' => 'admin_fee', 'config_value' => '2500']);
         $this->assertDatabaseHas('system_configs', ['config_key' => 'max_withdrawal_without_order', 'config_value' => '500000']);
+        $this->assertDatabaseHas('system_configs', ['config_key' => 'min_deposit_to_activate', 'config_value' => '20000']);
     }
 
     public function test_configuration_requires_bank_name(): void

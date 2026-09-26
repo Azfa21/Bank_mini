@@ -1,72 +1,85 @@
 @extends('layouts.app')
 
-@section('title', 'Transaksi Penarikan — Bank Mini')
+@section('title', 'Transaksi Penarikan  EBank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">Transaksi Penarikan</h1>
-            <p class="text-sm text-gray-500 mt-1">Pastikan saldo cukup dan PIN nasabah diverifikasi.</p>
+            <p class="text-xs font-semibold text-red-800">PENARIKAN TUNAI</p>
+            <h1 class="text-2xl font-bold text-stone-900 mt-1">Serahkan penarikan</h1>
+            <p class="text-sm text-stone-600 mt-1">Saldo harus cukup dan PIN 6 digit harus benar.</p>
         </div>
-        <a href="{{ route('teller.customers.show', $account) }}" class="text-sm text-blue-600 hover:text-blue-800">&larr; Kembali ke profil</a>
+        <a href="{{ route('teller.members.show', $account) }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline">&larr; Kembali ke profil</a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl border border-gray-200 p-5">
-                <p class="text-xs text-gray-500">Nasabah</p>
-                <p class="text-sm font-semibold text-gray-900 mt-1">{{ $account->customer->full_name }}</p>
-                <p class="text-xs text-gray-500 mt-2">No. Siswa: <span class="font-mono">{{ $account->customer->student_number }}</span></p>
-                <p class="text-xs text-gray-500 mt-1">No. Rekening: <span class="font-mono">{{ $account->account_number }}</span></p>
-                <div class="border-t border-gray-100 mt-4 pt-4">
-                    <p class="text-xs text-gray-500">Saldo Saat Ini</p>
-                    <p class="text-xl font-semibold text-blue-600 mt-1">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
-                    <p class="text-xs text-gray-400 mt-1">Saldo minimum: Rp {{ number_format((int) (\App\Models\SystemConfig::value('minimum_balance', 10000)), 0, ',', '.') }}</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+        <aside aria-label="Batas saldo penabung" class="lg:col-span-1">
+            <div class="bg-white rounded-2xl border border-stone-200 p-5 lg:sticky lg:top-4">
+                <p class="text-[13px] font-medium text-stone-600">Penabung</p>
+                <p class="text-base font-bold text-stone-900 mt-1">{{ $account->saver->full_name }}</p>
+                <p class="text-[13px] text-stone-600 mt-2">No. rekening: <span class="tnum font-medium text-stone-800">{{ $account->account_number }}</span></p>
+                <div class="border-t border-stone-100 mt-4 pt-4 space-y-1.5">
+                    <p class="text-[13px] font-medium text-stone-600">Saldo saat ini</p>
+                    <p class="text-2xl font-bold text-stone-900 tnum">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
                     @php
                         $adminFee = (int) \App\Models\SystemConfig::value('admin_fee', 0);
                         $maxWithoutOrder = (int) \App\Models\SystemConfig::value('max_withdrawal_without_order', 0);
+                        $minimumBalance = max(
+                            (int) $account->minimum_balance,
+                            (int) \App\Models\SystemConfig::value('minimum_balance', 10000)
+                        );
                     @endphp
-                    <p class="text-xs text-gray-400 mt-1">Biaya admin penarikan: Rp {{ number_format($adminFee, 0, ',', '.') }}</p>
+                    <p class="text-[13px] text-stone-600">Saldo mengendap: <span class="tnum font-medium text-stone-800">Rp {{ number_format($minimumBalance, 0, ',', '.') }}</span></p>
+                    <p class="text-[13px] text-stone-600">Biaya admin: <span class="tnum font-medium text-stone-800">Rp {{ number_format($adminFee, 0, ',', '.') }}</span></p>
                     @if ($maxWithoutOrder > 0)
-                        <p class="text-xs text-amber-600 mt-1">Batas penarikan tanpa pesanan: Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}</p>
+                        <p class="text-[13px] font-semibold text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-2">Batas tanpa pesanan: <span class="tnum">Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}</span></p>
                     @endif
+                    <p id="withdraw-preview" role="status" class="text-[13px] font-medium text-stone-800">Sisa sesudah penarikan: Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 class="text-sm font-medium text-gray-900 mb-4">Data Penarikan</h2>
+        <section aria-label="Formulir penarikan" class="lg:col-span-2">
+            <div class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6">
+                <h2 class="text-base font-bold text-stone-900">Data penarikan</h2>
 
-                <form method="POST" action="{{ route('teller.withdrawals.store', $account) }}" class="space-y-4">
+                <form method="POST" action="{{ route('teller.withdrawals.store', $account) }}" class="mt-4 space-y-5" id="withdraw-form" data-balance="{{ (int) $account->current_balance }}" data-admin-fee="{{ (int) \App\Models\SystemConfig::value('admin_fee', 0) }}">
                     @csrf
 
                     <div>
-                        <x-input-label for="amount" size="xs">Nominal Penarikan *</x-input-label>
-                        <x-input id="amount" name="amount" type="number" min="1" step="1" placeholder="Contoh: 50000" required />
+                        <x-input-label for="amount">Nominal penarikan (Rp) wajib</x-input-label>
+                        <x-input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 50000" required
+                            aria-describedby="amount-help amount-preview" />
+                        <p id="amount-help" class="text-[13px] text-stone-600 mt-1.5">Termasuk biaya admin bila ada. Sisa saldo tidak boleh di bawah saldo mengendap.</p>
+                        <p id="amount-preview" role="status" class="text-[13px] font-medium text-stone-800 mt-1">Terbaca: Rp 0</p>
                         <x-input-error :message="$errors->first('amount')" />
                     </div>
 
-                    <div class="border-t border-gray-100 pt-4">
-                        <p class="text-xs font-medium text-gray-600 mb-1">Rincian Uang Tunai Diserahkan (opsional)</p>
-                        <p class="text-xs text-gray-400 mb-3">Bantu teller menghitung pecahan uang yang diberikan kepada nasabah.</p>
+                    <details class="border-t border-stone-100 pt-5">
+                        <summary class="inline-flex items-center min-h-[44px] cursor-pointer text-[15px] font-bold text-stone-900">
+                            Siapkan pecahan untuk penabung (opsional)
+                        </summary>
+                        <p class="text-[13px] text-stone-600 mt-1 mb-3">Bantu teller menyiapkan uang yang diserahkan. Tidak memengaruhi nominal.</p>
                         <x-denomination-input />
-                    </div>
+                        <p role="status" data-denomination-sum class="text-[13px] font-medium text-stone-700 mt-2">Subtotal rincian: Rp 0</p>
+                    </details>
 
                     <div>
-                        <x-input-label for="pin" size="xs">PIN Nasabah (6 digit) *</x-input-label>
+                        <x-input-label for="pin">PIN penabung 6 digit wajib</x-input-label>
                         <x-input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6"
-                            class="tracking-widest" placeholder="••••••" required />
+                            class="tracking-[0.3em] text-center" placeholder="••••••" required
+                            aria-describedby="pin-help" />
+                        <p id="pin-help" class="text-[13px] text-stone-600 mt-1.5">Minta penabung mengetik sendiri. Teller tidak boleh melihat.</p>
                         <x-input-error :message="$errors->first('pin')" />
                     </div>
 
-                    <x-primary-button variant="red" class="w-full py-2.5"
-                        onclick="this.disabled = true; this.form.submit();">
-                        Proses Penarikan
+                    <x-primary-button variant="danger" id="withdraw-submit" data-loading-text="Memeriksa PIN dan saldo..." class="w-full">
+                        Simpan penarikan
                     </x-primary-button>
+                    <p class="text-[13px] text-stone-600 text-center">Periksa pecahan dan PIN dulu. Transaksi tersimpan tidak bisa diubah.</p>
                 </form>
             </div>
-        </div>
+        </section>
     </div>
 @endsection

@@ -22,10 +22,6 @@ class AuthorizationMatrixTest extends TellerTestCase
         $this->actingAsTeller()
             ->get(route('admin.reports.income-statement'))
             ->assertRedirect(route('login'));
-
-        $this->actingAsTeller()
-            ->get(route('admin.reports.balance-sheet'))
-            ->assertRedirect(route('login'));
     }
 
     public function test_admin_cannot_reverse_transaction(): void
@@ -42,11 +38,11 @@ class AuthorizationMatrixTest extends TellerTestCase
     public function test_supervisor_cannot_access_teller_registration(): void
     {
         $this->actingAs($this->supervisor, 'web')
-            ->get(route('teller.customers.register'))
+            ->get(route('teller.members.register'))
             ->assertRedirect(route('login'));
 
         $this->actingAs($this->supervisor, 'web')
-            ->post(route('teller.customers.register.store'), [
+            ->post(route('teller.members.register.store'), [
                 'full_name' => 'Bukan Tugasnya',
                 'class_name' => 'VII A',
                 'pin' => '112233',

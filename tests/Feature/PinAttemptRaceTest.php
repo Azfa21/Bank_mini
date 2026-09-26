@@ -16,12 +16,12 @@ class PinAttemptRaceTest extends TellerTestCase
 
     public function test_verification_uses_fresh_attempts_count_not_stale_model(): void
     {
-        DB::table('customers')
+        DB::table('savers')
             ->where('id', $this->nasabah->id)
             ->update(['failed_pin_attempts' => 2]);
 
         try {
-            $this->service()->verifyCustomerPin($this->nasabah, '000001', 'penarikan', $this->teller->id);
+            $this->service()->verifySaverPin($this->nasabah, '000001', 'penarikan', $this->teller->id);
             $this->fail('Seharusnya rekening dikunci pada percobaan ke-3.');
         } catch (TransactionValidationException $e) {
             $this->assertStringContainsString('dikunci selama 15 menit', $e->getMessage());
@@ -40,11 +40,11 @@ class PinAttemptRaceTest extends TellerTestCase
 
     public function test_correct_pin_resets_counter_read_from_database(): void
     {
-        DB::table('customers')
+        DB::table('savers')
             ->where('id', $this->nasabah->id)
             ->update(['failed_pin_attempts' => 2]);
 
-        $this->service()->verifyCustomerPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
+        $this->service()->verifySaverPin($this->nasabah, '123456', 'penarikan', $this->teller->id);
 
         $customer = $this->nasabah->refresh();
 

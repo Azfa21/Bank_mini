@@ -23,4 +23,6 @@ return [
 
     'otp_max_per_hour' => (int) env('RECOVERY_OTP_MAX_PER_HOUR', 5),
 
+    'transaction_attempts' => (int) env('RECOVERY_TRANSACTION_ATTEMPTS', 3),
+
 ];

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -205,7 +205,7 @@ class UserDeletionGuardTest extends TestCase
         $teller1 = $this->createUser('teller1', 'teller');
         $teller2 = $this->createUser('teller2', 'teller');
 
-        Customer::create([
+        Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani Wijaya',
             'class_name' => 'X RPL 1',

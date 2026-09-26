@@ -13,7 +13,8 @@ class NavigationTest extends TellerTestCase
             ->assertOk()
             ->assertSee('Dashboard')
             ->assertSee('Kelola Pengguna')
-            ->assertSee('Kelola Nasabah')
+            ->assertSee('Kelola Anggota')
+            ->assertSee('Kelola Penabung')
             ->assertSee('Konfigurasi')
             ->assertSee('Audit Jurnal');
     }
@@ -49,10 +50,10 @@ class NavigationTest extends TellerTestCase
     public function test_teller_search_page_shows_navbar_with_dashboard_link(): void
     {
         $this->actingAsTeller()
-            ->get(route('teller.customers.search'))
+            ->get(route('teller.members.search'))
             ->assertOk()
             ->assertSee(route('teller.dashboard'))
-            ->assertSee('Pencarian Nasabah');
+            ->assertSee('Pencarian Anggota');
     }
 
     public function test_nasabah_dashboard_shows_navbar(): void

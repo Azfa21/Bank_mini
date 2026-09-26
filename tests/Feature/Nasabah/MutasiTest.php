@@ -3,7 +3,7 @@
 namespace Tests\Feature\Nasabah;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use Illuminate\Support\Facades\Hash;
@@ -27,7 +27,7 @@ class MutasiTest extends NasabahTestCase
     {
         $this->deposit(100000);
 
-        $other = Customer::create([
+        $other = Saver::create([
             'student_number' => '2023997',
             'full_name' => 'Budi Santoso',
             'class_name' => 'XI RPL 1',
@@ -40,7 +40,7 @@ class MutasiTest extends NasabahTestCase
 
         $otherAccount = Account::create([
             'account_number' => '2026/2027-002',
-            'customer_id' => $other->id,
+            'saver_id' => $other->id,
             'balance' => 50000,
             'opening_balance' => 0,
             'minimum_balance' => 10000,
@@ -126,7 +126,7 @@ class MutasiTest extends NasabahTestCase
 
     public function test_mutasi_empty_when_nasabah_has_no_account(): void
     {
-        $nasabah = Customer::create([
+        $nasabah = Saver::create([
             'student_number' => '2023996',
             'full_name' => 'Tanpa Rekening 2',
             'class_name' => 'X RPL 2',
@@ -140,7 +140,7 @@ class MutasiTest extends NasabahTestCase
         $this->actingAs($nasabah, 'nasabah')
             ->get(route('nasabah.mutasi'))
             ->assertOk()
-            ->assertSee('belum memiliki rekening');
+            ->assertSee('belum punya rekening aktif');
     }
 
     public function test_teller_cannot_access_nasabah_mutasi(): void

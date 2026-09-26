@@ -37,8 +37,15 @@ class DailyReportService
         $totalAdminFee = (int) Transaction::where('teller_id', $teller->id)
             ->whereDate('transaction_at', $date)
             ->whereIn('status', ['success', 'reversed'])
-            ->where('type', 'withdrawal')
-            ->sum('admin_fee');
+            ->where(function ($query) {
+                $query->where('type', 'withdrawal')
+                    ->orWhere(function ($query) {
+                        $query->where('type', 'reversal')
+                            ->whereHas('reversalOf', fn ($query) => $query->where('type', 'withdrawal'));
+                    });
+            })
+            ->selectRaw('COALESCE(SUM(CASE WHEN type = \'withdrawal\' THEN admin_fee WHEN type = \'reversal\' THEN -admin_fee ELSE 0 END), 0) as total')
+            ->value('total');
 
         return [
             'opening_balance' => $opening,
@@ -91,16 +98,18 @@ class DailyReportService
         return ['deposit' => $deposit, 'withdrawal' => $withdrawal];
     }
 
-    public function createReport(User $teller, string $date, int $physicalCash, array $breakdown = []): DailyReport
+    public function createReport(User $teller, string $date, int $physicalCash, array $breakdown = [], ?string $differenceNote = null): DailyReport
     {
-        return DB::transaction(function () use ($teller, $date, $physicalCash, $breakdown) {
+        return DB::transaction(function () use ($teller, $date, $physicalCash, $breakdown, $differenceNote) {
             $recap = $this->recap($teller, $date);
 
             $cashDifference = $physicalCash - $recap['closing_balance_system'];
 
-            if ($cashDifference !== 0) {
+            $differenceNote = trim((string) ($differenceNote ?? ''));
+
+            if ($cashDifference !== 0 && mb_strlen($differenceNote) < 10) {
                 throw new TransactionValidationException(
-                    'Terdapat selisih kas sebesar Rp '.number_format(abs($cashDifference)).'. Laporan tidak dapat dibuat.'
+                    'Terdapat selisih kas sebesar Rp '.number_format(abs($cashDifference)).'. Tulis berita acara selisih (min 10 karakter) agar laporan tetap bisa disimpan dan diperiksa Supervisor.'
                 );
             }
 
@@ -142,7 +151,7 @@ class DailyReportService
                 'approved_by' => null,
                 'approved_at' => null,
                 'submitted_at' => now(),
-                'approval_notes' => null,
+                'approval_notes' => $cashDifference !== 0 ? 'Berita acara Teller: '.$differenceNote : null,
             ];
 
             if ($report) {
@@ -171,12 +180,32 @@ class DailyReportService
         return DB::transaction(function () use ($report, $supervisor, $notes) {
             $locked = DailyReport::query()->lockForUpdate()->findOrFail($report->id);
 
+            if ($locked->transactions()->exists()) {
+                $teller = User::findOrFail($locked->teller_id);
+                $currentRecap = $this->recap(
+                    $teller,
+                    $locked->report_date->toDateString(),
+                );
+
+                if ((int) $currentRecap['closing_balance_system'] !== (int) $locked->closing_balance_system) {
+                    throw new TransactionValidationException(
+                        'Arus kas tanggal tersebut berubah setelah laporan dibuat. Tolak laporan dan minta Teller menghitung ulang sebelum disetujui.'
+                    );
+                }
+            }
+
             if ($locked->teller_id === $supervisor->id) {
                 throw new TransactionValidationException('Supervisor tidak dapat menyetujui laporan miliknya sendiri.');
             }
 
             if ($locked->status !== 'submitted') {
                 throw new TransactionValidationException('Hanya laporan berstatus menunggu validasi yang dapat disetujui.');
+            }
+
+            if ((int) ($locked->cash_difference ?? 0) !== 0) {
+                throw new TransactionValidationException(
+                    'Laporan berselisih Rp '.number_format(abs((int) $locked->cash_difference)).' tidak bisa disetujui. Tolak laporan dan minta Teller koreksi / hitung ulang, atau selesaikan via koreksi transaksi.'
+                );
             }
 
             $locked->update([

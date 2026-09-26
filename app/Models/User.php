@@ -48,10 +48,16 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
-    /** @return HasMany<Customer, $this> */
-    public function customers(): HasMany
+    /** @return HasMany<Saver, $this> */
+    public function savers(): HasMany
     {
-        return $this->hasMany(Customer::class, 'created_by');
+        return $this->hasMany(Saver::class, 'created_by');
+    }
+
+    /** @return HasMany<Member, $this> */
+    public function members(): HasMany
+    {
+        return $this->hasMany(Member::class, 'created_by');
     }
 
     /** @return HasMany<Transaction, $this> */

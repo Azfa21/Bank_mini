@@ -23,6 +23,8 @@ class ReversalService
     public function reverse(Transaction $original, User $supervisor, string $reason): Transaction
     {
         return DB::transaction(function () use ($original, $supervisor, $reason) {
+            $this->assertReportNotApproved($original);
+
             $transaction = Transaction::query()->lockForUpdate()->findOrFail($original->id);
 
             if ($transaction->isReversal()) {
@@ -36,8 +38,6 @@ class ReversalService
             if (! in_array($transaction->type, ['deposit', 'withdrawal', 'transfer'], true)) {
                 throw new TransactionValidationException('Jenis transaksi ini tidak dapat dikoreksi.');
             }
-
-            $this->assertReportNotApproved($transaction);
 
             $accountIds = array_filter([$transaction->account_id, $transaction->recipient_account_id]);
             sort($accountIds);
@@ -186,13 +186,15 @@ class ReversalService
 
     protected function assertReportNotApproved(Transaction $transaction): void
     {
-        $approved = DailyReport::query()
+        $reports = DailyReport::query()
             ->where('teller_id', $transaction->teller_id)
             ->whereDate('report_date', $transaction->transaction_at->toDateString())
-            ->where('status', 'approved')
-            ->exists();
+            ->whereIn('status', ['submitted', 'approved'])
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
 
-        if ($approved) {
+        if ($reports->contains('status', 'approved')) {
             throw new TransactionValidationException(
                 'Transaksi tidak dapat dikoreksi karena laporan harian tanggal tersebut telah disetujui dan kas telah dipindahkan ke brankas.'
             );

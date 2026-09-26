@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Nasabah;
 
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 
@@ -40,7 +40,7 @@ class DashboardTest extends NasabahTestCase
 
     public function test_nasabah_without_account_sees_notice(): void
     {
-        Customer::create([
+        Saver::create([
             'student_number' => '2023998',
             'full_name' => 'Tanpa Rekening',
             'class_name' => 'X RPL 2',
@@ -51,10 +51,10 @@ class DashboardTest extends NasabahTestCase
             'status' => 'active',
         ]);
 
-        $this->actingAs(Customer::where('student_number', '2023998')->first(), 'nasabah')
+        $this->actingAs(Saver::where('student_number', '2023998')->first(), 'nasabah')
             ->get(route('nasabah.dashboard'))
             ->assertOk()
-            ->assertSee('belum memiliki rekening');
+            ->assertSee('belum punya rekening aktif');
     }
 
     public function test_nasabah_cannot_access_admin_journal_audit(): void

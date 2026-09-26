@@ -1,59 +1,74 @@
 @extends('layouts.app')
 
-@section('title', 'Pencarian Nasabah — Bank Mini')
+@section('title', 'Pencarian Penabung  EBank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">Pencarian Nasabah</h1>
-            <p class="text-sm text-gray-500 mt-1">Cari melalui nomor rekening, NIS, nama lengkap, atau pindai QR Code nasabah.</p>
+            <p class="text-xs font-semibold text-brand-900">LANGKAH 1 DARI TRANSAKSI</p>
+            <h1 class="text-2xl font-bold text-stone-900 mt-1">Temukan penabung</h1>
+            <p class="text-sm text-stone-600 mt-1">Pakai nomor rekening, NIS, nama lengkap, atau pindai QR Code di kartu.</p>
         </div>
-        <a href="{{ route('teller.customers.register') }}" class="text-sm bg-gray-900 text-white rounded-lg px-4 py-2 hover:bg-gray-800 transition-colors">
-            Registrasi Nasabah
+        <a href="{{ route('teller.members.register') }}" class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-white bg-stone-900 rounded-xl hover:bg-stone-800 transition-colors sm:shrink-0">
+            Daftarkan penabung baru
         </a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 class="text-sm font-medium text-gray-900 mb-4">Kata Kunci Pencarian</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5">
+        <section aria-label="Formulir pencarian penabung" class="lg:col-span-3 bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6">
+            <h2 class="text-base font-bold text-stone-900">Cari manual</h2>
 
-            <form method="GET" action="{{ route('teller.customers.lookup') }}" class="space-y-4">
+            <form method="GET" action="{{ route('teller.members.lookup') }}" class="mt-4 space-y-4">
                 <div>
-                    <x-input-label for="q" size="xs">Nomor rekening, NIS, nama lengkap, atau nilai QR Code</x-input-label>
-                    <x-input id="q" name="q" :value="request('q')" placeholder="Contoh: Ani Wijaya / 1026270001" autofocus />
+                    <x-input-label for="q">Nomor rekening, NIS, atau nama</x-input-label>
+                    <x-input id="q" name="q" :value="request('q')" placeholder="Contoh: Ani Wijaya atau 1026270001" autofocus autocomplete="off"
+                        aria-describedby="q-help" />
+                    <p id="q-help" class="text-[13px] text-stone-600 mt-1.5">Kalau hasil lebih dari satu, pilih nama yang tepat di daftar.</p>
                 </div>
                 <x-primary-button class="w-full">
-                    Cari Nasabah
+                    Cari penabung
                 </x-primary-button>
             </form>
 
-            <div class="mt-6 border-t border-gray-100 pt-6">
-                <h3 class="text-sm font-medium text-gray-900 mb-3">Pindai QR Code</h3>
-
-                <div id="qr-scan-area" class="hidden">
-                    <video id="qr-video" class="w-full rounded-lg border border-gray-200 bg-gray-900" playsinline muted></video>
-                    <div class="mt-3 flex gap-2">
-                        <button type="button" id="qr-stop" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50">Hentikan Kamera</button>
-                        <span id="qr-status" class="text-xs text-gray-500 self-center"></span>
+            <details class="mt-6 border-t border-stone-100 pt-5">
+                <summary class="inline-flex items-center min-h-[44px] cursor-pointer text-[15px] font-semibold text-stone-900">
+                    Pindai QR Code memakai kamera
+                </summary>
+                <div class="mt-3">
+                    <div id="qr-scan-area" class="hidden">
+                        <video id="qr-video" class="w-full rounded-xl border border-stone-200 bg-stone-900" playsinline muted aria-label="Pratinjau kamera pemindai QR"></video>
+                        <div class="mt-3 flex flex-wrap items-center gap-2.5">
+                            <button type="button" id="qr-stop" class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold border border-stone-300 rounded-xl hover:bg-stone-100">Hentikan kamera</button>
+                            <span id="qr-status" role="status" class="text-[13px] text-stone-600"></span>
+                        </div>
                     </div>
+
+                    <button type="button" id="qr-start" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors">
+                        Nyalakan kamera
+                    </button>
+                    <p class="text-[13px] text-stone-600 mt-2.5">Kalau kamera tidak tersedia, tetap pakai pencarian manual di atas.</p>
                 </div>
+            </details>
+        </section>
 
-                <button type="button" id="qr-start" class="text-sm bg-gray-900 text-white rounded-lg px-4 py-2 hover:bg-gray-800 transition-colors">
-                    Nyalakan Kamera
-                </button>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 class="text-sm font-medium text-gray-900 mb-3">Cara Penggunaan</h2>
-            <ol class="text-sm text-gray-600 space-y-2 list-decimal list-inside">
-                <li>Ketik nomor rekening, NIS, atau nama lengkap lalu tekan <strong>Cari Nasabah</strong>.</li>
-                <li>Jika hasil lebih dari satu, sistem menampilkan daftar untuk dipilih.</li>
-                <li>Atau nyalakan kamera dan arahkan ke QR Code pada kartu/buku tabungan nasabah.</li>
+        <aside aria-label="Alur pencarian" class="lg:col-span-2 bg-brand-50 rounded-2xl border border-brand-100 p-5 sm:p-6">
+            <h2 class="text-[15px] font-bold text-brand-950">Alur di loket</h2>
+            <ol class="mt-3 space-y-3 text-sm text-brand-950">
+                <li class="flex gap-3">
+                    <span class="inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-full bg-brand-800 text-white text-[13px] font-bold" aria-hidden="true">1</span>
+                    <span>Ketik identitas lalu tekan <strong>Cari penabung</strong>.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-full bg-brand-800 text-white text-[13px] font-bold" aria-hidden="true">2</span>
+                    <span>Cocokkan foto, nama, dan nomor rekening dengan buku tabungan.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-full bg-brand-800 text-white text-[13px] font-bold" aria-hidden="true">3</span>
+                    <span>Buka profil, lalu pilih setoran, penarikan, atau transfer.</span>
+                </li>
             </ol>
-            <p class="text-xs text-gray-400 mt-4">Jika kamera tidak tersedia, gunakan pencarian manual.</p>
-        </div>
+        </aside>
     </div>
 @endsection
 

@@ -4,8 +4,9 @@ namespace App\Services;
 
 use App\Exceptions\TransactionValidationException;
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
+use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
@@ -32,6 +33,7 @@ class TransactionService
         return DB::transaction(function () use ($account, $data, $teller) {
             $locked = Account::query()->lockForUpdate()->findOrFail($account->id);
             $this->assertAccountActive($locked);
+            $this->assertTellerDayOpen($teller);
 
             $amount = (int) ($data['amount'] ?? $data['slip_amount'] ?? 0);
             if ($amount <= 0) {
@@ -70,24 +72,25 @@ class TransactionService
     {
         $this->assertAccountActive($account);
 
-        $customer = $account->customer()->first();
+        $customer = $account->saver()->first();
         if (! $customer) {
             throw new TransactionValidationException('Data nasabah tidak ditemukan.');
         }
 
-        $this->verifyCustomerPin($customer, $pin, 'penarikan', $teller->id);
+        $this->verifySaverPin($customer, $pin, 'penarikan', $teller->id);
 
         return DB::transaction(function () use ($account, $data, $teller) {
             $locked = Account::query()->lockForUpdate()->findOrFail($account->id);
             $this->assertAccountActive($locked);
+            $this->assertTellerDayOpen($teller);
 
             $amount = (int) ($data['amount'] ?? 0);
             if ($amount <= 0) {
                 throw new TransactionValidationException('Nominal harus lebih besar dari nol.');
             }
 
-            $config = SystemConfig::find('minimum_balance');
-            $minimumBalance = (int) ($config->config_value ?? 10000);
+            $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
+            $minimumBalance = max((int) $locked->minimum_balance, $globalMinimumBalance);
 
             $adminFee = SystemConfig::integer('admin_fee', 0);
             $totalDeduction = $amount + $adminFee;
@@ -146,12 +149,12 @@ class TransactionService
 
         $this->assertAccountActive($source);
 
-        $customer = $source->customer()->first();
+        $customer = $source->saver()->first();
         if (! $customer) {
             throw new TransactionValidationException('Data nasabah pengirim tidak ditemukan.');
         }
 
-        $this->verifyCustomerPin($customer, $pin, 'transfer', $teller->id);
+        $this->verifySaverPin($customer, $pin, 'transfer', $teller->id);
 
         return DB::transaction(function () use ($source, $destination, $data, $teller) {
             // Deadlock prevention: lock accounts in ascending ID order
@@ -164,14 +167,15 @@ class TransactionService
 
             $this->assertAccountActive($lockedSource);
             $this->assertAccountActive($lockedDest);
+            $this->assertTellerDayOpen($teller);
 
             $amount = (int) ($data['amount'] ?? 0);
             if ($amount <= 0) {
                 throw new TransactionValidationException('Nominal transfer harus lebih besar dari nol.');
             }
 
-            $config = SystemConfig::find('minimum_balance');
-            $minimumBalance = (int) ($config->config_value ?? 10000);
+            $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
+            $minimumBalance = max((int) $lockedSource->minimum_balance, $globalMinimumBalance);
 
             $sourceBalanceBefore = (int) $lockedSource->balance;
             if ($amount > $sourceBalanceBefore) {
@@ -199,7 +203,7 @@ class TransactionService
                 'balance_before' => $sourceBalanceBefore,
                 'balance_after' => $sourceBalanceAfter,
                 'receipt_number' => $this->generateTransactionNumber(),
-                'slip_number' => $data['slip_number'] ?? $this->generateSlipNumber(),
+                'slip_number' => $this->resolveSlipNumber($data['slip_number'] ?? null),
                 'notes' => $notes,
                 'status' => 'success',
                 'transaction_at' => now(),
@@ -224,12 +228,12 @@ class TransactionService
         });
     }
 
-    public function verifyCustomerPin(Customer $customer, string $pin, string $actionType = 'transaksi', ?int $actorId = null): void
+    public function verifySaverPin(Saver $customer, string $pin, string $actionType = 'transaksi', ?int $actorId = null): void
     {
         $failure = null;
 
         DB::transaction(function () use ($customer, $pin, $actionType, $actorId, &$failure) {
-            $locked = Customer::query()
+            $locked = Saver::query()
                 ->whereKey($customer->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -251,7 +255,7 @@ class TransactionService
                         'locked_until' => now()->addMinutes(15),
                     ]);
 
-                    AuditLogService::record('customer_pin_locked', 'customer', $locked->id, [
+                    AuditLogService::record('customer_pin_locked', 'saver', $locked->id, [
                         'student_number' => $locked->student_number,
                         'action' => $actionType,
                         'failed_attempts' => $attempts,
@@ -301,7 +305,7 @@ class TransactionService
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
             'receipt_number' => $this->generateTransactionNumber(),
-            'slip_number' => $data['slip_number'] ?? $this->generateSlipNumber(),
+            'slip_number' => $this->resolveSlipNumber($data['slip_number'] ?? null),
             'slip_amount' => isset($data['slip_amount']) ? (int) $data['slip_amount'] : null,
             'physical_cash_amount' => isset($data['physical_cash_amount']) ? (int) $data['physical_cash_amount'] : null,
             'denomination_breakdown' => $this->normalizeBreakdown($data['denomination_breakdown'] ?? null),
@@ -324,6 +328,19 @@ class TransactionService
         $normalized = CashDenomination::normalize($breakdown);
 
         return $normalized === [] ? null : $normalized;
+    }
+
+    protected function resolveSlipNumber(?string $suppliedSlipNumber): string
+    {
+        $slipNumber = $suppliedSlipNumber !== null && $suppliedSlipNumber !== ''
+            ? $suppliedSlipNumber
+            : $this->generateSlipNumber();
+
+        if (Transaction::query()->where('slip_number', $slipNumber)->exists()) {
+            throw new TransactionValidationException('Nomor slip sudah digunakan untuk transaksi lain.');
+        }
+
+        return $slipNumber;
     }
 
     protected function createJournalEntries(Transaction $transaction, string $type, int $amount): void
@@ -369,14 +386,14 @@ class TransactionService
                 'entry_type' => 'debit',
                 'debit_amount' => $amount,
                 'credit_amount' => 0,
-                'description' => 'Transfer keluar ke Rek. '.$destination->account_number.' ('.$destination->customer?->full_name.')',
+                'description' => 'Transfer keluar ke Rek. '.$destination->account_number.' ('.$destination->saver?->full_name.')',
             ],
             [
                 'account_code' => self::ACCOUNT_CODE_SAVINGS,
                 'entry_type' => 'credit',
                 'debit_amount' => 0,
                 'credit_amount' => $amount,
-                'description' => 'Transfer masuk dari Rek. '.$source->account_number.' ('.$source->customer?->full_name.')',
+                'description' => 'Transfer masuk dari Rek. '.$source->account_number.' ('.$source->saver?->full_name.')',
             ],
         ];
 
@@ -413,8 +430,24 @@ class TransactionService
             throw new TransactionValidationException('Rekening tidak aktif.');
         }
 
-        if ($account->customer && $account->customer->status !== 'active') {
+        if ($account->saver && $account->saver->status !== 'active') {
             throw new TransactionValidationException('Nasabah dalam status diblokir.');
+        }
+    }
+
+    protected function assertTellerDayOpen(User $teller): void
+    {
+        $closedReport = DailyReport::query()
+            ->where('teller_id', $teller->id)
+            ->whereDate('report_date', now()->toDateString())
+            ->whereIn('status', ['submitted', 'approved'])
+            ->lockForUpdate()
+            ->first();
+
+        if ($closedReport !== null) {
+            throw new TransactionValidationException(
+                'Transaksi tidak dapat diposting karena laporan kas teller untuk tanggal ini sudah disubmitkan.'
+            );
         }
     }
 

@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
-use App\Models\Customer;
 use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
+use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
@@ -24,7 +24,7 @@ class AuthRbacTest extends TestCase
 
     protected User $supervisor;
 
-    protected Customer $nasabah;
+    protected Saver $nasabah;
 
     protected function setUp(): void
     {
@@ -54,7 +54,7 @@ class AuthRbacTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->nasabah = Customer::create([
+        $this->nasabah = Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani',
             'pin_hash' => Hash::make('123456'),
@@ -268,7 +268,7 @@ class AuthRbacTest extends TestCase
     {
         $account = Account::create([
             'account_number' => 'TAB-TEST',
-            'customer_id' => $this->nasabah->id,
+            'saver_id' => $this->nasabah->id,
             'balance' => 25000,
             'status' => 'active',
             'opened_at' => now(),

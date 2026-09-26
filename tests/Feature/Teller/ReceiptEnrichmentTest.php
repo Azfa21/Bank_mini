@@ -3,7 +3,7 @@
 namespace Tests\Feature\Teller;
 
 use App\Models\Account;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Services\ReversalService;
 use App\Services\TransactionService;
@@ -13,7 +13,7 @@ class ReceiptEnrichmentTest extends TellerTestCase
 {
     protected function createRecipient(): Account
     {
-        $customer = Customer::create([
+        $customer = Saver::create([
             'student_number' => '2023988',
             'full_name' => 'Rudi Penerima',
             'class_name' => 'X RPL 5',
@@ -25,7 +25,7 @@ class ReceiptEnrichmentTest extends TellerTestCase
 
         return Account::create([
             'account_number' => '2026/2027-988',
-            'customer_id' => $customer->id,
+            'saver_id' => $customer->id,
             'balance' => 0,
             'opening_balance' => 0,
             'minimum_balance' => 10000,
@@ -68,7 +68,7 @@ class ReceiptEnrichmentTest extends TellerTestCase
         $this->actingAsTeller()
             ->get(route('teller.transactions.receipt', $transaction))
             ->assertOk()
-            ->assertSee('Biaya Administrasi')
+            ->assertSee('Biaya admin')
             ->assertSee('Rp 2.000')
             ->assertSee('Total')
             ->assertSee('Rp 12.000')
@@ -91,7 +91,7 @@ class ReceiptEnrichmentTest extends TellerTestCase
             ->get(route('teller.transactions.receipt', $transaction))
             ->assertOk()
             ->assertSee('Transfer Antar Rekening')
-            ->assertSee('Rekening Tujuan')
+            ->assertSee('Rekening tujuan')
             ->assertSee('2026/2027-988')
             ->assertSee('Rudi Penerima');
     }

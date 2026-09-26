@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateMobile;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => EnsureRole::class,
+            'mobile.auth' => AuthenticateMobile::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

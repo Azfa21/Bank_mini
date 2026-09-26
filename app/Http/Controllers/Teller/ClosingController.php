@@ -9,7 +9,6 @@ use App\Models\DailyReport;
 use App\Models\Transaction;
 use App\Services\AuditLogService;
 use App\Services\DailyReportService;
-use App\Support\CashDenomination;
 use Illuminate\Http\Request;
 
 class ClosingController extends Controller
@@ -58,18 +57,14 @@ class ClosingController extends Controller
 
         $date = $request->validated('report_date');
 
+        // Total fisik yang diketik Teller adalah sumber kebenaran.
+        // Rincian pecahan hanya alat bantu hitung (opsional) dan bukti audit.
         $denominations = $request->validated('denominations') ?? [];
-        $breakdownTotal = CashDenomination::total($denominations);
-
-        if ($breakdownTotal > 0) {
-            $physicalCash = $breakdownTotal;
-        } else {
-            $denominations = [];
-            $physicalCash = (int) ($request->validated('physical_cash') ?? 0);
-        }
+        $physicalCash = (int) ($request->validated('physical_cash') ?? 0);
+        $differenceNote = $request->validated('difference_note');
 
         try {
-            $report = $this->reports->createReport($request->user(), $date, $physicalCash, $denominations);
+            $report = $this->reports->createReport($request->user(), $date, $physicalCash, $denominations, $differenceNote);
         } catch (TransactionValidationException $e) {
             AuditLogService::record('daily_report_creation_blocked', 'daily_report', null, [
                 'report_date' => $date,
@@ -85,7 +80,7 @@ class ClosingController extends Controller
 
             return back()
                 ->with('error', $e->getMessage())
-                ->withInput(['report_date' => $date]);
+                ->withInput();
         }
 
         if ($this->wantsJson($request)) {

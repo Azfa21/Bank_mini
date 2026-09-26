@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AuditLog;
-use App\Models\Customer;
+use App\Models\Saver;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +17,7 @@ class AuditLogTest extends TestCase
 
     protected User $teller;
 
-    protected Customer $nasabah;
+    protected Saver $nasabah;
 
     protected function setUp(): void
     {
@@ -39,7 +39,7 @@ class AuditLogTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->nasabah = Customer::create([
+        $this->nasabah = Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani',
             'pin_hash' => Hash::make('123456'),
@@ -67,7 +67,7 @@ class AuditLogTest extends TestCase
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'login_success',
-            'entity_name' => 'customer',
+            'entity_name' => 'saver',
             'entity_id' => $this->nasabah->id,
             'user_id' => null,
         ]);

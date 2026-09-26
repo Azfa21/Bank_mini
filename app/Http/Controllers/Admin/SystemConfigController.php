@@ -33,6 +33,7 @@ class SystemConfigController extends Controller
             'minimum_balance' => ['required', 'integer', 'min:0'],
             'admin_fee' => ['required', 'integer', 'min:0'],
             'max_withdrawal_without_order' => ['required', 'integer', 'min:0'],
+            'min_deposit_to_activate' => ['required', 'integer', 'min:0'],
         ]);
 
         foreach ($validated as $key => $value) {

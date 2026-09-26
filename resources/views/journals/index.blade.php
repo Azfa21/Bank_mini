@@ -4,77 +4,78 @@
 @section('section', $userRole === 'admin' ? 'Administrator' : 'Supervisor')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">Audit Jurnal Akuntansi</h1>
-            <p class="text-sm text-gray-500 mt-1">Jurnal double-entry setiap transaksi setoran, penarikan, dan transfer.</p>
+            <p class="text-xs font-semibold text-brand-900">DOUBLE-ENTRY</p>
+            <h1 class="text-2xl font-bold text-stone-900 mt-1">Audit jurnal</h1>
+            <p class="text-sm text-stone-600 mt-1">Setiap transaksi wajib dua baris seimbang: debit sama dengan kredit.</p>
         </div>
         <a href="{{ $userRole === 'admin' ? route('admin.reports.export', 'journals') : route('supervisor.reports.export', 'journals') }}"
-            class="text-sm bg-green-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-            Ekspor CSV
+            class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors sm:shrink-0">
+            Unduh CSV
         </a>
     </div>
 
-    <form method="GET" action="{{ $indexRoute }}" class="mb-6 bg-white rounded-xl border border-gray-200 p-5 flex flex-wrap gap-3 items-end">
-        <div>
-            <x-input-label for="transaction_number" size="xs">Nomor Transaksi</x-input-label>
-            <x-input id="transaction_number" name="transaction_number" :value="request('transaction_number')" :block="false" placeholder="TRX-..." />
+    <form method="GET" action="{{ $indexRoute }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end sm:flex-wrap">
+        <div class="sm:w-52">
+            <x-input-label for="transaction_number">Nomor transaksi</x-input-label>
+            <x-input id="transaction_number" name="transaction_number" :value="request('transaction_number')" placeholder="Contoh: TRX-..." />
         </div>
-        <div>
-            <x-input-label for="account_code" size="xs">Kode Akun</x-input-label>
-            <x-select id="account_code" name="account_code" :block="false">
-                <option value="">Semua</option>
-                <option value="101" @selected(request('account_code') === '101')>101 — Kas</option>
-                <option value="201" @selected(request('account_code') === '201')>201 — Tabungan</option>
+        <div class="sm:w-48">
+            <x-input-label for="account_code">Kode akun</x-input-label>
+            <x-select id="account_code" name="account_code">
+                <option value="">Semua akun</option>
+                <option value="101" @selected(request('account_code') === '101')>101, Kas</option>
+                <option value="201" @selected(request('account_code') === '201')>201, Tabungan</option>
             </x-select>
         </div>
         <div>
-            <x-input-label for="date_from" size="xs">Dari Tanggal</x-input-label>
-            <x-input id="date_from" name="date_from" type="date" :value="request('date_from')" :block="false" />
+            <x-input-label for="date_from">Dari tanggal</x-input-label>
+            <x-input id="date_from" name="date_from" type="date" :value="request('date_from')" />
         </div>
         <div>
-            <x-input-label for="date_to" size="xs">Sampai Tanggal</x-input-label>
-            <x-input id="date_to" name="date_to" type="date" :value="request('date_to')" :block="false" />
+            <x-input-label for="date_to">Sampai tanggal</x-input-label>
+            <x-input id="date_to" name="date_to" type="date" :value="request('date_to')" />
         </div>
         <x-primary-button>
-            Filter
+            Tampilkan jurnal
         </x-primary-button>
     </form>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <div class="text-sm text-gray-500">Total Baris Jurnal</div>
-            <div class="text-2xl font-semibold text-gray-900 mt-1">{{ $journals->total() }}</div>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <div class="text-sm text-gray-500">Total Debit</div>
-            <div class="text-2xl font-semibold text-gray-900 mt-1">Rp {{ number_format($totalDebit, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <div class="text-sm text-gray-500">Total Kredit</div>
-            <div class="text-2xl font-semibold text-gray-900 mt-1">Rp {{ number_format($totalCredit, 0, ',', '.') }}</div>
-        </div>
-    </div>
+    <section aria-label="Total jurnal" class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+        <dl class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5">
+            <dt class="text-[13px] font-medium text-stone-600">Baris jurnal</dt>
+            <dd class="text-2xl font-bold text-stone-900 mt-1 tnum">{{ $journals->total() }}</dd>
+        </dl>
+        <dl class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5">
+            <dt class="text-[13px] font-medium text-stone-600">Total debit</dt>
+            <dd class="text-xl font-bold text-stone-900 mt-1 tnum">Rp {{ number_format($totalDebit, 0, ',', '.') }}</dd>
+        </dl>
+        <dl class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5">
+            <dt class="text-[13px] font-medium text-stone-600">Total kredit</dt>
+            <dd class="text-xl font-bold text-stone-900 mt-1 tnum">Rp {{ number_format($totalCredit, 0, ',', '.') }}</dd>
+        </dl>
+    </section>
 
-    <x-data-table :headers="[['label' => 'Nomor Jurnal'], ['label' => 'Transaksi'], ['label' => 'Tanggal'], ['label' => 'Akun'], ['label' => 'Jenis'], ['label' => 'Debit', 'align' => 'right'], ['label' => 'Kredit', 'align' => 'right'], ['label' => 'Keterangan']]">
+    <x-data-table caption="Audit jurnal akuntansi" :headers="[['label' => 'Nomor jurnal'], ['label' => 'Transaksi'], ['label' => 'Tanggal'], ['label' => 'Akun'], ['label' => 'Jenis'], ['label' => 'Debit', 'align' => 'right'], ['label' => 'Kredit', 'align' => 'right'], ['label' => 'Keterangan']]">
                 @forelse ($journals as $journal)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-5 py-3 font-mono">{{ $journal->journal_number }}</td>
-                        <td class="px-5 py-3 font-mono">{{ $journal->transaction?->receipt_number }}</td>
-                        <td class="px-5 py-3">{{ $journal->journal_at?->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-3 font-mono">{{ $journal->account_code }}</td>
+                    <tr class="hover:bg-stone-50">
+                        <td class="px-5 py-3 tnum font-medium">{{ $journal->journal_number }}</td>
+                        <td class="px-5 py-3 tnum">{{ $journal->transaction?->receipt_number }}</td>
+                        <td class="px-5 py-3 tnum">{{ $journal->journal_at?->format('d/m/Y H:i') }}</td>
+                        <td class="px-5 py-3 tnum">{{ $journal->account_code }}</td>
                         <td class="px-5 py-3">
-                            <span class="text-xs px-2 py-1 rounded-full {{ $journal->entry_type === 'debit' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                            <span class="inline-flex items-center text-[13px] font-semibold px-2.5 py-1 rounded-full border {{ $journal->entry_type === 'debit' ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-700 border-stone-300' }}">
                                 {{ ucfirst($journal->entry_type) }}
                             </span>
                         </td>
-                        <td class="px-5 py-3 text-right font-mono">Rp {{ number_format($journal->debit_amount, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3 text-right font-mono">Rp {{ number_format($journal->credit_amount, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3 text-gray-500">{{ $journal->description }}</td>
+                        <td class="px-5 py-3 text-right tnum">Rp {{ number_format($journal->debit_amount, 0, ',', '.') }}</td>
+                        <td class="px-5 py-3 text-right tnum">Rp {{ number_format($journal->credit_amount, 0, ',', '.') }}</td>
+                        <td class="px-5 py-3 text-stone-600">{{ $journal->description }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">Belum ada jurnal.</td>
+                        <td colspan="8" class="px-5 py-8 text-center text-sm text-stone-600">Belum ada jurnal untuk filter ini.</td>
                     </tr>
                 @endforelse
 </x-data-table>

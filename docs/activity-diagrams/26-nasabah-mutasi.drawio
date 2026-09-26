@@ -1,0 +1,33 @@
+<mxfile host="app.diagrams.net" agent="opencode" version="24.7.17" type="device">
+  <diagram id="26-nasabah-mutasi" name="Activity Diagram - Nasabah Melihat Riwayat Mutasi">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="820" pageHeight="1180" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Activity Diagram - Nasabah Melihat Riwayat Mutasi" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="10" y="10" width="760" height="40" as="geometry"/></mxCell>
+        <mxCell id="lane0" value="Nasabah" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#b0b0b0;verticalAlign=top;fontStyle=1;fontSize=13;spacingTop=8;" vertex="1" parent="1"><mxGeometry x="0" y="60" width="260" height="1080" as="geometry"/></mxCell>
+        <mxCell id="lane1" value="Sistem" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#b0b0b0;verticalAlign=top;fontStyle=1;fontSize=13;spacingTop=8;" vertex="1" parent="1"><mxGeometry x="260" y="60" width="260" height="1080" as="geometry"/></mxCell>
+        <mxCell id="lane2" value="Database" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#b0b0b0;verticalAlign=top;fontStyle=1;fontSize=13;spacingTop=8;" vertex="1" parent="1"><mxGeometry x="520" y="60" width="260" height="1080" as="geometry"/></mxCell>
+        <mxCell id="s" value="Mulai" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="30" y="120" width="200" height="36" as="geometry"/></mxCell>
+        <mxCell id="a1" value="Buka riwayat mutasi" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="30" y="216" width="200" height="46" as="geometry"/></mxCell>
+        <mxCell id="a2" value="Filter jenis/tanggal" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="30" y="312" width="200" height="46" as="geometry"/></mxCell>
+        <mxCell id="dec1" value="Hanya data sendiri?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="290" y="408" width="200" height="84" as="geometry"/></mxCell>
+        <mxCell id="a3" value="Tolak akses" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="290" y="504" width="200" height="46" as="geometry"/></mxCell>
+        <mxCell id="e1" value="Selesai" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="290" y="600" width="200" height="36" as="geometry"/></mxCell>
+        <mxCell id="a4" value="Ambil transaksi akun sendiri (account_id / recipient)" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="550" y="696" width="200" height="46" as="geometry"/></mxCell>
+        <mxCell id="a5" value="Paginate hasil" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="290" y="792" width="200" height="46" as="geometry"/></mxCell>
+        <mxCell id="a6" value="Tampilkan tanggal, jenis, nominal, saldo akhir" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="290" y="888" width="200" height="46" as="geometry"/></mxCell>
+        <mxCell id="e2" value="Selesai" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="290" y="984" width="200" height="36" as="geometry"/></mxCell>
+        <mxCell id="edge0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="s" target="a1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="a1" target="a2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="a2" target="dec1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge3" value="Tidak" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;dashed=1;" edge="1" parent="1" source="dec1" target="a3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="a3" target="e1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge5" value="Ya" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="dec1" target="a4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="a4" target="a5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="a5" target="a6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#333333;" edge="1" parent="1" source="a6" target="e2"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

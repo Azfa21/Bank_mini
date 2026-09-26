@@ -16,9 +16,10 @@ class StoreClosingRequest extends FormRequest
     {
         return [
             'report_date' => ['required', 'date_format:Y-m-d'],
-            'physical_cash' => ['required_without:denominations', 'nullable', 'integer', 'min:0'],
+            'physical_cash' => ['required', 'integer', 'min:0'],
             'denominations' => ['nullable', 'array'],
             'denominations.*' => ['nullable', 'integer', 'min:0'],
+            'difference_note' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

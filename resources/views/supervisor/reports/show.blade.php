@@ -4,177 +4,158 @@
 @section('section', 'Supervisor')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">Detail Laporan Harian</h1>
-            <p class="text-sm text-gray-500 mt-1">{{ $report->report_number }} — {{ $report->report_date->format('d/m/Y') }}</p>
+            <p class="text-xs font-semibold text-brand-900">PERIKSA SEBELUM SETUJUI</p>
+            <h1 class="text-2xl font-bold text-stone-900 mt-1">Laporan {{ $report->report_number }}</h1>
+            <p class="text-sm text-stone-600 mt-1">Tanggal {{ $report->report_date->format('d/m/Y') }} · Teller {{ $report->teller->full_name }}</p>
         </div>
-        <a href="{{ route('supervisor.reports.index') }}" class="text-sm text-blue-600 hover:text-blue-800">&larr; Kembali ke daftar</a>
+        <a href="{{ route('supervisor.reports.index') }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline">&larr; Kembali ke daftar</a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 space-y-6">
-            <div class="bg-white rounded-xl border border-gray-200 p-5">
-                <p class="text-xs text-gray-500">Teller</p>
-                <p class="text-sm font-semibold text-gray-900 mt-1">{{ $report->teller->full_name }}</p>
-                <div class="mt-3 pt-3 border-t border-gray-100 text-sm space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Status</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full {{ $report->status === 'approved' ? 'bg-green-100 text-green-700' : ($report->status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
-                            {{ ucfirst($report->status) }}
-                        </span>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div class="lg:col-span-1 space-y-4">
+            <section aria-label="Status laporan" class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5">
+                <dl class="text-sm space-y-2.5">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Status</dt>
+                        <dd>
+                            <span class="inline-flex items-center text-[13px] font-semibold px-2.5 py-1 rounded-full border {{ $report->status === 'approved' ? 'bg-brand-50 border-brand-200 text-brand-900' : ($report->status === 'rejected' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-900') }}">
+                                {{ ['draft' => 'Draf', 'submitted' => 'Menunggu validasi', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'][$report->status] ?? ucfirst($report->status) }}
+                            </span>
+                        </dd>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Dikirim</span>
-                        <span class="font-mono">{{ $report->submitted_at?->format('d/m/Y H:i') ?? '—' }}</span>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Dikirim</dt>
+                        <dd class="tnum">{{ $report->submitted_at?->format('d/m/Y H:i') ?? 'Belum dikirim' }}</dd>
                     </div>
                     @if ($report->approved_at)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Disetujui</span>
-                            <span class="font-mono">{{ $report->approved_at->format('d/m/Y H:i') }}</span>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-stone-600">Disetujui</dt>
+                            <dd class="tnum">{{ $report->approved_at->format('d/m/Y H:i') }}</dd>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Oleh</span>
-                            <span>{{ $report->approver->full_name ?? '—' }}</span>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-stone-600">Oleh</dt>
+                            <dd>{{ $report->approver->full_name ?? 'Belum ada' }}</dd>
                         </div>
                     @endif
                     @if ($report->approval_notes)
-                        <div class="pt-2 border-t border-gray-100">
-                            <p class="text-xs text-gray-500">Catatan</p>
-                            <p class="text-sm text-gray-900 mt-1">{{ $report->approval_notes }}</p>
+                        <div class="pt-2.5 border-t border-stone-100">
+                            <dt class="text-[13px] font-medium text-stone-600">Catatan</dt>
+                            <dd class="text-sm text-stone-900 mt-1">{{ $report->approval_notes }}</dd>
                         </div>
                     @endif
-                </div>
-            </div>
+                </dl>
+            </section>
 
-            <div class="bg-white rounded-xl border border-gray-200 p-5">
-                <p class="text-xs text-gray-500 mb-3">Rekonsiliasi Kas</p>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Saldo Awal</span>
-                        <span class="font-mono">Rp {{ number_format($report->opening_balance, 0, ',', '.') }}</span>
+            <section aria-label="Perbandingan kas" class="bg-white rounded-2xl border border-stone-200 p-5">
+                <h2 class="text-[13px] font-semibold text-stone-700 mb-2.5">Sistem vs fisik</h2>
+                <dl class="space-y-2 text-sm">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Saldo awal</dt>
+                        <dd class="tnum">Rp {{ number_format($report->opening_balance, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Total Setoran</span>
-                        <span class="font-mono text-green-600">+ Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</span>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Total setoran</dt>
+                        <dd class="tnum font-semibold text-brand-900">+ Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Total Penarikan</span>
-                        <span class="font-mono text-red-600">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</span>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Total penarikan</dt>
+                        <dd class="tnum font-semibold text-red-800">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Biaya Administrasi</span>
-                        <span class="font-mono">Rp {{ number_format($report->total_admin_fee, 0, ',', '.') }}</span>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Biaya admin</dt>
+                        <dd class="tnum">Rp {{ number_format($report->total_admin_fee, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between pt-2 border-t border-gray-100 font-semibold">
-                        <span class="text-gray-900">Saldo Sistem</span>
-                        <span class="font-mono text-gray-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</span>
+                    <div class="flex justify-between gap-3 pt-2 border-t border-stone-100 font-bold">
+                        <dt class="text-stone-900">Saldo sistem</dt>
+                        <dd class="tnum text-stone-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Uang Fisik</span>
-                        <span class="font-mono">Rp {{ number_format($report->closing_balance_physical ?? 0, 0, ',', '.') }}</span>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Uang fisik</dt>
+                        <dd class="tnum">Rp {{ number_format($report->closing_balance_physical ?? 0, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Selisih Kas</span>
-                        <span class="font-mono {{ $report->cash_difference === 0 ? 'text-green-600' : 'text-red-600' }}">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Selisih</dt>
+                        <dd class="tnum font-bold {{ $report->cash_difference === 0 ? 'text-brand-900' : 'text-red-800' }}">
                             Rp {{ number_format($report->cash_difference ?? 0, 0, ',', '.') }}
-                        </span>
+                        </dd>
                     </div>
-                </div>
+                </dl>
 
                 @if ($report->cashTransfer)
-                    <div class="mt-4 pt-4 border-t border-gray-100">
-                        <p class="text-xs text-gray-500 mb-2">Pemindahan Kas ke Brankas</p>
-                        <div class="text-sm space-y-1">
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Nominal</span>
-                                <span class="font-mono">Rp {{ number_format($report->cashTransfer->amount, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Lokasi</span>
-                                <span>{{ $report->cashTransfer->source_location }} → {{ $report->cashTransfer->destination_location }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Waktu</span>
-                                <span class="font-mono">{{ $report->cashTransfer->transferred_at?->format('d/m/Y H:i') }}</span>
-                            </div>
+                    <div class="mt-4 pt-4 border-t border-stone-100 text-sm space-y-1.5">
+                        <h3 class="text-[13px] font-semibold text-stone-700">Kas pindah ke brankas</h3>
+                        <div class="flex justify-between gap-3">
+                            <span class="text-stone-600">Nominal</span>
+                            <span class="tnum">Rp {{ number_format($report->cashTransfer->amount, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <span class="text-stone-600">Rute</span>
+                            <span>{{ $report->cashTransfer->source_location }} ke {{ $report->cashTransfer->destination_location }}</span>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <span class="text-stone-600">Waktu</span>
+                            <span class="tnum">{{ $report->cashTransfer->transferred_at?->format('d/m/Y H:i') }}</span>
                         </div>
                     </div>
                 @endif
-            </div>
+            </section>
 
             @if ($report->closing_breakdown)
-                <div class="bg-white rounded-xl border border-gray-200 p-5">
-                    <p class="text-xs text-gray-500 mb-3">Rincian Uang Kertas &amp; Logam</p>
-                    <div class="text-sm space-y-1">
+                <section aria-label="Rincian pecahan" class="bg-white rounded-2xl border border-stone-200 p-5">
+                    <h2 class="text-[13px] font-semibold text-stone-700 mb-2.5">Rincian kertas dan logam</h2>
+                    <dl class="text-sm space-y-1.5">
                         @foreach (\App\Support\CashDenomination::GROUPS as $group => $info)
                             @foreach ($info['values'] as $value)
                                 @php $key = $group.'_'.$value; @endphp
                                 @if (isset($report->closing_breakdown[$key]))
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">{{ \App\Support\CashDenomination::label($value) }}</span>
-                                        <span class="font-mono">{{ $report->closing_breakdown[$key] }} × = Rp {{ number_format($value * $report->closing_breakdown[$key], 0, ',', '.') }}</span>
+                                    <div class="flex justify-between gap-3">
+                                        <dt class="text-stone-600">{{ \App\Support\CashDenomination::label($value) }}</dt>
+                                        <dd class="tnum">{{ $report->closing_breakdown[$key] }} × = Rp {{ number_format($value * $report->closing_breakdown[$key], 0, ',', '.') }}</dd>
                                     </div>
                                 @endif
                             @endforeach
                         @endforeach
-                    </div>
-                </div>
+                    </dl>
+                </section>
             @endif
 
             @if ($report->status === 'submitted')
-                <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-                    <h2 class="text-sm font-medium text-gray-900">Validasi Laporan</h2>
-                    <form method="POST" action="{{ route('supervisor.reports.approve', $report) }}" class="space-y-3">
+                <section aria-label="Keputusan validasi" class="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+                    <h2 class="text-[15px] font-bold text-stone-900">Keputusan validasi</h2>
+                    <form method="POST" action="{{ route('supervisor.reports.approve', $report) }}" class="space-y-3" id="approve-form" data-confirm="Setujui laporan ini? Kas laci pindah ke brankas dan tidak bisa dibatalkan.">
                         @csrf
                         <div>
-                            <label for="approval_notes" class="block text-xs font-medium text-gray-600 mb-1">Catatan Persetujuan *</label>
-                            <textarea id="approval_notes" name="approval_notes" rows="3"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Catatan pemeriksaan fisik dan transaksi" required></textarea>
+                            <x-input-label for="approval_notes">Catatan pemeriksaan wajib</x-input-label>
+                            <x-textarea id="approval_notes" name="approval_notes" rows="3"
+                                placeholder="Contoh: Uang fisik cocok, slip lengkap" required />
                             @error('approval_notes')
-                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                <p role="alert" class="text-[13px] font-medium text-red-800 mt-1.5">Periksa: {{ $message }}</p>
                             @enderror
                         </div>
-                        <button type="submit"
-                            class="w-full bg-green-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors"
-                            onclick="this.disabled = true; this.form.submit();">
-                            Setujui & Pindahkan Kas
-                        </button>
+                        <x-primary-button id="approve-submit" data-loading-text="Menyetujui..." class="w-full">
+                            Setujui dan pindahkan kas
+                        </x-primary-button>
                     </form>
-                    <form method="POST" action="{{ route('supervisor.reports.reject', $report) }}" class="space-y-3">
+                    <form method="POST" action="{{ route('supervisor.reports.reject', $report) }}" class="space-y-3 border-t border-stone-100 pt-4" id="reject-form" data-confirm="Tolak laporan ini? Teller harus perbaiki dan kirim ulang.">
                         @csrf
                         <div>
-                            <label for="rejection_notes" class="block text-xs font-medium text-gray-600 mb-1">Catatan Penolakan *</label>
-                            <textarea id="rejection_notes" name="approval_notes" rows="3"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                                placeholder="Alasan penolakan untuk perbaikan Teller" required></textarea>
+                            <x-input-label for="rejection_notes">Alasan penolakan wajib</x-input-label>
+                            <x-textarea id="rejection_notes" name="approval_notes" rows="3"
+                                placeholder="Contoh: Selisih Rp 10.000, hitung ulang laci" required />
                         </div>
-                        <button type="submit"
-                            class="w-full bg-red-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors">
-                            Tolak Laporan
+                        <button type="submit" id="reject-submit" data-loading-text="Menolak..." class="inline-flex items-center justify-center w-full min-h-[48px] px-5 text-[15px] font-semibold text-white bg-red-700 rounded-xl hover:bg-red-800 transition-colors disabled:opacity-60">
+                            Tolak laporan
                         </button>
                     </form>
-                </div>
+                </section>
             @endif
         </div>
 
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-                <div class="border-b border-gray-200 px-5 py-3">
-                    <h2 class="text-sm font-medium text-gray-900">Transaksi ({{ $transactions->count() }})</h2>
-                </div>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-                        <tr>
-                            <th class="px-5 py-3">No. Transaksi</th>
-                            <th class="px-5 py-3">Waktu</th>
-                            <th class="px-5 py-3">Jenis</th>
-                            <th class="px-5 py-3 text-right">Nominal</th>
-                            <th class="px-5 py-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
+        <div class="lg:col-span-2 space-y-4 sm:space-y-5">
+            <section aria-label="Daftar transaksi laporan">
+                <x-data-table caption="Transaksi pada laporan {{ $report->report_number }}" :headers="[['label' => 'Nomor transaksi'], ['label' => 'Waktu'], ['label' => 'Jenis'], ['label' => 'Nominal', 'align' => 'right'], ['label' => 'Koreksi', 'align' => 'right']]">
                         @forelse ($transactions as $transaction)
                             @php
                                 $typeLabel = match ($transaction->type) {
@@ -190,75 +171,63 @@
                                     && $transaction->status === 'success'
                                     && $transaction->type !== 'reversal';
                             @endphp
-                            <tr>
-                                <td class="px-5 py-3 font-mono">
+                            <tr class="hover:bg-stone-50">
+                                <td class="px-5 py-3 tnum">
                                     {{ $transaction->receipt_number }}
                                     @if ($transaction->status === 'reversed')
-                                        <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700">Dikoreksi</span>
+                                        <span class="ml-1 text-[13px] font-semibold px-1.5 py-0.5 rounded border bg-red-50 border-red-200 text-red-800">Dikoreksi</span>
                                     @elseif ($transaction->type === 'reversal')
-                                        <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">Pembalik</span>
+                                        <span class="ml-1 text-[13px] font-semibold px-1.5 py-0.5 rounded border bg-amber-50 border-amber-200 text-amber-900">Pembalik</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3 font-mono">{{ $transaction->transaction_at?->format('d/m/Y H:i') }}</td>
+                                <td class="px-5 py-3 tnum">{{ $transaction->transaction_at?->format('d/m/Y H:i') }}</td>
                                 <td class="px-5 py-3">{{ $typeLabel }}</td>
-                                <td class="px-5 py-3 text-right font-mono {{ $isCredit ? 'text-green-600' : 'text-red-600' }}">
+                                <td class="px-5 py-3 text-right tnum font-semibold {{ $isCredit ? 'text-brand-900' : 'text-red-800' }}">
                                     {{ $isCredit ? '+' : '−' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                                 </td>
                                 <td class="px-5 py-3 text-right">
                                     @if ($canReverse)
                                         <form method="POST" action="{{ route('supervisor.transactions.reverse', $transaction) }}"
-                                            onsubmit="var r = prompt('Alasan koreksi untuk {{ $transaction->receipt_number }}:', 'Salah input transaksi'); if (r === null || r.trim().length < 5) { return false; } this.reason.value = r.trim(); return true;">
+                                            data-reversal="{{ $transaction->receipt_number }}">
                                             @csrf
                                             <input type="hidden" name="reason" value="">
-                                            <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">Koreksi</button>
+                                            <button type="submit" class="inline-flex items-center justify-center min-h-[44px] px-3 text-sm font-semibold text-red-800 hover:underline">Koreksi</button>
                                         </form>
                                     @else
-                                        <span class="text-xs text-gray-300">—</span>
+                                        <span class="text-sm text-stone-400">Tidak bisa</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-6 text-center text-sm text-gray-500">Tidak ada transaksi.</td>
+                                <td colspan="5" class="px-5 py-8 text-center text-sm text-stone-600">Tidak ada transaksi pada laporan ini.</td>
                             </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                </x-data-table>
+            </section>
 
-            <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-                <div class="border-b border-gray-200 px-5 py-3">
-                    <h2 class="text-sm font-medium text-gray-900">Audit Log</h2>
-                </div>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-                        <tr>
-                            <th class="px-5 py-3">Waktu</th>
-                            <th class="px-5 py-3">Aksi</th>
-                            <th class="px-5 py-3">Catatan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
+            <section aria-label="Jejak audit laporan">
+                <x-data-table caption="Audit log laporan" :headers="[['label' => 'Waktu'], ['label' => 'Aksi'], ['label' => 'Catatan']]">
                         @forelse ($auditLogs as $log)
-                            <tr>
-                                <td class="px-5 py-3 font-mono">{{ $log->created_at->format('d/m/Y H:i') }}</td>
+                            <tr class="hover:bg-stone-50">
+                                <td class="px-5 py-3 tnum">{{ $log->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="px-5 py-3">{{ $log->action }}</td>
-                                <td class="px-5 py-3 text-gray-500">
+                                <td class="px-5 py-3 text-stone-600">
                                     @if ($log->metadata)
                                         {{ collect($log->metadata)->map(fn ($v, $k) => "$k: $v")->implode(', ') }}
                                     @else
-                                        —
+                                        Tidak ada catatan
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-5 py-6 text-center text-sm text-gray-500">Tidak ada audit log.</td>
+                                <td colspan="3" class="px-5 py-8 text-center text-sm text-stone-600">Belum ada jejak audit.</td>
                             </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                </x-data-table>
+            </section>
         </div>
     </div>
+
 @endsection

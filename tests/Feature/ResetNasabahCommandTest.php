@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use App\Models\Account;
 use App\Models\AuditLog;
 use App\Models\CashTransfer;
-use App\Models\Customer;
 use App\Models\DailyReport;
 use App\Models\DocumentSequence;
 use App\Models\JurnalAkuntansi;
+use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
@@ -44,7 +44,7 @@ class ResetNasabahCommandTest extends TellerTestCase
 
     public function test_reset_deletes_nasabah_related_data_and_keeps_users_and_config(): void
     {
-        $this->assertGreaterThan(0, Customer::count());
+        $this->assertGreaterThan(0, Saver::count());
         $this->assertGreaterThan(0, JurnalAkuntansi::count());
         $this->assertGreaterThan(0, DocumentSequence::count());
         $this->assertGreaterThan(0, AuditLog::count());
@@ -53,7 +53,7 @@ class ResetNasabahCommandTest extends TellerTestCase
             ->assertExitCode(0)
             ->run();
 
-        foreach ([JurnalAkuntansi::class, Transaction::class, CashTransfer::class, DailyReport::class, Account::class, Customer::class, DocumentSequence::class, AuditLog::class] as $model) {
+        foreach ([JurnalAkuntansi::class, Transaction::class, CashTransfer::class, DailyReport::class, Account::class, Saver::class, DocumentSequence::class, AuditLog::class] as $model) {
             $this->assertSame(0, $model::query()->count(), "Tabel {$model} harus kosong setelah reset.");
         }
 
@@ -68,7 +68,7 @@ class ResetNasabahCommandTest extends TellerTestCase
             ->expectsOutputToContain('Reset dibatalkan.')
             ->assertSuccessful();
 
-        $this->assertSame(1, Customer::query()->count());
+        $this->assertSame(1, Saver::query()->count());
         $this->assertSame(1, Account::query()->count());
     }
 }

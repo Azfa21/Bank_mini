@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Mail\ResetOtpMail;
-use App\Models\Customer;
 use App\Models\PasswordResetOtp;
+use App\Models\Saver;
 use App\Models\User;
+use Illuminate\Contracts\Database\ConcurrencyErrorDetector;
+use Illuminate\Database\DeadlockException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -15,6 +18,10 @@ class CredentialRecoveryService
     public const TYPE_STAFF = 'staff';
 
     public const TYPE_NASABAH = 'nasabah';
+
+    public function __construct(
+        protected MobileTokenService $mobileTokens,
+    ) {}
 
     /**
      * @return array{ok: bool, status: int, message: string, field: string}
@@ -124,60 +131,94 @@ class CredentialRecoveryService
             return $this->result(false, 403, 'email', 'Akun Anda diblokir. Silakan hubungi Administrator.');
         }
 
-        $record = $this->latestRecord($accountType, $email);
+        $attempts = max(1, (int) config('recovery.transaction_attempts', 3));
 
-        if ($record === null || ! $record->isUsable()) {
-            $this->record($accountType, '_otp_failed', $account->id, [
-                'email' => $email,
-                'reason' => 'expired_or_missing',
-            ]);
+        try {
+            $result = DB::transaction(function () use ($accountType, $email, $otp, $account, $newSecret) {
+                $record = $this->latestRecord($accountType, $email, lockForUpdate: true);
 
-            return $this->result(false, 422, 'otp', 'Kode verifikasi tidak valid atau sudah kedaluwarsa. Silakan minta kode baru.');
-        }
+                if ($record === null || ! $record->isUsable()) {
+                    $this->record($accountType, '_otp_failed', $account->id, [
+                        'email' => $email,
+                        'reason' => 'expired_or_missing',
+                    ]);
 
-        $maxAttempts = (int) config('recovery.otp_max_attempts', 5);
+                    return $this->result(false, 422, 'otp', 'Kode verifikasi tidak valid atau sudah kedaluwarsa. Silakan minta kode baru.');
+                }
 
-        if (! Hash::check($otp, $record->otp_hash)) {
-            $record->increment('attempts');
-            $record->refresh();
+                $maxAttempts = (int) config('recovery.otp_max_attempts', 5);
 
-            if ($record->attempts >= $maxAttempts) {
-                $record->update(['consumed_at' => now()]);
+                if (! Hash::check($otp, $record->otp_hash)) {
+                    $record->increment('attempts');
+                    $record->refresh();
 
-                $this->record($accountType, '_otp_failed', $account->id, [
-                    'email' => $email,
-                    'reason' => 'max_attempts',
-                ]);
+                    if ($record->attempts >= $maxAttempts) {
+                        $record->update(['consumed_at' => now()]);
 
-                return $this->result(false, 429, 'otp', 'Kode verifikasi salah. Batas percobaan tercapai, silakan minta kode baru.');
+                        $this->record($accountType, '_otp_failed', $account->id, [
+                            'email' => $email,
+                            'reason' => 'max_attempts',
+                        ]);
+
+                        return $this->result(false, 429, 'otp', 'Kode verifikasi salah. Batas percobaan tercapai, silakan minta kode baru.');
+                    }
+
+                    $remaining = max(0, $maxAttempts - $record->attempts);
+
+                    $this->record($accountType, '_otp_failed', $account->id, [
+                        'email' => $email,
+                        'reason' => 'invalid_otp',
+                        'attempts' => $record->attempts,
+                    ]);
+
+                    return $this->result(false, 422, 'otp', 'Kode verifikasi salah. Sisa percobaan: '.$remaining.'.');
+                }
+
+                $consumed = PasswordResetOtp::query()
+                    ->whereKey($record->id)
+                    ->whereNull('consumed_at')
+                    ->update(['consumed_at' => now()]);
+
+                if ($consumed !== 1) {
+                    $this->record($accountType, '_otp_failed', $account->id, [
+                        'email' => $email,
+                        'reason' => 'already_used',
+                    ]);
+
+                    return $this->result(false, 422, 'otp', 'Kode verifikasi tidak valid atau sudah kedaluwarsa. Silakan minta kode baru.');
+                }
+
+                if ($accountType === self::TYPE_NASABAH) {
+                    $account->update([
+                        'pin_hash' => $newSecret,
+                        'failed_pin_attempts' => 0,
+                        'locked_until' => null,
+                    ]);
+                    $this->mobileTokens->revokeAll($account);
+                } else {
+                    $account->update([
+                        'password_hash' => $newSecret,
+                    ]);
+                }
+
+                return $this->result(true, 200, 'otp', 'Kredensial berhasil diperbarui. Silakan masuk menggunakan kredensial baru Anda.');
+            }, $attempts);
+        } catch (QueryException|DeadlockException $exception) {
+            if (! app(ConcurrencyErrorDetector::class)->causedByConcurrencyError($exception)) {
+                throw $exception;
             }
 
-            $remaining = max(0, $maxAttempts - $record->attempts);
-
             $this->record($accountType, '_otp_failed', $account->id, [
                 'email' => $email,
-                'reason' => 'invalid_otp',
-                'attempts' => $record->attempts,
+                'reason' => 'lock_contention',
             ]);
 
-            return $this->result(false, 422, 'otp', 'Kode verifikasi salah. Sisa percobaan: '.$remaining.'.');
+            return $this->result(false, 409, 'otp', 'Permintaan lain sedang diproses. Silakan coba lagi.');
         }
 
-        DB::transaction(function () use ($accountType, $account, $record, $newSecret) {
-            if ($accountType === self::TYPE_NASABAH) {
-                $account->update([
-                    'pin_hash' => $newSecret,
-                    'failed_pin_attempts' => 0,
-                    'locked_until' => null,
-                ]);
-            } else {
-                $account->update([
-                    'password_hash' => $newSecret,
-                ]);
-            }
-
-            $record->update(['consumed_at' => now()]);
-        });
+        if (! $result['ok']) {
+            return $result;
+        }
 
         $this->record($accountType, '_success', $account->id, [
             'email' => $email,
@@ -188,22 +229,23 @@ class CredentialRecoveryService
         return $this->result(true, 200, 'otp', $label.' berhasil diperbarui. Silakan masuk menggunakan '.$label.' baru Anda.');
     }
 
-    protected function findAccount(string $accountType, string $email): User|Customer|null
+    protected function findAccount(string $accountType, string $email): User|Saver|null
     {
         if ($accountType === self::TYPE_STAFF) {
             return User::query()->where('email', $email)->first();
         }
 
-        return Customer::query()->where('email', $email)->first();
+        return Saver::query()->where('email', $email)->first();
     }
 
-    protected function latestRecord(string $accountType, string $email): ?PasswordResetOtp
+    protected function latestRecord(string $accountType, string $email, bool $lockForUpdate = false): ?PasswordResetOtp
     {
         return PasswordResetOtp::query()
             ->where('account_type', $accountType)
             ->where('email', $email)
             ->whereNull('consumed_at')
             ->latest('id')
+            ->when($lockForUpdate, fn ($query) => $query->lockForUpdate())
             ->first();
     }
 
@@ -232,7 +274,7 @@ class CredentialRecoveryService
 
     protected function entityName(string $accountType): string
     {
-        return $accountType === self::TYPE_NASABAH ? 'customer' : 'user';
+        return $accountType === self::TYPE_NASABAH ? 'saver' : 'user';
     }
 
     /**
