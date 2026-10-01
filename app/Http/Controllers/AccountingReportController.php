@@ -140,9 +140,7 @@ class AccountingReportController extends Controller
         return view('reports.income_statement', [
             'date' => $statement['date'],
             'incomes' => $statement['incomes'],
-            'expenses' => $statement['expenses'],
             'totalIncome' => $statement['total_income'],
-            'totalExpense' => $statement['total_expense'],
             'netIncome' => $statement['net_income'],
         ]);
     }

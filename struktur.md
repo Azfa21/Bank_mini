@@ -131,7 +131,7 @@ Sub-Fitur:
 - Jurnal koreksi/pembalik oleh Supervisor
 - Pencarian nasabah berdasarkan nama/NIS/nomor rekening
 - Registrasi nasabah didampingi Teller
-- Laporan Laba Rugi dan Neraca (akun 401 & 501)
+- Laporan Laba Rugi dan Neraca (akun 401)
 - Konfigurasi produk (nama bank, jam operasional, batas penarikan tanpa pesanan)
 Tasks:
 - Buat helper CashDenomination dan Terbilang sebagai fondasi fitur revisi.
@@ -155,7 +155,7 @@ Tasks:
 - Perluas pencarian nasabah berdasarkan nama, NIS, dan nomor rekening.
 - Buat halaman hasil pencarian ketika terdapat lebih dari satu kecocokan.
 - Buat CustomerRegistrationService dan modul registrasi nasabah untuk Teller.
-- Tambahkan akun 401 dan 501 ke chart of accounts.
+- Tambahkan akun pendapatan 401 ke chart of accounts.
 - Buat laporan Laba Rugi dan Neraca untuk Administrator dan Supervisor.
 - Perluas halaman konfigurasi sistem Administrator.
 - Perbarui menu navigasi dan dashboard Teller untuk fitur baru.

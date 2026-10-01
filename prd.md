@@ -344,7 +344,7 @@ Requirements Fitur
 - Teller dapat mendaftarkan nasabah baru didampingi pada loket.
 - Nomor siswa dan nomor rekening dibuat otomatis oleh sistem.
 7. Laporan Laba Rugi & Neraca
-- Administrator dan Supervisor dapat melihat Laba Rugi (pendapatan, beban, laba bersih).
+- Administrator dan Supervisor dapat melihat Laba Rugi (pendapatan, laba bersih).
 - Administrator dan Supervisor dapat melihat Neraca (aset, kewajiban, ekuitas) dengan status keseimbangan.
 8. Konfigurasi produk
 - Administrator mengatur nama bank, jam operasional, biaya admin, dan batas penarikan tanpa pesanan.

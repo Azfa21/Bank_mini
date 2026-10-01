@@ -14,15 +14,12 @@ class AccountingService
 
     public const ACCOUNT_CODE_ADMIN_INCOME = '401';
 
-    public const ACCOUNT_CODE_OPERATING_EXPENSE = '501';
-
     /**
      * @var array{
      *     101: array{name: string, normal: string, type: string},
      *     102: array{name: string, normal: string, type: string},
      *     201: array{name: string, normal: string, type: string},
-     *     401: array{name: string, normal: string, type: string},
-     *     501: array{name: string, normal: string, type: string}
+     *     401: array{name: string, normal: string, type: string}
      * }
      */
     public const CHART_OF_ACCOUNTS = [
@@ -30,7 +27,6 @@ class AccountingService
         self::ACCOUNT_CODE_CASH_VAULT => ['name' => 'Kas Brankas Utama (Khazanah)', 'normal' => 'debit', 'type' => 'asset'],
         self::ACCOUNT_CODE_SAVINGS => ['name' => 'Tabungan Nasabah (Simpanan Siswa)', 'normal' => 'credit', 'type' => 'liability'],
         self::ACCOUNT_CODE_ADMIN_INCOME => ['name' => 'Pendapatan Administrasi', 'normal' => 'credit', 'type' => 'income'],
-        self::ACCOUNT_CODE_OPERATING_EXPENSE => ['name' => 'Beban Operasional Bank Mini', 'normal' => 'debit', 'type' => 'expense'],
     ];
 
     public function accountName(string $accountCode): string
@@ -48,8 +44,7 @@ class AccountingService
      *         101: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
      *         102: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
      *         201: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
-     *         401: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int},
-     *         501: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int}
+     *         401: array{name: string, total_debit: int, total_credit: int, net_debit: int, net_credit: int}
      *     },
      *     grand_debit: int,
      *     grand_credit: int,
@@ -105,14 +100,13 @@ class AccountingService
     }
 
     /**
-     * Laporan Laba Rugi (pendapatan - beban) sampai tanggal tertentu.
+     * Laporan Laba Rugi (pendapatan) sampai tanggal tertentu. Bank Mini belum
+     * mencatat akun beban, sehingga laba bersih sama dengan total pendapatan.
      *
      * @return array{
      *     date: string,
      *     incomes: array<int, array{name: string, amount: int}>,
-     *     expenses: array<int, array{name: string, amount: int}>,
      *     total_income: int,
-     *     total_expense: int,
      *     net_income: int
      * }
      */
@@ -121,9 +115,7 @@ class AccountingService
         $trial = $this->trialBalance($date);
 
         $incomes = [];
-        $expenses = [];
         $totalIncome = 0;
-        $totalExpense = 0;
 
         foreach (self::CHART_OF_ACCOUNTS as $code => $info) {
             $balance = $trial['balances'][$code];
@@ -133,21 +125,13 @@ class AccountingService
                 $incomes[$code] = ['name' => $info['name'], 'amount' => $amount];
                 $totalIncome += $amount;
             }
-
-            if ($info['type'] === 'expense') {
-                $amount = (int) $balance['net_debit'] - (int) $balance['net_credit'];
-                $expenses[$code] = ['name' => $info['name'], 'amount' => $amount];
-                $totalExpense += $amount;
-            }
         }
 
         return [
             'date' => $trial['date'],
             'incomes' => $incomes,
-            'expenses' => $expenses,
             'total_income' => $totalIncome,
-            'total_expense' => $totalExpense,
-            'net_income' => $totalIncome - $totalExpense,
+            'net_income' => $totalIncome,
         ];
     }
 }

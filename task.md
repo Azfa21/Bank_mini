@@ -105,7 +105,7 @@ FASE 9 — Penyempurnaan Berbasis Riset Pengguna (Revisi Besar)
 - [x] Uji integritas koreksi: transfer, saldo tidak mencukupi, dampak rekap kas, dan tampilan mutasi/buku tabungan.
 - [x] Perluas pencarian nasabah berdasarkan nomor rekening, NIS, dan nama lengkap beserta halaman hasil pencarian.
 - [x] Buat modul registrasi nasabah didampingi Teller beserta service registrasi bersama.
-- [x] Tambahkan akun pendapatan 401 dan beban 501 ke chart of accounts untuk laporan keuangan.
+- [x] Tambahkan akun pendapatan 401 ke chart of accounts untuk laporan keuangan.
 - [x] Buat laporan Laba Rugi (Income Statement) untuk Administrator dan Supervisor.
 - [x] Buat laporan Neraca (Balance Sheet) beserta indikator keseimbangan untuk Administrator dan Supervisor.
 - [x] Perluas konfigurasi sistem: nama bank, jam operasional, biaya admin, dan batas penarikan tanpa pesanan.

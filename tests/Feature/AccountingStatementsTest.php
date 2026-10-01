@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\JurnalAkuntansi;
 use App\Models\SystemConfig;
 use App\Services\AccountingService;
 use App\Services\TransactionService;
@@ -22,76 +21,26 @@ class AccountingStatementsTest extends TellerTestCase
         ], $this->teller);
         $service->withdraw($this->account, ['amount' => 10000], '123456', $this->teller);
 
-        // Beban operasional 501 sebesar 500 (jurnal seimbang dengan kas).
-        JurnalAkuntansi::create([
-            'transaction_id' => null,
-            'cash_transfer_id' => null,
-            'journal_number' => 'JRN-EXP-001',
-            'account_code' => AccountingService::ACCOUNT_CODE_OPERATING_EXPENSE,
-            'entry_type' => 'debit',
-            'amount' => 500,
-            'debit_amount' => 500,
-            'credit_amount' => 0,
-            'description' => 'Beban operasional',
-            'status' => 'posted',
-            'journal_at' => now(),
-        ]);
-        JurnalAkuntansi::create([
-            'transaction_id' => null,
-            'cash_transfer_id' => null,
-            'journal_number' => 'JRN-EXP-002',
-            'account_code' => AccountingService::ACCOUNT_CODE_CASH_TELLER,
-            'entry_type' => 'credit',
-            'amount' => 500,
-            'debit_amount' => 0,
-            'credit_amount' => 500,
-            'description' => 'Beban operasional',
-            'status' => 'posted',
-            'journal_at' => now(),
-        ]);
-
         $statement = app(AccountingService::class)->incomeStatement();
 
         $this->assertSame(2000, $statement['total_income']);
-        $this->assertSame(500, $statement['total_expense']);
-        $this->assertSame(1500, $statement['net_income']);
+        $this->assertSame(2000, $statement['net_income']);
+        $this->assertArrayNotHasKey('total_expense', $statement);
     }
 
-    public function test_income_statement_page_shows_expense_account(): void
+    public function test_income_statement_page_shows_income_account(): void
     {
-        JurnalAkuntansi::create([
-            'transaction_id' => null,
-            'cash_transfer_id' => null,
-            'journal_number' => 'JRN-EXP-010',
-            'account_code' => AccountingService::ACCOUNT_CODE_OPERATING_EXPENSE,
-            'entry_type' => 'debit',
-            'amount' => 1000,
-            'debit_amount' => 1000,
-            'credit_amount' => 0,
-            'description' => 'Beban operasional',
-            'status' => 'posted',
-            'journal_at' => now(),
-        ]);
-        JurnalAkuntansi::create([
-            'transaction_id' => null,
-            'cash_transfer_id' => null,
-            'journal_number' => 'JRN-EXP-011',
-            'account_code' => AccountingService::ACCOUNT_CODE_CASH_TELLER,
-            'entry_type' => 'credit',
-            'amount' => 1000,
-            'debit_amount' => 0,
-            'credit_amount' => 1000,
-            'description' => 'Beban operasional',
-            'status' => 'posted',
-            'journal_at' => now(),
-        ]);
+        SystemConfig::updateOrCreate(['config_key' => 'admin_fee'], ['config_value' => '2000']);
+
+        app(TransactionService::class)
+            ->withdraw($this->account, ['amount' => 10000], '123456', $this->teller);
 
         $this->actingAs($this->admin, 'web')
             ->get(route('admin.reports.income-statement'))
             ->assertOk()
-            ->assertSee('501')
-            ->assertSee('Beban Operasional Bank Mini')
-            ->assertSee('Rp 1.000');
+            ->assertSee('401')
+            ->assertSee('Pendapatan Administrasi')
+            ->assertSee('Rp 2.000');
     }
 
     public function test_statements_accept_date_filter(): void
