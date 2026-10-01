@@ -14,6 +14,7 @@
 /.vscode
 /.zed
 /auth.json
+/docs/
 /Form Responses 1.html
 /node_modules
 /public/build
