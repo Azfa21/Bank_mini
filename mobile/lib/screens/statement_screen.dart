@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api/api_exception.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/formatters.dart';
 import '../models/statement.dart';
+import '../router/app_router.dart';
 import '../services/account_service.dart';
 import '../services/statement_pdf_service.dart';
 import '../widgets/state_views.dart';
 import '../widgets/transaction_tile.dart';
 import 'transaction_detail_sheet.dart';
 
+/// Rekening koran, padanan halaman statement web: pilih periode, ringkasan,
+/// lalu rincian transaksi dan tombol cetak/simpan PDF.
 class StatementScreen extends StatefulWidget {
   const StatementScreen({super.key});
 
@@ -30,10 +36,7 @@ class _StatementScreenState extends State<StatementScreen> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _range = DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
-      end: now,
-    );
+    _range = DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
     _load();
   }
 
@@ -45,9 +48,9 @@ class _StatementScreenState extends State<StatementScreen> {
 
     try {
       final data = await context.read<AccountService>().statement(
-            dateFrom: Formatters.apiDate(_range.start),
-            dateTo: Formatters.apiDate(_range.end),
-          );
+        dateFrom: Formatters.apiDate(_range.start),
+        dateTo: Formatters.apiDate(_range.end),
+      );
       if (mounted) {
         setState(() => _data = data);
       }
@@ -57,7 +60,7 @@ class _StatementScreenState extends State<StatementScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Gagal memuat e-statement.');
+        setState(() => _error = 'Gagal memuat rekening koran.');
       }
     } finally {
       if (mounted) {
@@ -73,7 +76,7 @@ class _StatementScreenState extends State<StatementScreen> {
       firstDate: DateTime(now.year - 3),
       lastDate: now,
       initialDateRange: _range,
-      helpText: 'Pilih periode e-Statement',
+      helpText: 'Pilih periode rekening koran',
     );
 
     if (picked != null) {
@@ -100,8 +103,8 @@ class _StatementScreenState extends State<StatementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Gagal membuat PDF e-Statement.'),
-            backgroundColor: AppColors.expense,
+            content: Text('Gagal membuat PDF rekening koran.'),
+            backgroundColor: AppColors.red800,
           ),
         );
       }
@@ -112,11 +115,25 @@ class _StatementScreenState extends State<StatementScreen> {
     }
   }
 
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRouter.home);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: const Text('e-Statement'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Kembali',
+          onPressed: _goBack,
+        ),
+        title: const Text('Rekening koran'),
         actions: [
           IconButton(
             tooltip: 'Pilih periode',
@@ -131,7 +148,7 @@ class _StatementScreenState extends State<StatementScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const AppLoading(message: 'Menyiapkan e-Statement...');
+      return const AppLoading(message: 'Menyiapkan rekening koran...');
     }
 
     if (_error != null) {
@@ -145,23 +162,16 @@ class _StatementScreenState extends State<StatementScreen> {
 
     return Column(
       children: [
-        _PeriodBar(
-          range: _range,
-          verificationCode: data.verificationCode,
-        ),
+        _PeriodBar(range: _range, verificationCode: data.verificationCode),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             children: [
               _SummaryGrid(data: data),
               const SizedBox(height: 16),
-              const Text(
-                'Rincian Transaksi',
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F2A24),
-                ),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Rincian transaksi', style: AppText.sectionTitle),
               ),
               const SizedBox(height: 10),
               if (data.transactions.isEmpty)
@@ -169,7 +179,10 @@ class _StatementScreenState extends State<StatementScreen> {
                   padding: EdgeInsets.symmetric(vertical: 24),
                   child: AppEmptyView(
                     title: 'Tidak ada transaksi',
-                    subtitle: 'Belum ada transaksi pada periode ini.',
+                    subtitle:
+                        'Belum ada mutasi pada periode ini. Coba '
+                        'rentang tanggal lain.',
+                    icon: Icons.receipt_long_outlined,
                   ),
                 )
               else
@@ -186,7 +199,7 @@ class _StatementScreenState extends State<StatementScreen> {
         SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
             child: FilledButton.icon(
               onPressed: _pdfBusy ? null : _exportPdf,
               icon: _pdfBusy
@@ -195,11 +208,13 @@ class _StatementScreenState extends State<StatementScreen> {
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     )
                   : const Icon(Icons.picture_as_pdf_outlined),
-              label: Text(_pdfBusy ? 'Menyiapkan PDF...' : 'Cetak / Simpan PDF'),
+              label: Text(
+                _pdfBusy ? 'Menyiapkan PDF...' : 'Cetak atau simpan PDF',
+              ),
             ),
           ),
         ),
@@ -218,23 +233,22 @@ class _PeriodBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: AppColors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '${Formatters.date(range.start)} - ${Formatters.date(range.end)}',
-            style: const TextStyle(
+            style: AppText.body.copyWith(
               fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Color(0xFF1F2A24),
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 3),
           Text(
             'Kode verifikasi: $verificationCode',
-            style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
+            style: AppText.tnum(AppText.caption),
           ),
         ],
       ),
@@ -242,6 +256,8 @@ class _PeriodBar extends StatelessWidget {
   }
 }
 
+/// Ringkasan empat angka rekening koran. Warna mengikuti aturan uang web:
+/// masuk terakota, keluar merah.
 class _SummaryGrid extends StatelessWidget {
   const _SummaryGrid({required this.data});
 
@@ -257,7 +273,7 @@ class _SummaryGrid extends StatelessWidget {
               child: _SummaryCard(
                 label: 'Total Setoran',
                 value: data.summary.totalDeposit,
-                color: AppColors.income,
+                color: AppColors.brand800,
                 icon: Icons.south_west_rounded,
               ),
             ),
@@ -266,7 +282,7 @@ class _SummaryGrid extends StatelessWidget {
               child: _SummaryCard(
                 label: 'Total Penarikan',
                 value: data.summary.totalWithdrawal,
-                color: AppColors.expense,
+                color: AppColors.red700,
                 icon: Icons.north_east_rounded,
               ),
             ),
@@ -279,7 +295,7 @@ class _SummaryGrid extends StatelessWidget {
               child: _SummaryCard(
                 label: 'Transfer Masuk',
                 value: data.summary.totalTransferIn,
-                color: AppColors.income,
+                color: AppColors.brand800,
                 icon: Icons.swap_horiz_rounded,
               ),
             ),
@@ -288,7 +304,7 @@ class _SummaryGrid extends StatelessWidget {
               child: _SummaryCard(
                 label: 'Transfer Keluar',
                 value: data.summary.totalTransferOut,
-                color: AppColors.expense,
+                color: AppColors.red700,
                 icon: Icons.swap_horiz_rounded,
               ),
             ),
@@ -317,26 +333,25 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8E4)),
+        color: AppColors.white,
+        borderRadius: AppRadius.cardAll,
+        border: Border.all(color: AppColors.stone200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: color),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
-          ),
+          Text(label, style: AppText.micro),
           const SizedBox(height: 3),
           Text(
             Formatters.rupiah(value),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2A24),
+            style: AppText.tnum(
+              const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
             ),
           ),
         ],

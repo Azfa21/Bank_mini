@@ -22,11 +22,13 @@ class DashboardData {
 
     return DashboardData(
       customer: Customer.fromJson(json['customer'] as Map<String, dynamic>),
-      account:
-          account is Map<String, dynamic> ? Account.fromJson(account) : null,
+      account: account is Map<String, dynamic>
+          ? Account.fromJson(account)
+          : null,
       bank: Bank.fromJson(json['bank'] as Map<String, dynamic>? ?? const {}),
-      lastTransaction:
-          last is Map<String, dynamic> ? Transaction.fromJson(last) : null,
+      lastTransaction: last is Map<String, dynamic>
+          ? Transaction.fromJson(last)
+          : null,
     );
   }
 }

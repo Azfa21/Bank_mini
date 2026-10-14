@@ -47,7 +47,7 @@ class StatementPdfService {
               style: pw.TextStyle(
                 fontSize: 18,
                 fontWeight: pw.FontWeight.bold,
-                color: PdfColor.fromHex('#0F5132'),
+                color: PdfColor.fromHex('#743722'),
               ),
             ),
             pw.Text(
@@ -58,39 +58,33 @@ class StatementPdfService {
         ),
         pw.SizedBox(height: 4),
         pw.Text(
-          'Rekening Koran Digital',
+          'Rekening Koran Nasabah (e-Statement)',
           style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700),
         ),
-        pw.Divider(color: PdfColor.fromHex('#0F5132')),
+        pw.Divider(color: PdfColor.fromHex('#743722')),
       ],
     );
   }
 
   pw.Widget _accountBlock(StatementData data) {
     pw.Widget row(String label, String value) => pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 2),
-          child: pw.Row(
-            children: [
-              pw.SizedBox(
-                width: 130,
-                child: pw.Text(
-                  label,
-                  style: const pw.TextStyle(
-                    fontSize: 10,
-                    color: PdfColors.grey700,
-                  ),
-                ),
-              ),
-              pw.Text(
-                value,
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-            ],
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        children: [
+          pw.SizedBox(
+            width: 130,
+            child: pw.Text(
+              label,
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            ),
           ),
-        );
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ],
+      ),
+    );
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -107,35 +101,29 @@ class StatementPdfService {
 
   pw.Widget _summaryBlock(StatementData data) {
     pw.Widget item(String label, int value) => pw.Expanded(
-          child: pw.Container(
-            padding: const pw.EdgeInsets.all(8),
-            margin: const pw.EdgeInsets.symmetric(horizontal: 2),
-            decoration: pw.BoxDecoration(
-              color: PdfColor.fromHex('#F4F6F5'),
-              borderRadius: pw.BorderRadius.circular(6),
+      child: pw.Container(
+        padding: const pw.EdgeInsets.all(8),
+        margin: const pw.EdgeInsets.symmetric(horizontal: 2),
+        decoration: pw.BoxDecoration(
+          color: PdfColor.fromHex('#F5F5F4'),
+          borderRadius: pw.BorderRadius.circular(6),
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              label,
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
             ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  label,
-                  style: const pw.TextStyle(
-                    fontSize: 8,
-                    color: PdfColors.grey700,
-                  ),
-                ),
-                pw.SizedBox(height: 3),
-                pw.Text(
-                  Formatters.rupiah(value),
-                  style: pw.TextStyle(
-                    fontSize: 10,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-              ],
+            pw.SizedBox(height: 3),
+            pw.Text(
+              Formatters.rupiah(value),
+              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
 
     return pw.Row(
       children: [
@@ -170,7 +158,7 @@ class StatementPdfService {
         fontWeight: pw.FontWeight.bold,
         color: PdfColors.white,
       ),
-      headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#0F5132')),
+      headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#743722')),
       cellStyle: const pw.TextStyle(fontSize: 8.5),
       cellAlignments: {
         0: pw.Alignment.centerLeft,
@@ -204,7 +192,8 @@ class StatementPdfService {
   String _typeLabel(Transaction transaction) {
     if (transaction.type == 'transfer' && transaction.counterpart != null) {
       final target =
-          transaction.counterpart!.name ?? transaction.counterpart!.accountNumber;
+          transaction.counterpart!.name ??
+          transaction.counterpart!.accountNumber;
       return 'Transfer ${transaction.isIncoming ? 'dari' : 'ke'} $target';
     }
 

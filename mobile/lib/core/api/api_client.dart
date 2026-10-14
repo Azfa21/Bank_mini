@@ -6,8 +6,8 @@ import 'api_exception.dart';
 
 class ApiClient {
   ApiClient({TokenStorage? storage, Dio? dio})
-      : _storage = storage ?? TokenStorage(),
-        _dio = dio ?? Dio() {
+    : _storage = storage ?? TokenStorage(),
+      _dio = dio ?? Dio() {
     _dio.options
       ..baseUrl = AppConfig.apiBaseUrl
       ..connectTimeout = const Duration(seconds: 15)
@@ -49,10 +49,7 @@ class ApiClient {
     return _request(() => _dio.get<dynamic>(path, queryParameters: query));
   }
 
-  Future<Map<String, dynamic>> postJson(
-    String path, {
-    Object? data,
-  }) async {
+  Future<Map<String, dynamic>> postJson(String path, {Object? data}) async {
     return _request(() => _dio.post<dynamic>(path, data: data));
   }
 

@@ -38,7 +38,8 @@ class AuthService {
       data: {
         'student_number': studentNumber,
         'pin': pin,
-        if (deviceName != null && deviceName.isNotEmpty) 'device_name': deviceName,
+        if (deviceName != null && deviceName.isNotEmpty)
+          'device_name': deviceName,
       },
     );
 
@@ -49,8 +50,9 @@ class AuthService {
       token: data['token'] as String,
       expiresAt: DateTime.tryParse(data['expires_at'] as String? ?? ''),
       customer: Customer.fromJson(data['customer'] as Map<String, dynamic>),
-      account:
-          account is Map<String, dynamic> ? Account.fromJson(account) : null,
+      account: account is Map<String, dynamic>
+          ? Account.fromJson(account)
+          : null,
     );
   }
 
@@ -61,8 +63,9 @@ class AuthService {
 
     return SessionData(
       customer: Customer.fromJson(data['customer'] as Map<String, dynamic>),
-      account:
-          account is Map<String, dynamic> ? Account.fromJson(account) : null,
+      account: account is Map<String, dynamic>
+          ? Account.fromJson(account)
+          : null,
     );
   }
 
@@ -73,10 +76,7 @@ class AuthService {
   Future<void> requestResetOtp({required String email}) async {
     await _api.postJson(
       '/mobile/forgot-pin/request-otp',
-      data: {
-        'account_type': 'nasabah',
-        'email': email,
-      },
+      data: {'account_type': 'nasabah', 'email': email},
     );
   }
 

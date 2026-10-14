@@ -2,15 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../core/utils/formatters.dart';
 import '../models/dashboard_data.dart';
-import '../providers/auth_provider.dart';
+import '../models/transaction.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/home_tab_provider.dart';
 import '../router/app_router.dart';
+import '../widgets/alert_card.dart';
+import '../widgets/ledger_card.dart';
+import '../widgets/page_header.dart';
 import '../widgets/state_views.dart';
+import '../widgets/status_pill.dart';
 import '../widgets/transaction_tile.dart';
 
+/// Beranda nasabah, disusun mengikuti dashboard nasabah di web: kepala halaman,
+/// lalu satu kartu saldo bergaris buku besar berisi status rekening,
+/// transaksi terakhir, dan dua aksi utama.
+///
+/// Kartu QR tidak diulang di sini karena sudah punya tab Kartu sendiri;
+/// menggandakan konten yang sama di dua tab hanya menambah kebisingan.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -33,11 +45,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final data = provider.data;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: provider.load,
-        child: _buildBody(provider, data),
+      backgroundColor: AppColors.paper,
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: AppColors.brand800,
+          onRefresh: provider.load,
+          child: _buildBody(provider, data),
+        ),
       ),
     );
   }
@@ -52,7 +66,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
-            child: AppErrorView(message: provider.error!, onRetry: provider.load),
+            child: AppErrorView(
+              message: provider.error!,
+              onRetry: provider.load,
+            ),
           ),
         ],
       );
@@ -66,248 +83,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final last = data.lastTransaction;
 
     return ListView(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       children: [
-        _Header(data: data),
-        Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _BalanceCard(
-                balance: account?.balance,
-                accountNumber: account?.accountNumber,
-                minimumBalance: account?.minimumBalance,
-              ),
-              const SizedBox(height: 16),
-              _SectionTitle(title: 'Transaksi Terakhir'),
-              const SizedBox(height: 10),
-              if (last == null)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: AppEmptyView(
-                    title: 'Belum ada transaksi',
-                    icon: Icons.receipt_long_outlined,
-                  ),
-                )
-              else
-                TransactionTile(transaction: last),
-              const SizedBox(height: 20),
-              _InfoCard(
-                bankName: data.bank.name,
-                operationalHours: data.bank.operationalHours,
-              ),
-            ],
-          ),
+        PageHeader(
+          eyebrow: 'TABUNGAN SAYA',
+          title: 'Halo, ${data.customer.fullName}',
+          subtitle: 'Pantau saldo dan mutasi rekening sekolah Anda.',
         ),
+        const SizedBox(height: 20),
+        if (account == null)
+          const AlertCard(
+            tone: AlertTone.warning,
+            title: 'Rekening belum aktif',
+            message:
+                'Datang ke loket Bank Mini sekolah dengan kartu pelajar '
+                'untuk pembukaan rekening.',
+          )
+        else
+          _AccountSummary(
+            balance: account.balance,
+            accountNumber: account.accountNumber,
+            isActive: account.status == 'active',
+            last: last,
+          ),
       ],
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.data});
-
-  final DashboardData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final customer = context.watch<AuthProvider>().customer ?? data.customer;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 26),
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(26),
-          bottomRight: Radius.circular(26),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.account_balance_rounded,
-                  color: Colors.white, size: 22),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  data.bank.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => context.go(AppRouter.statement),
-                icon: const Icon(Icons.description_outlined, color: Colors.white),
-                tooltip: 'e-Statement',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Selamat datang,',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            customer.fullName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'NIS ${customer.studentNumber}'
-            '${customer.className != null ? ' • ${customer.className}' : ''}',
-            style: const TextStyle(color: Colors.white70, fontSize: 12.5),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({
+class _AccountSummary extends StatelessWidget {
+  const _AccountSummary({
     required this.balance,
     required this.accountNumber,
-    required this.minimumBalance,
+    required this.isActive,
+    required this.last,
   });
 
-  final int? balance;
-  final String? accountNumber;
-  final int? minimumBalance;
+  final int balance;
+  final String accountNumber;
+  final bool isActive;
+  final Transaction? last;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8E4)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F0F5132),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+    return LedgerCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Saldo Rekening',
-            style: TextStyle(color: AppColors.muted, fontSize: 13),
-          ),
-          const SizedBox(height: 6),
+          Text('Saldo berjalan', style: AppText.meta),
+          const SizedBox(height: 4),
           Text(
-            balance == null ? '-' : Formatters.rupiah(balance!),
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF10241A),
+            Formatters.rupiah(balance),
+            style: AppText.tnum(AppText.balance),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No. rekening $accountNumber',
+            style: AppText.tnum(AppText.meta),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: StatusPill(
+              isActive: isActive,
+              label: isActive ? 'Rekening aktif' : 'Rekening tidak aktif',
             ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              const Icon(Icons.credit_card_rounded,
-                  size: 16, color: AppColors.muted),
-              const SizedBox(width: 6),
-              Text(
-                accountNumber ?? 'Belum ada rekening',
-                style: const TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(height: 1),
           ),
-          if (minimumBalance != null) ...[
-            const SizedBox(height: 6),
+          Text('Transaksi terakhir', style: AppText.metaStrong),
+          const SizedBox(height: 8),
+          if (last == null)
             Text(
-              'Saldo mengendap minimum ${Formatters.rupiah(minimumBalance!)}',
-              style: const TextStyle(color: AppColors.muted, fontSize: 11.5),
+              'Belum ada transaksi. Setoran pertama bisa dilakukan di loket '
+              'sekolah.',
+              style: AppText.body.copyWith(color: AppColors.stone600),
+            )
+          else
+            TransactionTile(transaction: last!),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => context.read<HomeTabController>().select(1),
+            child: const Text('Lihat riwayat mutasi'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: () => context.push(AppRouter.statement),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
             ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF1F2A24),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.bankName,
-    required this.operationalHours,
-  });
-
-  final String bankName;
-  final String operationalHours;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.schedule_rounded, color: AppColors.accent),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Jam Operasional',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: Color(0xFF3A4A42),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$operationalHours • $bankName',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-              ],
-            ),
+            child: const Text('Unduh rekening koran'),
           ),
         ],
       ),

@@ -8,6 +8,7 @@ import 'core/storage/token_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/home_tab_provider.dart';
 import 'providers/mutasi_provider.dart';
 import 'router/app_router.dart';
 import 'services/account_service.dart';
@@ -43,10 +44,14 @@ class BankMiniApp extends StatelessWidget {
           )..bootstrap(),
         ),
         ChangeNotifierProvider<DashboardProvider>(
-          create: (context) => DashboardProvider(context.read<AccountService>()),
+          create: (context) =>
+              DashboardProvider(context.read<AccountService>()),
         ),
         ChangeNotifierProvider<MutasiProvider>(
           create: (context) => MutasiProvider(context.read<AccountService>()),
+        ),
+        ChangeNotifierProvider<HomeTabController>(
+          create: (_) => HomeTabController(),
         ),
       ],
       child: const _AppView(),

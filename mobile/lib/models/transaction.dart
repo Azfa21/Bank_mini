@@ -23,7 +23,6 @@ class Transaction {
     required this.typeLabel,
     required this.direction,
     required this.amount,
-    required this.adminFee,
     required this.balanceBefore,
     required this.balanceAfter,
     required this.status,
@@ -41,7 +40,6 @@ class Transaction {
   final String typeLabel;
   final String direction;
   final int amount;
-  final int adminFee;
   final int balanceBefore;
   final int balanceAfter;
   final String status;
@@ -64,7 +62,6 @@ class Transaction {
       typeLabel: json['type_label'] as String? ?? '',
       direction: json['direction'] as String? ?? 'out',
       amount: (json['amount'] as num?)?.toInt() ?? 0,
-      adminFee: (json['admin_fee'] as num?)?.toInt() ?? 0,
       balanceBefore: (json['balance_before'] as num?)?.toInt() ?? 0,
       balanceAfter: (json['balance_after'] as num?)?.toInt() ?? 0,
       status: json['status'] as String? ?? '',
@@ -74,8 +71,7 @@ class Transaction {
       counterpart: counterpart is Map<String, dynamic>
           ? TransactionCounterpart.fromJson(counterpart)
           : null,
-      transactionAt:
-          DateTime.tryParse(json['transaction_at'] as String? ?? ''),
+      transactionAt: DateTime.tryParse(json['transaction_at'] as String? ?? ''),
     );
   }
 }
@@ -134,7 +130,9 @@ class TransactionPage {
       meta: TransactionMeta.fromJson(
         json['meta'] as Map<String, dynamic>? ?? const {},
       ),
-      account: account is Map<String, dynamic> ? Account.fromJson(account) : null,
+      account: account is Map<String, dynamic>
+          ? Account.fromJson(account)
+          : null,
     );
   }
 }

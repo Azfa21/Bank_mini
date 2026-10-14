@@ -4,10 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api/api_exception.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../providers/auth_provider.dart';
 import '../router/app_router.dart';
+import '../widgets/alert_card.dart';
+import '../widgets/ledger_card.dart';
+import '../widgets/page_header.dart';
 
+/// Dua langkah: minta kode verifikasi ke email, lalu set PIN baru.
+///
+/// Web menyediakan tab Pegawai/Nasabah di halaman ini. Aplikasi ini hanya
+/// melayani nasabah, jadi tab itu sengaja tidak dibawa: tab ke alur yang tidak
+/// ada akan jadi tautan mati.
 class ForgotPinScreen extends StatefulWidget {
   const ForgotPinScreen({super.key});
 
@@ -23,6 +32,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   final _confirmController = TextEditingController();
   int _step = 1;
   bool _submitting = false;
+  String? _error;
+  String? _notice;
 
   @override
   void dispose() {
@@ -39,31 +50,32 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     }
 
     FocusScope.of(context).unfocus();
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
 
     try {
       await context.read<AuthProvider>().requestResetOtp(
-            email: _emailController.text.trim(),
-          );
+        email: _emailController.text.trim(),
+      );
 
       if (!mounted) {
         return;
       }
 
-      setState(() => _step = 2);
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Kode verifikasi telah dikirim ke email Anda.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      setState(() {
+        _step = 2;
+        _notice = 'Kode verifikasi telah dikirim ke email Anda.';
+      });
     } on ApiException catch (error) {
-      _showError(error.message);
+      if (mounted) {
+        setState(() => _error = error.message);
+      }
     } catch (_) {
-      _showError('Gagal mengirim kode verifikasi. Silakan coba lagi.');
+      if (mounted) {
+        setState(() => _error = 'Gagal mengirim kode verifikasi. Coba lagi.');
+      }
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
@@ -77,14 +89,17 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     }
 
     FocusScope.of(context).unfocus();
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
 
     try {
       await context.read<AuthProvider>().resetPin(
-            email: _emailController.text.trim(),
-            otp: _otpController.text.trim(),
-            pin: _pinController.text,
-          );
+        email: _emailController.text.trim(),
+        otp: _otpController.text.trim(),
+        pin: _pinController.text,
+      );
 
       if (!mounted) {
         return;
@@ -93,10 +108,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('PIN Berhasil Diubah'),
-          content: const Text(
-            'Silakan masuk kembali menggunakan PIN baru Anda.',
-          ),
+          title: const Text('PIN berhasil diubah'),
+          content: const Text('Silakan masuk kembali memakai PIN baru Anda.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -110,9 +123,13 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
         context.go(AppRouter.login);
       }
     } on ApiException catch (error) {
-      _showError(error.message);
+      if (mounted) {
+        setState(() => _error = error.message);
+      }
     } catch (_) {
-      _showError('Gagal mengubah PIN. Silakan coba lagi.');
+      if (mounted) {
+        setState(() => _error = 'Gagal mengubah PIN. Silakan coba lagi.');
+      }
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
@@ -120,69 +137,69 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     }
   }
 
-  void _showError(String message) {
-    if (!mounted) {
-      return;
+  void _goBack() {
+    if (_step == 2) {
+      setState(() {
+        _step = 1;
+        _notice = null;
+        _error = null;
+      });
+    } else {
+      context.go(AppRouter.login);
     }
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.expense,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset PIN'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (_step == 2) {
-              setState(() => _step = 1);
-            } else {
-              context.go(AppRouter.login);
-            }
-          },
+          onPressed: _submitting ? null : _goBack,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: AppColors.accent),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _step == 1
-                            ? 'Masukkan email yang terdaftar. Kami akan mengirim kode verifikasi ke email tersebut.'
-                            : 'Masukkan kode verifikasi dari email dan PIN baru 6 digit angka.',
-                        style: const TextStyle(fontSize: 12.5),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const PageHeader(
+                    eyebrow: 'PEMULIHAN KREDENSIAL',
+                    title: 'Atur ulang PIN',
+                    subtitle:
+                        'Pakai email yang terdaftar untuk menerima kode '
+                        'verifikasi.',
+                  ),
+                  const SizedBox(height: 20),
+                  LedgerCard(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_error != null) ...[
+                            AlertCard(tone: AlertTone.error, message: _error!),
+                            const SizedBox(height: 18),
+                          ],
+                          if (_notice != null) ...[
+                            AlertCard(tone: AlertTone.olive, message: _notice!),
+                            const SizedBox(height: 18),
+                          ],
+                          if (_step == 1)
+                            ..._buildStepOne()
+                          else
+                            ..._buildStepTwo(),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 22),
-              if (_step == 1) ..._buildStepOne() else ..._buildStepTwo(),
-            ],
+            ),
           ),
         ),
       ),
@@ -193,9 +210,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     return [
       _Field(
         controller: _emailController,
-        label: 'Email Terdaftar',
+        label: 'Email terdaftar',
         hint: 'Contoh: ani.wijaya@example.test',
-        icon: Icons.email_outlined,
         keyboardType: TextInputType.emailAddress,
         validator: (value) {
           final email = value?.trim() ?? '';
@@ -208,18 +224,11 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
           return null;
         },
       ),
-      const SizedBox(height: 28),
+      const SizedBox(height: 24),
       FilledButton(
         onPressed: _submitting ? null : _requestOtp,
         child: _submitting
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: Colors.white,
-                ),
-              )
+            ? const _ButtonSpinner()
             : const Text('Kirim Kode Verifikasi'),
       ),
     ];
@@ -229,30 +238,24 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     return [
       _Field(
         controller: _emailController,
-        label: 'Email Terdaftar',
-        icon: Icons.email_outlined,
-        keyboardType: TextInputType.emailAddress,
+        label: 'Email terdaftar',
         readOnly: true,
       ),
       const SizedBox(height: 16),
       _Field(
         controller: _otpController,
-        label: 'Kode Verifikasi (6 Digit)',
-        hint: 'Masukkan kode dari email',
-        icon: Icons.password_outlined,
+        label: 'Kode verifikasi',
+        hint: '6 digit dari email',
         keyboardType: TextInputType.number,
         maxLength: 6,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       ),
       const SizedBox(height: 16),
-      _PinField(
-        controller: _pinController,
-        label: 'PIN Baru',
-      ),
+      _PinField(controller: _pinController, label: 'PIN baru'),
       const SizedBox(height: 16),
       _PinField(
         controller: _confirmController,
-        label: 'Konfirmasi PIN Baru',
+        label: 'Konfirmasi PIN baru',
         validator: (value) {
           if (value != _pinController.text) {
             return 'Konfirmasi PIN tidak cocok.';
@@ -260,21 +263,14 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
           return null;
         },
       ),
-      const SizedBox(height: 28),
+      const SizedBox(height: 24),
       FilledButton(
         onPressed: _submitting ? null : _resetPin,
         child: _submitting
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: Colors.white,
-                ),
-              )
+            ? const _ButtonSpinner()
             : const Text('Simpan PIN Baru'),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 4),
       TextButton(
         onPressed: _submitting ? null : _requestOtp,
         child: const Text('Kirim ulang kode'),
@@ -283,11 +279,26 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   }
 }
 
+class _ButtonSpinner extends StatelessWidget {
+  const _ButtonSpinner();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 22,
+      height: 22,
+      child: CircularProgressIndicator(
+        strokeWidth: 2.4,
+        color: AppColors.white,
+      ),
+    );
+  }
+}
+
 class _Field extends StatelessWidget {
   const _Field({
     required this.controller,
     required this.label,
-    required this.icon,
     this.hint,
     this.keyboardType,
     this.maxLength,
@@ -299,7 +310,6 @@ class _Field extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String? hint;
-  final IconData icon;
   final TextInputType? keyboardType;
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
@@ -311,27 +321,17 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-            color: Color(0xFF3A4A42),
-          ),
-        ),
-        const SizedBox(height: 8),
+        Text(label, style: AppText.fieldLabel),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           maxLength: maxLength,
           inputFormatters: inputFormatters,
           readOnly: readOnly,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon),
-            counterText: '',
-          ),
-          validator: validator ??
+          decoration: InputDecoration(hintText: hint, counterText: ''),
+          validator:
+              validator ??
               (value) => value == null || value.trim().isEmpty
                   ? '$label wajib diisi.'
                   : null,
@@ -364,15 +364,8 @@ class _PinFieldState extends State<_PinField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-            color: Color(0xFF3A4A42),
-          ),
-        ),
-        const SizedBox(height: 8),
+        Text(widget.label, style: AppText.fieldLabel),
+        const SizedBox(height: 6),
         TextFormField(
           controller: widget.controller,
           keyboardType: TextInputType.number,
@@ -382,17 +375,13 @@ class _PinFieldState extends State<_PinField> {
           decoration: InputDecoration(
             hintText: '6 digit angka',
             counterText: '',
-            prefixIcon: const Icon(Icons.lock_outline_rounded),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscure
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
+            suffixIcon: TextButton(
               onPressed: () => setState(() => _obscure = !_obscure),
+              child: Text(_obscure ? 'Tampilkan' : 'Sembunyikan'),
             ),
           ),
-          validator: widget.validator ??
+          validator:
+              widget.validator ??
               (value) {
                 if (value == null || value.isEmpty) {
                   return 'PIN wajib diisi.';

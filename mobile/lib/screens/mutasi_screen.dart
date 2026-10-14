@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../core/utils/formatters.dart';
 import '../providers/mutasi_provider.dart';
+import '../widgets/page_header.dart';
 import '../widgets/state_views.dart';
 import '../widgets/transaction_tile.dart';
 import 'transaction_detail_sheet.dart';
 
+/// Mutasi rekening nasabah. Filter jenis dan rentang tanggal meniru form
+/// filter di halaman web, diterjemahkan menjadi chip agar nyaman dijangkau
+/// ibu jari.
 class MutasiScreen extends StatefulWidget {
   const MutasiScreen({super.key});
 
@@ -60,38 +65,49 @@ class _MutasiScreenState extends State<MutasiScreen> {
     final provider = context.watch<MutasiProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Mutasi'),
-        actions: [
-          IconButton(
-            tooltip: 'Filter tanggal',
-            onPressed: () => _pickRange(provider),
-            icon: const Icon(Icons.date_range_outlined),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _TypeFilterBar(
-            selected: provider.type,
-            onSelected: (value) => provider.applyFilters(
-              type: value,
-              dateFrom: provider.dateFrom,
-              dateTo: provider.dateTo,
-            ),
-          ),
-          if (provider.dateFrom != null && provider.dateTo != null)
-            _RangeChip(
-              from: provider.dateFrom!,
-              to: provider.dateTo!,
-              onClear: () => provider.applyFilters(
-                type: provider.type,
-                dateFrom: null,
-                dateTo: null,
+      backgroundColor: AppColors.paper,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              child: PageHeader(
+                eyebrow: 'RIWAYAT UANG',
+                title: 'Mutasi rekening',
+                subtitle:
+                    'Setoran masuk dan penarikan keluar dibedakan '
+                    'oleh warna dan tanda.',
+                trailing: IconButton(
+                  tooltip: 'Filter tanggal',
+                  onPressed: () => _pickRange(provider),
+                  icon: const Icon(
+                    Icons.date_range_outlined,
+                    color: AppColors.brand800,
+                  ),
+                ),
               ),
             ),
-          Expanded(child: _buildList(provider)),
-        ],
+            _TypeFilterBar(
+              selected: provider.type,
+              onSelected: (value) => provider.applyFilters(
+                type: value,
+                dateFrom: provider.dateFrom,
+                dateTo: provider.dateTo,
+              ),
+            ),
+            if (provider.dateFrom != null && provider.dateTo != null)
+              _RangeChip(
+                from: provider.dateFrom!,
+                to: provider.dateTo!,
+                onClear: () => provider.applyFilters(
+                  type: provider.type,
+                  dateFrom: null,
+                  dateTo: null,
+                ),
+              ),
+            Expanded(child: _buildList(provider)),
+          ],
+        ),
       ),
     );
   }
@@ -106,16 +122,33 @@ class _MutasiScreenState extends State<MutasiScreen> {
     }
 
     if (provider.transactions.isEmpty) {
+      final hasFilter =
+          provider.type != null ||
+          (provider.dateFrom != null && provider.dateTo != null);
+
       return RefreshIndicator(
-        color: AppColors.primary,
+        color: AppColors.brand800,
         onRefresh: provider.refresh,
         child: ListView(
-          children: const [
-            SizedBox(height: 80),
+          children: [
+            const SizedBox(height: 80),
             AppEmptyView(
               title: 'Belum ada mutasi',
-              subtitle: 'Transaksi pada periode ini belum tersedia.',
+              subtitle: hasFilter
+                  ? 'Tidak ada transaksi pada filter ini. Coba rentang '
+                        'tanggal lain.'
+                  : 'Setoran pertama bisa dilakukan di loket sekolah.',
               icon: Icons.receipt_long_outlined,
+              action: hasFilter
+                  ? OutlinedButton(
+                      onPressed: () => provider.applyFilters(
+                        type: null,
+                        dateFrom: null,
+                        dateTo: null,
+                      ),
+                      child: const Text('Hapus filter'),
+                    )
+                  : null,
             ),
           ],
         ),
@@ -123,7 +156,7 @@ class _MutasiScreenState extends State<MutasiScreen> {
     }
 
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: AppColors.brand800,
       onRefresh: provider.refresh,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
@@ -134,7 +167,7 @@ class _MutasiScreenState extends State<MutasiScreen> {
           return false;
         },
         child: ListView.separated(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           itemCount: provider.transactions.length + (provider.hasMore ? 1 : 0),
           separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
@@ -172,8 +205,9 @@ class _TypeFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      width: double.infinity,
+      color: AppColors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -185,18 +219,20 @@ class _TypeFilterBar extends StatelessWidget {
                 label: Text(type.label),
                 selected: isSelected,
                 onSelected: (_) => onSelected(type.value),
-                selectedColor: AppColors.primary.withValues(alpha: 0.14),
-                labelStyle: TextStyle(
-                  color: isSelected ? AppColors.primary : AppColors.muted,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12.5,
-                ),
+                selectedColor: AppColors.brand50,
+                backgroundColor: AppColors.white,
                 side: BorderSide(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.4)
-                      : const Color(0xFFCBD5CE),
+                  color: isSelected ? AppColors.brand200 : AppColors.stone300,
                 ),
-                backgroundColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: isSelected ? AppColors.brand900 : AppColors.stone600,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 showCheckmark: false,
               ),
             );
@@ -218,19 +254,47 @@ class _RangeChip extends StatelessWidget {
   final String to;
   final VoidCallback onClear;
 
+  String _display(String value) => Formatters.date(DateTime.tryParse(value));
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Chip(
-          avatar: const Icon(Icons.event, size: 16),
-          label: Text('$from s/d $to'),
-          onDeleted: onClear,
-          deleteIcon: const Icon(Icons.close, size: 16),
-          backgroundColor: AppColors.accent.withValues(alpha: 0.12),
-          side: BorderSide.none,
+        child: Container(
+          padding: const EdgeInsets.only(left: 12),
+          decoration: BoxDecoration(
+            color: AppColors.brand50,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.brand200),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.event_outlined,
+                size: 16,
+                color: AppColors.brand900,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${_display(from)} s/d ${_display(to)}',
+                style: AppText.tnum(AppText.metaStrong),
+              ),
+              SizedBox(
+                width: 36,
+                height: 44,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 16,
+                  tooltip: 'Hapus filter tanggal',
+                  onPressed: onClear,
+                  icon: const Icon(Icons.close, color: AppColors.brand900),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

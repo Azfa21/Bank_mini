@@ -4,10 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api/api_exception.dart';
-import '../core/theme/app_theme.dart';
+import '../core/config/app_config.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../providers/auth_provider.dart';
 import '../router/app_router.dart';
+import '../widgets/alert_card.dart';
+import '../widgets/ledger_card.dart';
 
+/// Halaman masuk nasabah, memakai cangkang yang sama dengan halaman login web:
+/// latar kertas, blok merek, lalu satu kartu bergaris buku besar.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _nisController = TextEditingController();
   final _pinController = TextEditingController();
   bool _obscurePin = true;
+  String? _error;
 
   @override
   void dispose() {
@@ -34,33 +41,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     FocusScope.of(context).unfocus();
+    setState(() => _error = null);
 
     try {
       await context.read<AuthProvider>().login(
-            studentNumber: _nisController.text.trim(),
-            pin: _pinController.text,
-          );
-    } on ApiException catch (error) {
-      _showError(error.message);
-    } catch (_) {
-      _showError('Login gagal. Silakan coba lagi.');
-    }
-  }
-
-  void _showError(String message) {
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.expense,
-          behavior: SnackBarBehavior.floating,
-        ),
+        studentNumber: _nisController.text.trim(),
+        pin: _pinController.text,
       );
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => _error = error.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Login gagal. Silakan coba lagi.');
+      }
+    }
   }
 
   @override
@@ -68,158 +64,178 @@ class _LoginScreenState extends State<LoginScreen> {
     final submitting = context.watch<AuthProvider>().isSubmitting;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.paper,
       body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 36, 24, 40),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_rounded,
-                      color: AppColors.primary,
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+                  const _BrandBlock(),
+                  const SizedBox(height: 24),
                   const Text(
-                    'Masuk Rekening',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    'Masuk ke rekening Anda',
+                    style: AppText.titleAuth,
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Gunakan Nomor Induk Siswa dan PIN 6 digit Anda.',
-                    style: TextStyle(color: Colors.white70, fontSize: 13.5),
+                  Text(
+                    'Nomor siswa dan PIN 6 digit, sama seperti yang Anda pakai '
+                    'di loket sekolah.',
+                    style: AppText.body.copyWith(color: AppColors.stone600),
+                  ),
+                  const SizedBox(height: 20),
+                  LedgerCard(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_error != null) ...[
+                            AlertCard(tone: AlertTone.error, message: _error!),
+                            const SizedBox(height: 18),
+                          ],
+                          const Text(
+                            'Nomor Induk Siswa',
+                            style: AppText.fieldLabel,
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _nisController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            autofillHints: const [AutofillHints.username],
+                            decoration: const InputDecoration(
+                              hintText: 'Contoh: 2023001',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Nomor siswa wajib diisi.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('PIN', style: AppText.fieldLabel),
+                              TextButton(
+                                onPressed: submitting
+                                    ? null
+                                    : () => context.go(AppRouter.forgotPin),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(0, 32),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Text('Lupa PIN?'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          TextFormField(
+                            controller: _pinController,
+                            keyboardType: TextInputType.number,
+                            obscureText: _obscurePin,
+                            maxLength: 6,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: InputDecoration(
+                              hintText: '6 digit angka',
+                              counterText: '',
+                              suffixIcon: TextButton(
+                                onPressed: () =>
+                                    setState(() => _obscurePin = !_obscurePin),
+                                child: Text(
+                                  _obscurePin ? 'Tampilkan' : 'Sembunyikan',
+                                ),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'PIN wajib diisi.';
+                              }
+                              if (value.length != 6) {
+                                return 'PIN harus tepat 6 digit.';
+                              }
+                              return null;
+                            },
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            onPressed: submitting ? null : _submit,
+                            child: submitting
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      color: AppColors.white,
+                                    ),
+                                  )
+                                : const Text('Masuk'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    '© ${DateTime.now().year} ${AppConfig.bankName}',
+                    textAlign: TextAlign.center,
+                    style: AppText.meta,
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Nomor Induk Siswa (NIS)',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: Color(0xFF3A4A42),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _nisController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          hintText: 'Contoh: 2023001',
-                          prefixIcon: Icon(Icons.badge_outlined),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'NIS wajib diisi.';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 18),
-                      const Text(
-                        'PIN',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: Color(0xFF3A4A42),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _pinController,
-                        keyboardType: TextInputType.number,
-                        obscureText: _obscurePin,
-                        maxLength: 6,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          hintText: '6 digit angka',
-                          counterText: '',
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePin
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscurePin = !_obscurePin,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'PIN wajib diisi.';
-                          }
-                          if (value.length != 6) {
-                            return 'PIN harus tepat 6 digit.';
-                          }
-                          return null;
-                        },
-                        onFieldSubmitted: (_) => _submit(),
-                      ),
-                      const SizedBox(height: 28),
-                      FilledButton(
-                        onPressed: submitting ? null : _submit,
-                        child: submitting
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Masuk'),
-                      ),
-                      const SizedBox(height: 14),
-                      TextButton(
-                        onPressed: submitting
-                            ? null
-                            : () => context.go(AppRouter.forgotPin),
-                        child: const Text('Lupa PIN?'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _BrandBlock extends StatelessWidget {
+  const _BrandBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.brand800,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(
+            Icons.account_balance_rounded,
+            color: AppColors.white,
+            size: 26,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppConfig.bankName,
+                style: AppText.action.copyWith(color: AppColors.stone900),
+              ),
+              const SizedBox(height: 2),
+              const Text('Tabungan siswa sekolah', style: AppText.meta),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

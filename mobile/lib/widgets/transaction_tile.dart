@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/formatters.dart';
 import '../models/transaction.dart';
+import 'status_pill.dart';
 
+/// Satu baris mutasi. Warna uang mengikuti aturan web: kredit memakai terakota
+/// (brand), debit memakai merah, dan selalu disertai tanda + / - supaya arah
+/// uang tidak bergantung pada warna saja.
 class TransactionTile extends StatelessWidget {
   const TransactionTile({super.key, required this.transaction, this.onTap});
 
@@ -13,18 +19,18 @@ class TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final incoming = transaction.isIncoming;
-    final color = incoming ? AppColors.income : AppColors.expense;
+    final amountColor = incoming ? AppColors.brand800 : AppColors.red700;
     final sign = incoming ? '+' : '-';
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.cardAll,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE6EBE8)),
+          color: AppColors.white,
+          borderRadius: AppRadius.cardAll,
+          border: Border.all(color: AppColors.stone200),
         ),
         child: Row(
           children: [
@@ -32,10 +38,10 @@ class TransactionTile extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                color: amountColor.withValues(alpha: 0.10),
+                borderRadius: AppRadius.controlAll,
               ),
-              child: Icon(_icon(), color: color, size: 22),
+              child: Icon(_icon(), color: amountColor, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -44,40 +50,48 @@ class TransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     _title(),
-                    style: const TextStyle(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.body.copyWith(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14.5,
-                      color: Color(0xFF1F2A24),
+                      color: AppColors.ink,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    Formatters.dateTime(transaction.transactionAt),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
-                    ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        Formatters.dateTime(transaction.transactionAt),
+                        style: AppText.micro,
+                      ),
+                      if (transaction.status != 'success') ...[
+                        const SizedBox(width: 8),
+                        TransactionStatusPill(status: transaction.status),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   '$sign${Formatters.rupiah(transaction.amount)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: color,
+                  style: AppText.tnum(
+                    TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: amountColor,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   'Saldo ${Formatters.rupiah(transaction.balanceAfter)}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.muted,
+                  style: AppText.tnum(
+                    const TextStyle(fontSize: 11, color: AppColors.stone500),
                   ),
                 ),
               ],
@@ -89,8 +103,7 @@ class TransactionTile extends StatelessWidget {
   }
 
   String _title() {
-    if (transaction.type == 'transfer' &&
-        transaction.counterpart != null) {
+    if (transaction.type == 'transfer' && transaction.counterpart != null) {
       final name = transaction.counterpart!.name;
       final number = transaction.counterpart!.accountNumber;
       final target = name != null && name.isNotEmpty ? name : number;

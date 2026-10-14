@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/formatters.dart';
 import '../models/transaction.dart';
+import '../widgets/status_pill.dart';
 
 Future<void> showTransactionDetail(
   BuildContext context,
@@ -10,11 +13,9 @@ Future<void> showTransactionDetail(
 ) {
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: AppColors.white,
     showDragHandle: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-    ),
+    shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheetTop),
     builder: (context) => _TransactionDetail(transaction: transaction),
   );
 }
@@ -27,7 +28,7 @@ class _TransactionDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final incoming = transaction.isIncoming;
-    final color = incoming ? AppColors.income : AppColors.expense;
+    final color = incoming ? AppColors.brand800 : AppColors.red700;
 
     return SafeArea(
       child: Padding(
@@ -39,21 +40,19 @@ class _TransactionDetail extends StatelessWidget {
             Center(
               child: Text(
                 transaction.typeLabel,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F2A24),
-                ),
+                style: AppText.title.copyWith(fontSize: 16),
               ),
             ),
             const SizedBox(height: 6),
             Center(
               child: Text(
                 '${incoming ? '+' : '-'}${Formatters.rupiah(transaction.amount)}',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: color,
+                style: AppText.tnum(
+                  TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
                 ),
               ),
             ),
@@ -71,13 +70,9 @@ class _TransactionDetail extends StatelessWidget {
             if (transaction.counterpart != null)
               _Row(
                 label: incoming ? 'Dari' : 'Ke',
-                value: transaction.counterpart!.name ??
+                value:
+                    transaction.counterpart!.name ??
                     transaction.counterpart!.accountNumber,
-              ),
-            if (transaction.adminFee > 0)
-              _Row(
-                label: 'Biaya Admin',
-                value: Formatters.rupiah(transaction.adminFee),
               ),
             _Row(
               label: 'Saldo Sebelum',
@@ -87,7 +82,10 @@ class _TransactionDetail extends StatelessWidget {
               label: 'Saldo Sesudah',
               value: Formatters.rupiah(transaction.balanceAfter),
             ),
-            _Row(label: 'Status', value: _statusLabel(transaction.status)),
+            _Row(
+              label: 'Status',
+              valueWidget: TransactionStatusPill(status: transaction.status),
+            ),
             if (transaction.notes != null && transaction.notes!.isNotEmpty)
               _Row(label: 'Catatan', value: transaction.notes!),
             if (transaction.isReversal && transaction.reversalReason != null)
@@ -97,23 +95,14 @@ class _TransactionDetail extends StatelessWidget {
       ),
     );
   }
-
-  String _statusLabel(String status) {
-    return switch (status) {
-      'success' => 'Berhasil',
-      'reversed' => 'Dikoreksi',
-      'rejected' => 'Ditolak',
-      'draft' => 'Draf',
-      _ => status,
-    };
-  }
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.value});
+  const _Row({required this.label, this.value, this.valueWidget});
 
   final String label;
-  final String value;
+  final String? value;
+  final Widget? valueWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -122,23 +111,15 @@ class _Row extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
-            ),
-          ),
+          SizedBox(width: 120, child: Text(label, style: AppText.meta)),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2A24),
-              ),
-            ),
+            child:
+                valueWidget ??
+                Text(
+                  value ?? '-',
+                  textAlign: TextAlign.right,
+                  style: AppText.tnum(AppText.metaStrong),
+                ),
           ),
         ],
       ),

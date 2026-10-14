@@ -43,14 +43,8 @@ class AppRouter {
       }
     },
     routes: [
-      GoRoute(
-        path: splash,
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: login,
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: splash, builder: (context, state) => const SplashScreen()),
+      GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: forgotPin,
         builder: (context, state) => const ForgotPinScreen(),
