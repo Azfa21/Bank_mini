@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\JurnalAkuntansi;
+use App\Services\AccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -58,6 +59,8 @@ class JournalController extends Controller
             ]);
         }
 
-        return view('journals.index', compact('journals', 'totalDebit', 'totalCredit', 'userRole', 'indexRoute'));
+        $accounts = AccountingService::CHART_OF_ACCOUNTS;
+
+        return view('journals.index', compact('journals', 'totalDebit', 'totalCredit', 'userRole', 'indexRoute', 'accounts'));
     }
 }

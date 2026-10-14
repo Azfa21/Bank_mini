@@ -25,8 +25,9 @@
             <x-input-label for="account_code">Kode akun</x-input-label>
             <x-select id="account_code" name="account_code">
                 <option value="">Semua akun</option>
-                <option value="101" @selected(request('account_code') === '101')>101, Kas</option>
-                <option value="201" @selected(request('account_code') === '201')>201, Tabungan</option>
+                @foreach (($accounts ?? []) as $code => $info)
+                    <option value="{{ $code }}" @selected((string) request('account_code') === (string) $code)>{{ $code }} — {{ $info['name'] }}</option>
+                @endforeach
             </x-select>
         </div>
         <div>

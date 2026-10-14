@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\JurnalAkuntansi;
 use App\Models\Transaction;
+use App\Services\AccountingService;
 use App\Services\TransactionService;
 use Tests\Feature\Teller\TellerTestCase;
 
@@ -166,6 +167,49 @@ class JournalTest extends TellerTestCase
                 'date_to' => now()->toDateString(),
             ]))
             ->assertOk()
+            ->assertDontSee($transaction->receipt_number);
+    }
+
+    public function test_journal_filter_offers_every_account_in_chart(): void
+    {
+        $response = $this->actingAs($this->admin, 'web')
+            ->get(route('admin.journals.index'))
+            ->assertOk();
+
+        foreach (AccountingService::CHART_OF_ACCOUNTS as $code => $info) {
+            $response->assertSee('value="'.$code.'"', false);
+            $response->assertSee($info['name']);
+        }
+    }
+
+    public function test_supervisor_can_filter_journal_by_vault_account(): void
+    {
+        $transaction = app(TransactionService::class)->deposit($this->account, [
+            'slip_number' => 'SLIP-J-009',
+            'slip_amount' => 100000,
+            'physical_cash_amount' => 100000,
+            'amount' => 100000,
+        ], $this->teller);
+
+        JurnalAkuntansi::create([
+            'transaction_id' => null,
+            'cash_transfer_id' => null,
+            'journal_number' => 'JRN-VAULT-01',
+            'account_code' => AccountingService::ACCOUNT_CODE_CASH_VAULT,
+            'entry_type' => 'debit',
+            'amount' => 80000,
+            'debit_amount' => 80000,
+            'credit_amount' => 0,
+            'description' => 'Pemindahan kas ke brankas',
+            'status' => 'posted',
+            'journal_at' => now(),
+        ]);
+
+        $this->actingAs($this->supervisor, 'web')
+            ->get(route('supervisor.journals.index', ['account_code' => '102']))
+            ->assertOk()
+            ->assertSee('JRN-VAULT-01')
+            ->assertSee('value="102" selected', false)
             ->assertDontSee($transaction->receipt_number);
     }
 }

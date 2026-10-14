@@ -2,19 +2,24 @@
 
 namespace Database\Seeders;
 
-use App\Models\Account;
 use App\Models\Member;
 use App\Models\Saver;
 use App\Models\User;
+use App\Services\AccountService;
+use App\Services\TransactionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use RuntimeException;
 
 class SaverSeeder extends Seeder
 {
+    /** PIN awal untuk semua penabung contoh. */
+    private const PIN = '123456';
+
     public function run(): void
     {
         $admin = User::where('username', 'admin')->firstOrFail();
+        $teller = User::where('role', 'teller')->first();
 
         $savers = [
             ['2023001', 'Ani Wijaya', 'X RPL 1', '081234567001', 25000],
@@ -24,7 +29,7 @@ class SaverSeeder extends Seeder
             ['2023005', 'Eka Puspita', 'X MM 1', '081234567005', 30000],
         ];
 
-        foreach ($savers as $i => [$studentNumber, $fullName, $className, $phoneNumber, $balance]) {
+        foreach ($savers as [$studentNumber, $fullName, $className, $phoneNumber, $openingBalance]) {
             Member::updateOrCreate(
                 ['nis' => $studentNumber],
                 [
@@ -35,34 +40,53 @@ class SaverSeeder extends Seeder
                 ]
             );
 
-            $saver = Saver::create([
-                'student_number' => $studentNumber,
-                'member_nis' => $studentNumber,
-                'full_name' => $fullName,
-                'class_name' => $className,
-                'phone_number' => $phoneNumber,
-                'pin_hash' => Hash::make('123456'),
-                'qr_code_value' => Str::uuid()->toString(),
-                'created_by' => $admin->id,
-                'status' => 'active',
-            ]);
+            // student_number unik, jadi penabung yang pernah di-soft delete harus dipakai
+            // ulang lewat withTrashed(); mencoba create lagi akan melanggar unique constraint.
+            $saver = Saver::withTrashed()->updateOrCreate(
+                ['student_number' => $studentNumber],
+                [
+                    'member_nis' => $studentNumber,
+                    'full_name' => $fullName,
+                    'class_name' => $className,
+                    'phone_number' => $phoneNumber,
+                    'pin_hash' => Hash::make(self::PIN),
+                    'qr_code_value' => 'SEED-'.$studentNumber,
+                    'created_by' => $admin->id,
+                    'status' => 'active',
+                ]
+            );
 
-            $this->command->info("Penabung [{$studentNumber}] {$fullName} -> PIN: 123456");
+            if ($saver->trashed()) {
+                $saver->restore();
+            }
 
-            $academicYear = date('Y').'/'.(date('Y') + 1);
-            $startYear = date('y');
-            $accountNumber = '10'.$startYear.((int) $startYear + 1).str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $this->command->info("Penabung [{$studentNumber}] {$fullName} -> PIN: ".self::PIN);
 
-            Account::create([
-                'account_number' => $accountNumber,
-                'saver_id' => $saver->id,
-                'balance' => $balance,
-                'opening_balance' => $balance,
-                'minimum_balance' => 10000,
-                'academic_year' => $academicYear,
-                'status' => 'active',
-                'opened_at' => now(),
-            ]);
+            // Rekening yang sudah ada tidak dibuat ulang, sehingga seeder aman dijalankan berkali-kali.
+            if ($saver->account()->exists()) {
+                continue;
+            }
+
+            if ($teller === null) {
+                throw new RuntimeException('SaverSeeder butuh satu user teller untuk mencatat setoran saldo awal.');
+            }
+
+            // Nomor rekening dibuat lewat AccountService supaya memakai sequence yang sama
+            // dengan aplikasi. Menghitungnya sendiri di seeder akan bertabrakan dengan nomor
+            // yang sudah dibuat teller.
+            $account = app(AccountService::class)->openFor($saver);
+
+            // Saldo awal disetor lewat TransactionService agar transaksi dan jurnalnya ikut
+            // tercatat. Mengisi kolom balance langsung menghasilkan saldo tanpa jejak jurnal,
+            // sehingga neraca saldo tidak akan cocok dengan saldo rekening.
+            app(TransactionService::class)->deposit($account, [
+                'slip_number' => 'SLIP-SEED-'.$studentNumber,
+                'slip_amount' => $openingBalance,
+                'physical_cash_amount' => $openingBalance,
+                'amount' => $openingBalance,
+            ], $teller);
+
+            $this->command->info('  rekening '.$account->account_number.' saldo awal Rp '.number_format($openingBalance));
         }
     }
 }
