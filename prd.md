@@ -307,56 +307,49 @@ Status
 Selesai
 Latar Belakang
 Hasil kuesioner pengguna (Teller, Nasabah, Supervisor, Administrator) menunjukkan kebutuhan
-yang belum tercakup: rincian uang kertas & logam, biaya administrasi, kelengkapan struk,
-jurnal koreksi/pembalik, pencarian nasabah yang lebih cepat, laporan Laba Rugi & Neraca,
+yang belum tercakup: rincian uang kertas & logam, kelengkapan struk,
+jurnal koreksi/pembalik, pencarian nasabah yang lebih cepat, Neraca Saldo,
 konfigurasi produk Bank Mini, dan registrasi nasabah yang didampingi Teller.
 Sub-Fitur
 - Rincian uang kertas & logam pada transaksi dan penutupan kas
-- Biaya administrasi penarikan (akun pendapatan 401)
-- Struk transaksi lengkap (nomor referensi jurnal, terbilang, biaya admin, status)
+- Struk transaksi lengkap (nomor referensi jurnal, terbilang, status)
 - Jurnal koreksi/pembalik oleh Supervisor
 - Pencarian nasabah berdasarkan nama/NIS/nomor rekening
 - Registrasi nasabah didampingi Teller
-- Laporan Laba Rugi dan Neraca
+- Neraca Saldo dan Buku Besar
 - Konfigurasi produk (nama bank, jam operasional, batas penarikan tanpa pesanan)
 Requirements Fitur
 1. Rincian uang kertas & logam
 - Teller dapat mencatat jumlah lembar/keping per pecahan pada setoran, penarikan, dan penutupan kas.
 - Total uang fisik dihitung otomatis dari rincian pecahan.
 - Rincian pecahan disimpan sebagai bukti audit pada transaksi dan Laporan Harian Teller.
-2. Biaya administrasi
-- Administrator menetapkan biaya administrasi per penarikan pada konfigurasi.
-- Biaya dicatat sebagai pendapatan (akun 401) dan muncul pada struk serta laporan harian.
-- Penarikan ditolak jika biaya menyebabkan saldo di bawah saldo mengendap minimum.
-3. Struk transaksi
+2. Struk transaksi
 - Struk memuat nama bank, nomor struk, nomor referensi jurnal, tanggal & waktu, jenis transaksi,
-  nomor rekening, nama nasabah, NIS, nomor slip, nama Teller, nominal, biaya admin, total, terbilang,
+  nomor rekening, nama nasabah, NIS, nomor slip, nama Teller, nominal, terbilang,
   saldo sebelum, saldo sesudah, dan status transaksi.
-4. Jurnal koreksi/pembalik
+3. Jurnal koreksi/pembalik
 - Supervisor dapat mengoreksi transaksi berstatus sukses dengan alasan wajib.
 - Sistem membuat jurnal pembalik, memulihkan saldo, dan menandai transaksi asal sebagai "reversed".
 - Transaksi yang sudah dikoreksi tidak dapat dikoreksi ulang.
 - Koreksi ditolak jika laporan harian tanggal transaksi telah disetujui dan kas telah dipindahkan ke brankas.
-5. Pencarian nasabah
+4. Pencarian nasabah
 - Teller dapat mencari berdasarkan nomor rekening, NIS, nama lengkap, atau QR Code.
 - Pencarian yang menghasilkan lebih dari satu nasabah menampilkan daftar hasil.
-6. Registrasi nasabah
+5. Registrasi nasabah
 - Teller dapat mendaftarkan nasabah baru didampingi pada loket.
 - Nomor siswa dan nomor rekening dibuat otomatis oleh sistem.
-7. Laporan Laba Rugi & Neraca
-- Administrator dan Supervisor dapat melihat Laba Rugi (pendapatan, laba bersih).
-- Administrator dan Supervisor dapat melihat Neraca (aset, kewajiban, ekuitas) dengan status keseimbangan.
-8. Konfigurasi produk
-- Administrator mengatur nama bank, jam operasional, biaya admin, dan batas penarikan tanpa pesanan.
+6. Neraca Saldo
+- Administrator dan Supervisor dapat melihat Buku Besar dan Neraca Saldo (aset, kewajiban) dengan status keseimbangan.
+- Bank Mini tidak mencatat pendapatan maupun beban karena tidak mencari keuntungan; dana murni untuk menabung.
+7. Konfigurasi produk
+- Administrator mengatur nama bank, jam operasional, dan batas penarikan tanpa pesanan.
 - Batas penarikan tanpa pesanan diterapkan sebagai validasi server sebelum penarikan diproses.
 Field Wajib
-- transactions.admin_fee
 - transactions.denomination_breakdown
 - transactions.reversal_of_transaction_id
 - transactions.reversed_at, transactions.reversed_by, transactions.reversal_reason
 - daily_reports.closing_breakdown
-- daily_reports.total_admin_fee
-- system_configs (bank_name, operational_hours, admin_fee, max_withdrawal_without_order)
+- system_configs (bank_name, operational_hours, max_withdrawal_without_order)
 4. User Flow
 4.1 Flow Login Pengguna
 1. Pengguna membuka halaman login.
@@ -657,6 +650,7 @@ AUDIT_LOGS	Menyimpan jejak aktivitas dan perubahan penting untuk kebutuhan audit
 - Pencarian nomor rekening dan QR Code harus memberikan hasil dengan cepat pada kondisi operasional loket.
 - Sistem harus mampu mencatat audit log tanpa menyimpan password atau PIN asli.
 - Penghapusan data master tidak boleh menghapus histori transaksi dan jurnal.
+- Pengecualian: perintah `bankmini:reset-nasabah` boleh menghapus permanen seluruh histori untuk membersihkan data testing sebelum peluncuran. Perintah ini menolak berjalan saat `APP_ENV=production` dan menulis satu entri audit log setiap kali dijalankan.
 - Penggunaan browser cache harus dimatikan pada seluruh respons (Cache-Control: no-store) untuk mencegah akses back-button setelah logout.
 - Library pihak ketiga untuk fitur front-end (seperti QR Scanner) wajib di-bundle secara lokal untuk mematuhi kebijakan CSP.
 7.2 Panduan Desain Antarmuka

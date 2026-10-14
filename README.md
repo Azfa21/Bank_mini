@@ -39,13 +39,12 @@ Aplikasi client-server untuk operasional Bank Mini Sekolah yang mencakup pengelo
 
 ### 6. Penyempurnaan Berbasis Riset Pengguna (FASE 9)
 - **Rincian Uang Kertas & Logam**: input pecahan per lembar/keping pada setoran, penarikan, dan penutupan kas; total dihitung otomatis.
-- **Biaya Administrasi**: biaya per penarikan yang dicatat sebagai pendapatan (akun 401) dan tampil pada struk & laporan harian.
-- **Struk Lengkap**: nama bank, nomor referensi jurnal, terbilang Rupiah, biaya admin, total, saldo sebelum/sesudah, dan status transaksi.
+- **Struk Lengkap**: nama bank, nomor referensi jurnal, terbilang Rupiah, saldo sebelum/sesudah, dan status transaksi.
 - **Jurnal Koreksi/Pembalik**: Supervisor dapat mengoreksi transaksi dengan jurnal pembalik dan pemulihan saldo.
 - **Pencarian Cepat**: cari nasabah berdasarkan nomor rekening, NIS, nama lengkap, atau QR Code.
 - **Registrasi Didampingi Teller**: Teller dapat mendaftarkan nasabah baru, nomor rekening dibuat otomatis.
-- **Laporan Laba Rugi & Neraca**: laporan keuangan lengkap untuk Administrator dan Supervisor.
-- **Konfigurasi Produk**: nama bank, jam operasional, biaya admin, dan batas penarikan tanpa pesanan.
+- **Neraca Saldo & Buku Besar**: laporan keuangan untuk Administrator dan Supervisor.
+- **Konfigurasi Produk**: nama bank, jam operasional, dan batas penarikan tanpa pesanan.
 
 ---
 
@@ -81,12 +80,20 @@ php artisan serve
 
 ### Membersihkan Data Testing (Peluncuran)
 ```bash
-# Hapus seluruh data nasabah, transaksi, jurnal, laporan, dan audit log hasil testing.
+# Hapus permanen seluruh data nasabah, transaksi, jurnal, laporan, dan audit log hasil testing.
 # Akun staff (admin/teller/supervisor) beserta passwordnya dan konfigurasi sistem tetap utuh.
+#
+# Perintah ini hanya untuk membersihkan data testing SEBELUM peluncuran. Ia sengaja melanggar
+# aturan aplikasi bahwa anggota yang sudah menabung tidak dapat dihapus permanen, sehingga
+# histori yang terhapus TIDAK dapat dikembalikan.
+# Perintah menolak berjalan saat APP_ENV=production dan menyisakan satu entri audit log.
 php artisan bankmini:reset-nasabah
 
-# Tanpa prompt konfirmasi (untuk skrip/deployment)
+# Tanpa prompt konfirmasi (untuk skrip otomatisasi non-production)
 php artisan bankmini:reset-nasabah --force
+
+# Catat nama operator pada entri audit log
+php artisan bankmini:reset-nasabah --operator="Nama Operator"
 ```
 
 ### Menjalankan Pengujian (Testing)
