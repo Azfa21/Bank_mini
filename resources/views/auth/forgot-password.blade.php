@@ -9,26 +9,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Password & Reset PIN — Bank Mini Sekolah</title>
+    <title>Lupa Password &amp; Reset PIN &middot; Bank Mini Sekolah</title>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 </head>
-<body class="min-h-screen bg-stone-50 flex items-center justify-center px-4 py-8">
+<body class="min-h-screen bg-paper text-ink flex items-center justify-center px-4 py-8">
     <div class="w-full max-w-md">
         <!-- Brand Header -->
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-14 h-14 bg-brand-700 rounded-2xl shadow-sm mb-3">
-                <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                </svg>
+        <div class="mb-6">
+            <div class="flex items-center gap-3">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-brand-800 rounded-xl shrink-0" aria-hidden="true">
+                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-6 9 6M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9m-4 6H8"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-[15px] font-semibold text-stone-900 leading-tight">Bank Mini Sekolah</p>
+                    <p class="text-[13px] text-stone-600 leading-tight">Loket teller dan tabungan siswa</p>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-stone-900">Pemulihan Kredensial</h1>
-            <p class="text-sm text-stone-500 mt-1">Verifikasi email untuk reset password pegawai atau PIN nasabah</p>
+
+            <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Pemulihan Kredensial</h1>
+            <p class="text-sm text-stone-600 mt-1.5">Kode dikirim ke email terdaftar, berlaku {{ config('recovery.otp_expire_minutes', 10) }} menit, dan hanya bisa dipakai sekali.</p>
         </div>
 
         <!-- Main Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+        <div class="bg-white rounded-2xl border border-stone-200 ledger-rule overflow-hidden">
             <!-- Tabs -->
             <div class="flex border-b border-stone-200 bg-stone-50" role="tablist" aria-label="Pilih jenis akun">
                 <button
@@ -206,7 +213,7 @@
             </div>
         </div>
 
-        <p class="text-center text-xs text-stone-500 mt-6">&copy; {{ date('Y') }} Bank Mini Sekolah</p>
+        <p class="text-[13px] text-stone-600 mt-5">&copy; {{ date('Y') }} Bank Mini Sekolah</p>
     </div>
 
 </body>
