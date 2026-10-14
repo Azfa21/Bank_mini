@@ -1,53 +1,5 @@
 # Sistem Informasi E-Teller Bank Mini Sekolah
 
-Aplikasi client-server untuk operasional Bank Mini Sekolah yang mencakup pengelolaan rekening nasabah, transaksi loket teller (setoran & penarikan), rekonsiliasi kas harian, approval supervisor, pembukuan jurnal akuntansi otomatis, dan pemulihan kredensial (lupa password / reset PIN).
-
----
-
-## 🚀 Fitur Utama
-
-### 1. Autentikasi, RBAC & Pemulihan Kredensial (FASE 1)
-- **Multi-Role RBAC**: Administrator, Teller, Supervisor, dan Nasabah.
-- **Password & PIN Hashing**: Hashing aman menggunakan `bcrypt` (`password_hash` & `pin_hash`).
-- **Security Headers & Anti Cache**: Proteksi CSP, X-Frame-Options, dan `Cache-Control: no-store`.
-- **Rate Limiting**: Pembatasan 5 request/menit untuk mencegah serangan brute force pada login & pemulihan.
-- **Fitur Lupa Password & Reset PIN (Self-Service Identity Verification)**:
-  - **Pegawai (Staff)**: Verifikasi `username` + `full_name` terdaftar, penetapan password baru minimal 8 karakter.
-  - **Nasabah (Siswa)**: Verifikasi `student_number` (NIS) + `class_name` terdaftar, penetapan PIN baru tepat 6 digit angka.
-  - **Audit Logging**: Mencatat setiap aktivitas sukses, gagal, atau percobaan akun terblokir ke tabel `audit_logs`.
-
-### 2. Manajemen Pengguna & Rekening (FASE 2)
-- CRUD akun pegawai internal (Admin, Teller, Supervisor).
-- CRUD profil nasabah/siswa lengkap dengan nomor rekening otomatis format tahun ajaran.
-- Pengaturan konfigurasi sistem (saldo mengendap minimum, scanner QR).
-
-### 3. Operasional Transaksi Loket (FASE 3)
-- Pencarian profil nasabah melalui nomor rekening atau pemindaian QR Code kamera.
-- Validasi slip dan uang fisik setoran tunai.
-- Validasi saldo, saldo mengendap minimum Rp10.000, dan PIN nasabah 6 digit pada penarikan.
-- Pencetakan struk transaksi otomatis dan transaksi berstatus final (read-only).
-
-### 4. Penutupan Kas & Approval Supervisor (FASE 4)
-- Rekap transaksi harian teller dan rekonsiliasi saldo fisik vs saldo sistem.
-- Penguncian pencetakan draf jika terjadi selisih kas (*cash difference*).
-- Approval supervisor dan pemindahan tanggung jawab kas ke brankas utama.
-
-### 5. Informasi Nasabah & Integritas Akuntansi (FASE 5)
-- Dasbor saldo dan riwayat mutasi mandiri untuk nasabah.
-- Double-entry automatic journal: Kas (101) & Tabungan (201).
-- Atomic database transaction dengan mekanisme rollback otomatis jika terjadi kegagalan.
-
-### 6. Penyempurnaan Berbasis Riset Pengguna (FASE 9)
-- **Rincian Uang Kertas & Logam**: input pecahan per lembar/keping pada setoran, penarikan, dan penutupan kas; total dihitung otomatis.
-- **Struk Lengkap**: nama bank, nomor referensi jurnal, terbilang Rupiah, saldo sebelum/sesudah, dan status transaksi.
-- **Jurnal Koreksi/Pembalik**: Supervisor dapat mengoreksi transaksi dengan jurnal pembalik dan pemulihan saldo.
-- **Pencarian Cepat**: cari nasabah berdasarkan nomor rekening, NIS, nama lengkap, atau QR Code.
-- **Registrasi Didampingi Teller**: Teller dapat mendaftarkan nasabah baru, nomor rekening dibuat otomatis.
-- **Neraca Saldo & Buku Besar**: laporan keuangan untuk Administrator dan Supervisor.
-- **Konfigurasi Produk**: nama bank, jam operasional, dan batas penarikan tanpa pesanan.
-
----
-
 ## 🛠️ Panduan Menjalankan Aplikasi
 
 ### Persyaratan Sistem
