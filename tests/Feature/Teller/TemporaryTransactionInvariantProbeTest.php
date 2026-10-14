@@ -2,36 +2,15 @@
 
 namespace Tests\Feature\Teller;
 
-use App\Models\DailyReport;
-use App\Models\SystemConfig;
+use App\Exceptions\TransactionValidationException;
 use App\Models\Transaction;
 use App\Services\DailyReportService;
 use App\Services\ReversalService;
 use App\Services\TransactionService;
+use App\Support\CashDenomination;
 
 class TemporaryTransactionInvariantProbeTest extends TellerTestCase
 {
-    public function test_same_slip_number_can_post_multiple_deposits(): void
-    {
-        $payload = [
-            'slip_number' => 'SLIP-001',
-            'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
-        ];
-
-        $first = $this->actingAsTeller()
-            ->postJson(route('teller.deposits.store', $this->account), $payload)
-            ->assertCreated();
-
-        $second = $this->actingAsTeller()
-            ->postJson(route('teller.deposits.store', $this->account), $payload)
-            ->assertCreated();
-
-        $this->assertSame(125000, $this->account->refresh()->balance);
-        $this->assertSame(2, Transaction::where('slip_number', 'SLIP-001')->count());
-        $this->assertNotSame($first->json('data.id'), $second->json('data.id'));
-    }
-
     public function test_deposit_denomination_total_may_disagree_with_cash_and_slip(): void
     {
         $this->actingAsTeller()
@@ -46,7 +25,7 @@ class TemporaryTransactionInvariantProbeTest extends TellerTestCase
         $transaction = Transaction::where('type', 'deposit')->firstOrFail();
 
         $this->assertSame(50000, $transaction->amount);
-        $this->assertSame(100000, \App\Support\CashDenomination::total($transaction->denomination_breakdown));
+        $this->assertSame(100000, CashDenomination::total($transaction->denomination_breakdown));
         $this->assertSame(['kertas_100000' => 1], $transaction->denomination_breakdown);
     }
 
@@ -126,31 +105,8 @@ class TemporaryTransactionInvariantProbeTest extends TellerTestCase
 
         app(DailyReportService::class)->approve($report, $this->supervisor, 'Approved');
 
-        $this->expectException(\App\Exceptions\TransactionValidationException::class);
+        $this->expectException(TransactionValidationException::class);
         app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Correction after approval');
-    }
-
-    public function test_reversed_withdrawal_fee_remains_in_daily_recap(): void
-    {
-        SystemConfig::updateOrCreate(['config_key' => 'admin_fee'], ['config_value' => '2000']);
-
-        $withdrawal = app(TransactionService::class)->withdraw(
-            $this->account,
-            ['slip_number' => 'SLIP-001', 'amount' => 10000],
-            '123456',
-            $this->teller
-        );
-
-        app(ReversalService::class)->reverse($withdrawal, $this->supervisor, 'Reverse complete withdrawal');
-
-        $recap = app(DailyReportService::class)->recap($this->teller, now()->toDateString());
-        $feeJournalDebit = \App\Models\JurnalAkuntansi::query()
-            ->whereHas('transaction', fn ($query) => $query->where('type', 'reversal'))
-            ->where('account_code', TransactionService::ACCOUNT_CODE_ADMIN_INCOME)
-            ->sum('debit_amount');
-
-        $this->assertSame(0, $recap['total_admin_fee']);
-        $this->assertSame(2000, $feeJournalDebit);
     }
 
     public function test_withdrawal_after_report_submission_is_rejected(): void
@@ -161,7 +117,7 @@ class TemporaryTransactionInvariantProbeTest extends TellerTestCase
             0
         );
 
-        $this->expectException(\App\Exceptions\TransactionValidationException::class);
+        $this->expectException(TransactionValidationException::class);
         app(TransactionService::class)->withdraw(
             $this->account,
             ['slip_number' => 'SLIP-002', 'amount' => 10000],

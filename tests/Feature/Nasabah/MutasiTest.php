@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 
 class MutasiTest extends NasabahTestCase
 {
+    private int $slipSequence = 0;
+
     public function test_mutasi_shows_own_transactions_with_type_and_balance(): void
     {
         $deposit = $this->deposit(50000);
@@ -164,7 +166,7 @@ class MutasiTest extends NasabahTestCase
     protected function deposit(int $amount): Transaction
     {
         return app(TransactionService::class)->deposit($this->account, [
-            'slip_number' => 'SLIP-N-'.random_int(100, 999),
+            'slip_number' => $this->nextSlipNumber(),
             'slip_amount' => $amount,
             'physical_cash_amount' => $amount,
             'amount' => $amount,
@@ -174,9 +176,18 @@ class MutasiTest extends NasabahTestCase
     protected function withdraw(int $amount): Transaction
     {
         return app(TransactionService::class)->withdraw($this->account, [
-            'slip_number' => 'SLIP-N-'.random_int(100, 999),
+            'slip_number' => $this->nextSlipNumber(),
             'amount' => $amount,
         ], '123456', $this->teller);
+    }
+
+    /**
+     * Nomor slip acak dari ruang terbatas bertabrakan saat sebuah test membuat banyak
+     * transaksi (mis. paginasi 20 deposit), sehingga test gagal secara acak.
+     */
+    private function nextSlipNumber(): string
+    {
+        return sprintf('SLIP-N-%04d', ++$this->slipSequence);
     }
 
     protected function depositReceipt(int $amount): string

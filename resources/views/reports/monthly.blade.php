@@ -15,7 +15,7 @@
         <div>
             <p class="text-xs font-semibold text-brand-900">REKAP BULANAN</p>
             <h1 class="text-2xl font-bold text-stone-900 mt-1">Laporan bulanan {{ $periodLabel }}</h1>
-            <p class="text-sm text-stone-600 mt-1">Rekap setoran, penarikan, biaya admin, dan status laporan harian.</p>
+            <p class="text-sm text-stone-600 mt-1">Rekap setoran, penarikan, dan status laporan harian.</p>
         </div>
         <a href="{{ $printRoute }}?month={{ $month }}" class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900">
             Cetak laporan
@@ -30,7 +30,7 @@
         <x-primary-button>Tampilkan</x-primary-button>
     </form>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
         <div class="bg-white rounded-2xl border border-stone-200 p-5">
             <p class="text-[13px] font-medium text-stone-600">Total setoran</p>
             <p class="text-xl font-bold text-stone-900 mt-1 tnum">Rp {{ number_format($totals['deposit'], 0, ',', '.') }}</p>
@@ -38,10 +38,6 @@
         <div class="bg-white rounded-2xl border border-stone-200 p-5">
             <p class="text-[13px] font-medium text-stone-600">Total penarikan</p>
             <p class="text-xl font-bold text-stone-900 mt-1 tnum">Rp {{ number_format($totals['withdrawal'], 0, ',', '.') }}</p>
-        </div>
-        <div class="bg-white rounded-2xl border border-stone-200 p-5">
-            <p class="text-[13px] font-medium text-stone-600">Biaya admin</p>
-            <p class="text-xl font-bold text-stone-900 mt-1 tnum">Rp {{ number_format($totals['admin_fee'], 0, ',', '.') }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-stone-200 p-5">
             <p class="text-[13px] font-medium text-stone-600">Arus kas bersih</p>
@@ -58,7 +54,6 @@
                         <th class="px-5 py-3 text-right">Transaksi</th>
                         <th class="px-5 py-3 text-right">Setoran</th>
                         <th class="px-5 py-3 text-right">Penarikan</th>
-                        <th class="px-5 py-3 text-right">Biaya admin</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-stone-100">
@@ -68,11 +63,10 @@
                             <td class="px-5 py-3 text-right tnum">{{ number_format($row->total) }}</td>
                             <td class="px-5 py-3 text-right tnum">Rp {{ number_format($row->deposit, 0, ',', '.') }}</td>
                             <td class="px-5 py-3 text-right tnum">Rp {{ number_format($row->withdrawal, 0, ',', '.') }}</td>
-                            <td class="px-5 py-3 text-right tnum">Rp {{ number_format($row->admin_fee, 0, ',', '.') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-8 text-center text-sm text-stone-600">Belum ada transaksi pada bulan ini.</td>
+                            <td colspan="4" class="px-5 py-8 text-center text-sm text-stone-600">Belum ada transaksi pada bulan ini.</td>
                         </tr>
                     @endforelse
                 </tbody>

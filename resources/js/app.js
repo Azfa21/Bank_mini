@@ -248,12 +248,11 @@ function bindWithdrawPage() {
     var form = document.getElementById('withdraw-form');
     if (!amount || !form) return;
     var balance = toInt(form.getAttribute('data-balance'));
-    var adminFee = toInt(form.getAttribute('data-admin-fee'));
 
     function refresh() {
         var val = toInt(amount.value);
-        if (preview) preview.textContent = 'Terbaca: ' + rupiah(val) + (adminFee ? ' + biaya admin ' + rupiah(adminFee) : '');
-        if (remain) remain.textContent = 'Sisa sesudah penarikan: ' + rupiah(balance - val - adminFee);
+        if (preview) preview.textContent = 'Terbaca: ' + rupiah(val);
+        if (remain) remain.textContent = 'Sisa sesudah penarikan: ' + rupiah(balance - val);
     }
 
     amount.addEventListener('input', refresh);

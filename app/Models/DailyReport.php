@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $opening_balance
  * @property int $total_deposit
  * @property int $total_withdrawal
- * @property int $total_admin_fee
  * @property int $closing_balance_system
  * @property int|null $closing_balance_physical
  * @property array<string, int>|null $closing_breakdown
@@ -41,7 +40,6 @@ class DailyReport extends Model
         'opening_balance',
         'total_deposit',
         'total_withdrawal',
-        'total_admin_fee',
         'closing_balance_system',
         'closing_balance_physical',
         'closing_breakdown',
@@ -58,7 +56,6 @@ class DailyReport extends Model
         'opening_balance' => 'integer',
         'total_deposit' => 'integer',
         'total_withdrawal' => 'integer',
-        'total_admin_fee' => 'integer',
         'closing_balance_system' => 'integer',
         'closing_balance_physical' => 'integer',
         'closing_breakdown' => 'array',

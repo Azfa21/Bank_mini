@@ -57,10 +57,6 @@
                         <dt class="text-stone-600">Total penarikan</dt>
                         <dd class="tnum font-semibold text-red-800">− Rp {{ number_format($recap['total_withdrawal'], 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between gap-4 px-5 py-3">
-                        <dt class="text-stone-600">Biaya admin (bila ada)</dt>
-                        <dd class="tnum text-stone-800">Rp {{ number_format($recap['total_admin_fee'], 0, ',', '.') }}</dd>
-                    </div>
                     <div class="flex justify-between gap-4 px-5 py-3 bg-stone-50 font-bold">
                         <dt class="text-stone-900">Saldo akhir sistem</dt>
                         <dd class="tnum text-stone-900">Rp {{ number_format($recap['closing_balance_system'], 0, ',', '.') }}</dd>

@@ -112,7 +112,6 @@ class CashDenominationTest extends TellerTestCase
             'opening_balance' => 0,
             'total_deposit' => 100000,
             'total_withdrawal' => 0,
-            'total_admin_fee' => 0,
             'closing_balance_system' => 100000,
             'closing_balance_physical' => 100000,
             'closing_breakdown' => ['kertas_100000' => 1],

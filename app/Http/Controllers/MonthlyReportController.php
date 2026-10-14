@@ -53,7 +53,6 @@ class MonthlyReportController extends Controller
             ->selectRaw("
                 COALESCE(SUM(CASE WHEN type = 'deposit' THEN amount ELSE 0 END), 0) as deposit,
                 COALESCE(SUM(CASE WHEN type = 'withdrawal' THEN amount ELSE 0 END), 0) as withdrawal,
-                COALESCE(SUM(CASE WHEN type = 'withdrawal' THEN admin_fee WHEN type = 'reversal' THEN -admin_fee ELSE 0 END), 0) as admin_fee,
                 COUNT(*) as total
             ")
             ->first();
@@ -63,7 +62,6 @@ class MonthlyReportController extends Controller
                 teller_id,
                 COALESCE(SUM(CASE WHEN type = 'deposit' THEN amount ELSE 0 END), 0) as deposit,
                 COALESCE(SUM(CASE WHEN type = 'withdrawal' THEN amount ELSE 0 END), 0) as withdrawal,
-                COALESCE(SUM(CASE WHEN type = 'withdrawal' THEN admin_fee WHEN type = 'reversal' THEN -admin_fee ELSE 0 END), 0) as admin_fee,
                 COUNT(*) as total
             ")
             ->groupBy('teller_id')
@@ -96,7 +94,6 @@ class MonthlyReportController extends Controller
             'totals' => [
                 'deposit' => (int) ($totals->deposit ?? 0),
                 'withdrawal' => (int) ($totals->withdrawal ?? 0),
-                'admin_fee' => (int) ($totals->admin_fee ?? 0),
                 'total' => (int) ($totals->total ?? 0),
             ],
             'perTeller' => $perTeller,

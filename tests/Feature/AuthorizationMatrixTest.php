@@ -20,7 +20,7 @@ class AuthorizationMatrixTest extends TellerTestCase
     public function test_teller_cannot_open_accounting_statements(): void
     {
         $this->actingAsTeller()
-            ->get(route('admin.reports.income-statement'))
+            ->get(route('admin.reports.trial-balance'))
             ->assertRedirect(route('login'));
     }
 

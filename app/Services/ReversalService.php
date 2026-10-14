@@ -50,12 +50,11 @@ class ReversalService
                 : null;
 
             $amount = (int) $transaction->amount;
-            $fee = (int) $transaction->admin_fee;
             $balanceBefore = (int) $account->balance;
 
             $balanceAfter = match ($transaction->type) {
                 'deposit' => $this->reverseDeposit($account, $amount),
-                'withdrawal' => $this->reverseWithdrawal($account, $amount, $fee),
+                'withdrawal' => $this->reverseWithdrawal($account, $amount),
                 default => $this->reverseTransfer($account, $recipient, $amount),
             };
 
@@ -65,7 +64,6 @@ class ReversalService
                 'teller_id' => $transaction->teller_id,
                 'type' => 'reversal',
                 'amount' => $amount,
-                'admin_fee' => $fee,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'receipt_number' => $this->generateNumber(),
@@ -89,7 +87,6 @@ class ReversalService
                 'reversal_receipt_number' => $reversal->receipt_number,
                 'account_number' => $account->account_number,
                 'amount' => $amount,
-                'admin_fee' => $fee,
                 'reason' => $reason,
             ], $supervisor->id);
 
@@ -97,9 +94,9 @@ class ReversalService
         });
     }
 
-    protected function reverseWithdrawal(Account $account, int $amount, int $fee): int
+    protected function reverseWithdrawal(Account $account, int $amount): int
     {
-        $balanceAfter = (int) $account->balance + $amount + $fee;
+        $balanceAfter = (int) $account->balance + $amount;
 
         $account->update(['balance' => $balanceAfter]);
 
@@ -147,20 +144,16 @@ class ReversalService
     protected function createReversalJournalEntries(Transaction $reversal, Transaction $original): void
     {
         $amount = (int) $original->amount;
-        $fee = (int) $original->admin_fee;
 
         $rows = match ($original->type) {
             'deposit' => [
                 ['account_code' => TransactionService::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Koreksi setoran (jurnal pembalik)'],
                 ['account_code' => TransactionService::ACCOUNT_CODE_CASH, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Koreksi setoran (jurnal pembalik)'],
             ],
-            'withdrawal' => array_values(array_filter([
+            'withdrawal' => [
                 ['account_code' => TransactionService::ACCOUNT_CODE_CASH, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Koreksi penarikan (jurnal pembalik)'],
-                $fee > 0
-                    ? ['account_code' => TransactionService::ACCOUNT_CODE_ADMIN_INCOME, 'entry_type' => 'debit', 'debit_amount' => $fee, 'credit_amount' => 0, 'description' => 'Koreksi biaya administrasi']
-                    : null,
-                ['account_code' => TransactionService::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount + $fee, 'description' => 'Koreksi penarikan (jurnal pembalik)'],
-            ])),
+                ['account_code' => TransactionService::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Koreksi penarikan (jurnal pembalik)'],
+            ],
             default => [
                 ['account_code' => TransactionService::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Koreksi transfer masuk ke pengirim'],
                 ['account_code' => TransactionService::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Koreksi transfer keluar dari penerima'],

@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $teller_id
  * @property string $type
  * @property int $amount
- * @property int $admin_fee
  * @property int|null $slip_amount
  * @property int|null $physical_cash_amount
  * @property array<string, int>|null $denomination_breakdown
@@ -43,7 +42,6 @@ class Transaction extends Model
         'teller_id',
         'type',
         'amount',
-        'admin_fee',
         'balance_before',
         'balance_after',
         'receipt_number',
@@ -62,7 +60,6 @@ class Transaction extends Model
 
     protected $casts = [
         'amount' => 'integer',
-        'admin_fee' => 'integer',
         'slip_amount' => 'integer',
         'physical_cash_amount' => 'integer',
         'denomination_breakdown' => 'array',

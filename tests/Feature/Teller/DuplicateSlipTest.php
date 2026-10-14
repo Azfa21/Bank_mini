@@ -44,7 +44,6 @@ class DuplicateSlipTest extends TellerTestCase
             'teller_id' => $this->teller->id,
             'type' => 'deposit',
             'amount' => 50000,
-            'admin_fee' => 0,
             'balance_before' => 75000,
             'balance_after' => 125000,
             'receipt_number' => 'TRX-20260925-9999',

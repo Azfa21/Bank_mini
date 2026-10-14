@@ -66,7 +66,6 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('reports/monthly/print', [MonthlyReportController::class, 'print'])->name('reports.monthly.print');
     Route::get('reports/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('reports.general-ledger');
     Route::get('reports/trial-balance', [AccountingReportController::class, 'trialBalance'])->name('reports.trial-balance');
-    Route::get('reports/income-statement', [AccountingReportController::class, 'incomeStatement'])->name('reports.income-statement');
     Route::get('reports/export/{type?}', [AccountingReportController::class, 'exportCsv'])->name('reports.export');
 });
 
@@ -115,7 +114,6 @@ Route::middleware(['role:supervisor'])->prefix('supervisor')->group(function () 
     Route::get('/reports-monthly/print', [MonthlyReportController::class, 'print'])->name('supervisor.reports.monthly.print');
     Route::get('/reports-accounting/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('supervisor.reports.general-ledger');
     Route::get('/reports-accounting/trial-balance', [AccountingReportController::class, 'trialBalance'])->name('supervisor.reports.trial-balance');
-    Route::get('/reports-accounting/income-statement', [AccountingReportController::class, 'incomeStatement'])->name('supervisor.reports.income-statement');
     Route::get('/reports-accounting/export/{type?}', [AccountingReportController::class, 'exportCsv'])->name('supervisor.reports.export');
 });
 

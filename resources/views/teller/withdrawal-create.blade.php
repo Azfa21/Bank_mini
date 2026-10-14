@@ -23,7 +23,6 @@
                     <p class="text-[13px] font-medium text-stone-600">Saldo saat ini</p>
                     <p class="text-2xl font-bold text-stone-900 tnum">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
                     @php
-                        $adminFee = (int) \App\Models\SystemConfig::value('admin_fee', 0);
                         $maxWithoutOrder = (int) \App\Models\SystemConfig::value('max_withdrawal_without_order', 0);
                         $minimumBalance = max(
                             (int) $account->minimum_balance,
@@ -31,7 +30,6 @@
                         );
                     @endphp
                     <p class="text-[13px] text-stone-600">Saldo mengendap: <span class="tnum font-medium text-stone-800">Rp {{ number_format($minimumBalance, 0, ',', '.') }}</span></p>
-                    <p class="text-[13px] text-stone-600">Biaya admin: <span class="tnum font-medium text-stone-800">Rp {{ number_format($adminFee, 0, ',', '.') }}</span></p>
                     @if ($maxWithoutOrder > 0)
                         <p class="text-[13px] font-semibold text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-2">Batas tanpa pesanan: <span class="tnum">Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}</span></p>
                     @endif
@@ -44,14 +42,14 @@
             <div class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6">
                 <h2 class="text-base font-bold text-stone-900">Data penarikan</h2>
 
-                <form method="POST" action="{{ route('teller.withdrawals.store', $account) }}" class="mt-4 space-y-5" id="withdraw-form" data-balance="{{ (int) $account->current_balance }}" data-admin-fee="{{ (int) \App\Models\SystemConfig::value('admin_fee', 0) }}">
+                <form method="POST" action="{{ route('teller.withdrawals.store', $account) }}" class="mt-4 space-y-5" id="withdraw-form" data-balance="{{ (int) $account->current_balance }}">
                     @csrf
 
                     <div>
                         <x-input-label for="amount">Nominal penarikan (Rp) wajib</x-input-label>
                         <x-input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 50000" required
                             aria-describedby="amount-help amount-preview" />
-                        <p id="amount-help" class="text-[13px] text-stone-600 mt-1.5">Termasuk biaya admin bila ada. Sisa saldo tidak boleh di bawah saldo mengendap.</p>
+                        <p id="amount-help" class="text-[13px] text-stone-600 mt-1.5">Sisa saldo tidak boleh di bawah saldo mengendap.</p>
                         <p id="amount-preview" role="status" class="text-[13px] font-medium text-stone-800 mt-1">Terbaca: Rp 0</p>
                         <x-input-error :message="$errors->first('amount')" />
                     </div>

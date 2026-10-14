@@ -36,7 +36,6 @@ class MobileTransactionPresenter
             'type_label' => $transaction->typeLabel(),
             'direction' => $isCredit ? 'in' : 'out',
             'amount' => (int) $transaction->amount,
-            'admin_fee' => (int) $transaction->admin_fee,
             'balance_before' => (int) $transaction->balance_before,
             'balance_after' => (int) $transaction->balance_after,
             'status' => $transaction->status,

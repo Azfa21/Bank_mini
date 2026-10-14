@@ -77,10 +77,6 @@
                 <span class="text-stone-600">Total penarikan</span>
                 <span class="tnum font-semibold text-red-800">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between gap-3">
-                <span class="text-stone-600">Biaya admin</span>
-                <span class="tnum">Rp {{ number_format($report->total_admin_fee, 0, ',', '.') }}</span>
-            </div>
             <div class="flex justify-between gap-3 font-bold">
                 <span class="text-stone-900">Saldo akhir sistem</span>
                 <span class="tnum text-stone-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</span>

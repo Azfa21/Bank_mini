@@ -46,10 +46,6 @@
                 <dt class="text-stone-600">Total penarikan</dt>
                 <dd class="tnum">Rp {{ number_format($totals['withdrawal'], 0, ',', '.') }}</dd>
             </div>
-            <div class="flex justify-between gap-3">
-                <dt class="text-stone-600">Total biaya admin</dt>
-                <dd class="tnum">Rp {{ number_format($totals['admin_fee'], 0, ',', '.') }}</dd>
-            </div>
             <div class="flex justify-between gap-3 border-t border-dashed border-stone-300 pt-2">
                 <dt class="font-semibold text-stone-900">Arus kas bersih</dt>
                 <dd class="tnum font-bold">Rp {{ number_format($totals['deposit'] - $totals['withdrawal'], 0, ',', '.') }}</dd>

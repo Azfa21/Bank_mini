@@ -31,7 +31,6 @@ class SystemConfigController extends Controller
             'bank_name' => ['required', 'string', 'max:100'],
             'operational_hours' => ['nullable', 'string', 'max:100'],
             'minimum_balance' => ['required', 'integer', 'min:0'],
-            'admin_fee' => ['required', 'integer', 'min:0'],
             'max_withdrawal_without_order' => ['required', 'integer', 'min:0'],
             'min_deposit_to_activate' => ['required', 'integer', 'min:0'],
         ]);

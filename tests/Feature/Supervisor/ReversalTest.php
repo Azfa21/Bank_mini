@@ -3,7 +3,6 @@
 namespace Tests\Feature\Supervisor;
 
 use App\Models\JurnalAkuntansi;
-use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use Tests\Feature\Teller\TellerTestCase;
@@ -44,16 +43,14 @@ class ReversalTest extends TellerTestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'transaction_reversed']);
     }
 
-    public function test_supervisor_reverses_withdrawal_and_refunds_fee(): void
+    public function test_supervisor_reverses_withdrawal_and_restores_balance(): void
     {
-        SystemConfig::updateOrCreate(['config_key' => 'admin_fee'], ['config_value' => '2000']);
-
         $withdrawal = app(TransactionService::class)->withdraw($this->account, [
             'slip_number' => 'SLIP-REV-002',
             'amount' => 10000,
         ], '123456', $this->teller);
 
-        $this->assertSame(13000, $this->account->refresh()->balance);
+        $this->assertSame(15000, $this->account->refresh()->balance);
 
         $this->actingAs($this->supervisor, 'web')
             ->post(route('supervisor.transactions.reverse', $withdrawal), [
@@ -64,8 +61,7 @@ class ReversalTest extends TellerTestCase
         $this->assertSame(25000, $this->account->refresh()->balance);
 
         $reversal = Transaction::where('type', 'reversal')->firstOrFail();
-        $this->assertSame(2000, $reversal->admin_fee);
-        $this->assertSame(3, $reversal->journalEntries()->count());
+        $this->assertSame(2, $reversal->journalEntries()->count());
     }
 
     public function test_teller_cannot_reverse_transaction(): void

@@ -15,7 +15,6 @@
     };
     $isCredit = $transaction->type === 'deposit'
         || ($transaction->type === 'reversal' && $transaction->reversalOf?->type === 'withdrawal');
-    $total = (int) $transaction->amount + (int) $transaction->admin_fee;
 @endphp
 
 @section('title', 'Struk Transaksi  EBank Mini')
@@ -124,15 +123,7 @@
                     {{ $isCredit ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                 </span>
             </div>
-            <div class="flex justify-between gap-3">
-                <span class="text-stone-600">Biaya admin</span>
-                <span class="tnum">Rp {{ number_format($transaction->admin_fee, 0, ',', '.') }}</span>
-            </div>
-            <div class="flex justify-between gap-3">
-                <span class="text-stone-600">Total</span>
-                <span class="tnum font-semibold">Rp {{ number_format($total, 0, ',', '.') }}</span>
-            </div>
-            <p class="text-[13px] text-stone-600 italic">Terbilang: {{ Terbilang::rupiah($total) }}</p>
+            <p class="text-[13px] text-stone-600 italic">Terbilang: {{ Terbilang::rupiah((int) $transaction->amount) }}</p>
             <div class="flex justify-between gap-3">
                 <span class="text-stone-600">Saldo sebelum</span>
                 <span class="tnum">Rp {{ number_format($transaction->balance_before, 0, ',', '.') }}</span>

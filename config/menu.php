@@ -9,7 +9,6 @@ return [
         ['label' => 'Laporan Bulanan', 'route' => 'admin.reports.monthly', 'routes' => ['admin.reports.monthly']],
         ['label' => 'Buku Besar', 'route' => 'admin.reports.general-ledger', 'routes' => ['admin.reports.general-ledger']],
         ['label' => 'Neraca Saldo', 'route' => 'admin.reports.trial-balance', 'routes' => ['admin.reports.trial-balance']],
-        ['label' => 'Laba Rugi', 'route' => 'admin.reports.income-statement', 'routes' => ['admin.reports.income-statement']],
         ['label' => 'Konfigurasi', 'route' => 'admin.config.edit', 'routes' => ['admin.config.*']],
         ['label' => 'Audit Jurnal', 'route' => 'admin.journals.index', 'routes' => ['admin.journals.*']],
     ],
@@ -25,7 +24,6 @@ return [
         ['label' => 'Laporan Bulanan', 'route' => 'supervisor.reports.monthly', 'routes' => ['supervisor.reports.monthly']],
         ['label' => 'Buku Besar', 'route' => 'supervisor.reports.general-ledger', 'routes' => ['supervisor.reports.general-ledger']],
         ['label' => 'Neraca Saldo', 'route' => 'supervisor.reports.trial-balance', 'routes' => ['supervisor.reports.trial-balance']],
-        ['label' => 'Laba Rugi', 'route' => 'supervisor.reports.income-statement', 'routes' => ['supervisor.reports.income-statement']],
         ['label' => 'Audit Jurnal', 'route' => 'supervisor.journals.index', 'routes' => ['supervisor.journals.*']],
     ],
 

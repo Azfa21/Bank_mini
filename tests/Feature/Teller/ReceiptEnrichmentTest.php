@@ -4,7 +4,6 @@ namespace Tests\Feature\Teller;
 
 use App\Models\Account;
 use App\Models\Saver;
-use App\Models\SystemConfig;
 use App\Services\ReversalService;
 use App\Services\TransactionService;
 use Illuminate\Support\Facades\Hash;
@@ -54,25 +53,6 @@ class ReceiptEnrichmentTest extends TellerTestCase
             ->assertSee('success')
             ->assertSee('Ani Wijaya')
             ->assertSee('2023001');
-    }
-
-    public function test_withdrawal_receipt_shows_admin_fee_and_total(): void
-    {
-        SystemConfig::updateOrCreate(['config_key' => 'admin_fee'], ['config_value' => '2000']);
-
-        $transaction = app(TransactionService::class)->withdraw($this->account, [
-            'slip_number' => 'SLIP-RCP-002',
-            'amount' => 10000,
-        ], '123456', $this->teller);
-
-        $this->actingAsTeller()
-            ->get(route('teller.transactions.receipt', $transaction))
-            ->assertOk()
-            ->assertSee('Biaya admin')
-            ->assertSee('Rp 2.000')
-            ->assertSee('Total')
-            ->assertSee('Rp 12.000')
-            ->assertSee('Dua Belas Ribu Rupiah');
     }
 
     public function test_transfer_receipt_shows_recipient_details(): void

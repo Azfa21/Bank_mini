@@ -28,22 +28,12 @@
                 <x-input-error :message="$errors->first('operational_hours')" />
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <x-input-label for="minimum_balance">Saldo mengendap (Rp) wajib</x-input-label>
-                    <x-input id="minimum_balance" name="minimum_balance" type="number" inputmode="numeric" :value="$configs->get('minimum_balance')->config_value ?? 10000" min="0" required
-                        aria-describedby="min-help" />
-                    <p id="min-help" class="text-[13px] text-stone-600 mt-1.5">Sisa penarikan tidak boleh di bawah ini.</p>
-                    <x-input-error :message="$errors->first('minimum_balance')" />
-                </div>
-
-                <div>
-                    <x-input-label for="admin_fee">Biaya admin per penarikan (Rp) wajib</x-input-label>
-                    <x-input id="admin_fee" name="admin_fee" type="number" inputmode="numeric" :value="$configs->get('admin_fee')->config_value ?? 0" min="0" required
-                        aria-describedby="fee-help" />
-                    <p id="fee-help" class="text-[13px] text-stone-600 mt-1.5">Masuk akun 401. Isi 0 bila gratis.</p>
-                    <x-input-error :message="$errors->first('admin_fee')" />
-                </div>
+            <div>
+                <x-input-label for="minimum_balance">Saldo mengendap (Rp) wajib</x-input-label>
+                <x-input id="minimum_balance" name="minimum_balance" type="number" inputmode="numeric" :value="$configs->get('minimum_balance')->config_value ?? 10000" min="0" required
+                    aria-describedby="min-help" />
+                <p id="min-help" class="text-[13px] text-stone-600 mt-1.5">Sisa penarikan tidak boleh di bawah ini.</p>
+                <x-input-error :message="$errors->first('minimum_balance')" />
             </div>
 
             <div>

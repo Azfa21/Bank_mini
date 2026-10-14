@@ -91,7 +91,6 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
             'opening_balance' => 0,
             'total_deposit' => 0,
             'total_withdrawal' => 0,
-            'total_admin_fee' => 0,
             'closing_balance_system' => 0,
             'closing_balance_physical' => 0,
             'cash_difference' => 0,

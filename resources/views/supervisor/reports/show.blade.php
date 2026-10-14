@@ -63,10 +63,6 @@
                         <dt class="text-stone-600">Total penarikan</dt>
                         <dd class="tnum font-semibold text-red-800">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between gap-3">
-                        <dt class="text-stone-600">Biaya admin</dt>
-                        <dd class="tnum">Rp {{ number_format($report->total_admin_fee, 0, ',', '.') }}</dd>
-                    </div>
                     <div class="flex justify-between gap-3 pt-2 border-t border-stone-100 font-bold">
                         <dt class="text-stone-900">Saldo sistem</dt>
                         <dd class="tnum text-stone-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</dd>

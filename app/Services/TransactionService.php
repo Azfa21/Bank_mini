@@ -26,8 +26,6 @@ class TransactionService
 
     public const ACCOUNT_CODE_SAVINGS = AccountingService::ACCOUNT_CODE_SAVINGS;
 
-    public const ACCOUNT_CODE_ADMIN_INCOME = AccountingService::ACCOUNT_CODE_ADMIN_INCOME;
-
     public function deposit(Account $account, array $data, User $teller): Transaction
     {
         return DB::transaction(function () use ($account, $data, $teller) {
@@ -92,9 +90,6 @@ class TransactionService
             $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
             $minimumBalance = max((int) $locked->minimum_balance, $globalMinimumBalance);
 
-            $adminFee = SystemConfig::integer('admin_fee', 0);
-            $totalDeduction = $amount + $adminFee;
-
             $balanceBefore = (int) $locked->balance;
             if ($amount > $balanceBefore) {
                 throw new TransactionValidationException('Saldo tidak mencukupi.');
@@ -107,14 +102,12 @@ class TransactionService
                 );
             }
 
-            $balanceAfter = $balanceBefore - $totalDeduction;
+            $balanceAfter = $balanceBefore - $amount;
             if ($balanceAfter < $minimumBalance) {
                 throw new TransactionValidationException(
                     'Saldo setelah penarikan tidak boleh kurang dari Rp '.number_format($minimumBalance).'.'
                 );
             }
-
-            $data['admin_fee'] = $adminFee;
 
             $transaction = $this->createTransaction(
                 $locked,
@@ -301,7 +294,6 @@ class TransactionService
             'teller_id' => $teller->id,
             'type' => $type,
             'amount' => $amount,
-            'admin_fee' => (int) ($data['admin_fee'] ?? 0),
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
             'receipt_number' => $this->generateTransactionNumber(),
@@ -345,20 +337,15 @@ class TransactionService
 
     protected function createJournalEntries(Transaction $transaction, string $type, int $amount): void
     {
-        $fee = (int) $transaction->admin_fee;
-
         $rows = match ($type) {
             'deposit' => [
                 ['account_code' => self::ACCOUNT_CODE_CASH, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Setoran tunai'],
                 ['account_code' => self::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Setoran tunai'],
             ],
-            default => array_filter([
-                ['account_code' => self::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'debit', 'debit_amount' => $amount + $fee, 'credit_amount' => 0, 'description' => 'Penarikan tunai'],
+            default => [
+                ['account_code' => self::ACCOUNT_CODE_SAVINGS, 'entry_type' => 'debit', 'debit_amount' => $amount, 'credit_amount' => 0, 'description' => 'Penarikan tunai'],
                 ['account_code' => self::ACCOUNT_CODE_CASH, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $amount, 'description' => 'Penarikan tunai'],
-                $fee > 0
-                    ? ['account_code' => self::ACCOUNT_CODE_ADMIN_INCOME, 'entry_type' => 'credit', 'debit_amount' => 0, 'credit_amount' => $fee, 'description' => 'Biaya administrasi penarikan']
-                    : null,
-            ]),
+            ],
         };
 
         foreach ($rows as $index => $row) {

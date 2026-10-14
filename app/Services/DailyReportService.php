@@ -34,24 +34,10 @@ class DailyReportService
 
         $systemEnding = $opening + $today['deposit'] - $today['withdrawal'];
 
-        $totalAdminFee = (int) Transaction::where('teller_id', $teller->id)
-            ->whereDate('transaction_at', $date)
-            ->whereIn('status', ['success', 'reversed'])
-            ->where(function ($query) {
-                $query->where('type', 'withdrawal')
-                    ->orWhere(function ($query) {
-                        $query->where('type', 'reversal')
-                            ->whereHas('reversalOf', fn ($query) => $query->where('type', 'withdrawal'));
-                    });
-            })
-            ->selectRaw('COALESCE(SUM(CASE WHEN type = \'withdrawal\' THEN admin_fee WHEN type = \'reversal\' THEN -admin_fee ELSE 0 END), 0) as total')
-            ->value('total');
-
         return [
             'opening_balance' => $opening,
             'total_deposit' => $today['deposit'],
             'total_withdrawal' => $today['withdrawal'],
-            'total_admin_fee' => $totalAdminFee,
             'closing_balance_system' => $systemEnding,
         ];
     }
@@ -142,7 +128,6 @@ class DailyReportService
                 'opening_balance' => $recap['opening_balance'],
                 'total_deposit' => $recap['total_deposit'],
                 'total_withdrawal' => $recap['total_withdrawal'],
-                'total_admin_fee' => $recap['total_admin_fee'],
                 'closing_balance_system' => $recap['closing_balance_system'],
                 'closing_balance_physical' => $physicalCash,
                 'closing_breakdown' => $normalizedBreakdown === [] ? null : $normalizedBreakdown,
