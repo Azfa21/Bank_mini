@@ -32,20 +32,29 @@ php artisan serve
 
 ### Membersihkan Data Testing (Peluncuran)
 ```bash
-# Hapus permanen seluruh data nasabah, transaksi, jurnal, laporan, dan audit log hasil testing.
-# Akun staff (admin/teller/supervisor) beserta passwordnya dan konfigurasi sistem tetap utuh.
-#
-# Perintah ini hanya untuk membersihkan data testing SEBELUM peluncuran. Ia sengaja melanggar
-# aturan aplikasi bahwa anggota yang sudah menabung tidak dapat dihapus permanen, sehingga
-# histori yang terhapus TIDAK dapat dikembalikan.
-# Perintah menolak berjalan saat APP_ENV=production dan menyisakan satu entri audit log.
+A. Untuk Testing Sehari-hari
+Jalankan di terminal proyek:
+
+bash
+# Dengan konfirmasi interaktif:
 php artisan bankmini:reset-nasabah
-
-# Tanpa prompt konfirmasi (untuk skrip otomatisasi non-production)
+# Atau langsung eksekusi tanpa prompt (misal untuk alur cepat):
 php artisan bankmini:reset-nasabah --force
+# Atau sertakan nama operator di audit log:
+php artisan bankmini:reset-nasabah --operator="Nama Anda"
+B. Untuk Persiapan Release ke Production
+Karena perintah ini memiliki Production Guard, lakukan langkah berikut:
 
-# Catat nama operator pada entri audit log
-php artisan bankmini:reset-nasabah --operator="Nama Operator"
+Jalankan pembersihan saat APP_ENV masih local atau staging:
+bash
+php artisan bankmini:reset-nasabah --operator="Admin Rilis"
+Pastikan di /admin/users hanya tersisa akun-akun resmi yang memang dibutuhkan untuk operasional sekolah.
+Setelah database bersih, ubah file .env ke mode produksi:
+env
+APP_ENV=production
+APP_DEBUG=false
+Setelah berada di mode produksi, perintah ini otomatis terkunci dan tidak bisa menghapus data nasabah lagi.
+Catatan Operasional: Jika selama masa pengujian Anda sempat mencoba fitur penutupan rekening (account_closures), pastikan tabel tersebut tidak menahan foreign key relasi rekening lama saat reset dijalankan.
 ```
 
 ### Menjalankan Pengujian (Testing)
