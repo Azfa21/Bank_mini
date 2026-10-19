@@ -32,8 +32,8 @@ php artisan serve
 
 ### Membersihkan Data Testing (Peluncuran)
 ```bash
-#A. Untuk Testing Sehari-hari
-Jalankan di terminal proyek:
+# A. Untuk Testing Sehari-hari
+# Jalankan di terminal proyek:
 
 bash
 # Dengan konfirmasi interaktif:
@@ -44,18 +44,18 @@ php artisan bankmini:reset-nasabah --force
 php artisan bankmini:reset-nasabah --operator="Nama Anda"
 
 #B. Untuk Persiapan Release ke Production
-Karena perintah ini memiliki Production Guard, lakukan langkah berikut:
+# Karena perintah ini memiliki Production Guard, lakukan langkah berikut:
 
-Jalankan pembersihan saat APP_ENV masih local atau staging:
+# Jalankan pembersihan saat APP_ENV masih local atau staging:
 bash
 php artisan bankmini:reset-nasabah --operator="Admin Rilis"
-Pastikan di /admin/users hanya tersisa akun-akun resmi yang memang dibutuhkan untuk operasional sekolah.
-Setelah database bersih, ubah file .env ke mode produksi:
+# Pastikan di /admin/users hanya tersisa akun-akun resmi yang memang dibutuhkan untuk operasional sekolah.
+# Setelah database bersih, ubah file .env ke mode produksi:
 env
 APP_ENV=production
 APP_DEBUG=false
-Setelah berada di mode produksi, perintah ini otomatis terkunci dan tidak bisa menghapus data nasabah lagi.
-Catatan Operasional: Jika selama masa pengujian Anda sempat mencoba fitur penutupan rekening (account_closures), pastikan tabel tersebut tidak menahan foreign key relasi rekening lama saat reset dijalankan.
+# Setelah berada di mode produksi, perintah ini otomatis terkunci dan tidak bisa menghapus data nasabah lagi.
+# Catatan Operasional: Jika selama masa pengujian Anda sempat mencoba fitur penutupan rekening (account_closures), pastikan tabel # tersebut tidak menahan foreign key relasi rekening lama saat reset dijalankan.
 ```
 
 ### Menjalankan Pengujian (Testing)
