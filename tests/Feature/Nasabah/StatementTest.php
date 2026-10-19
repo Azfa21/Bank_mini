@@ -48,7 +48,6 @@ class StatementTest extends NasabahTestCase
         $this->service->deposit($this->account, [
             'slip_number' => 'SLIP-ST-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
         ], $this->teller);
 
         $this->service->withdraw($this->account, [

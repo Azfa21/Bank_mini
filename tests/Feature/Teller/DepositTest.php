@@ -13,7 +13,6 @@ class DepositTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-001',
                 'slip_amount' => 100000,
-                'physical_cash_amount' => 100000,
             ])
             ->assertRedirect();
 
@@ -22,7 +21,6 @@ class DepositTest extends TellerTestCase
         $this->assertSame('success', $transaction->status);
         $this->assertSame(100000, $transaction->amount);
         $this->assertSame(100000, $transaction->slip_amount);
-        $this->assertSame(100000, $transaction->physical_cash_amount);
         $this->assertSame(25000, $transaction->balance_before);
         $this->assertSame(125000, $transaction->balance_after);
         $this->assertSame('SLIP-001', $transaction->slip_number);
@@ -41,22 +39,6 @@ class DepositTest extends TellerTestCase
         ]);
     }
 
-    public function test_deposit_rejects_when_slip_amount_differs_from_physical_cash(): void
-    {
-        $this->actingAsTeller()
-            ->from(route('teller.deposits.create', $this->account))
-            ->post(route('teller.deposits.store', $this->account), [
-                'slip_number' => 'SLIP-002',
-                'slip_amount' => 100000,
-                'physical_cash_amount' => 95000,
-            ])
-            ->assertRedirect(route('teller.deposits.create', $this->account))
-            ->assertSessionHasErrors('physical_cash_amount');
-
-        $this->assertSame(0, Transaction::count());
-        $this->assertSame(25000, $this->account->refresh()->balance);
-    }
-
     public function test_deposit_rejects_zero_amount(): void
     {
         $this->actingAsTeller()
@@ -64,7 +46,6 @@ class DepositTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-003',
                 'slip_amount' => 0,
-                'physical_cash_amount' => 0,
             ])
             ->assertSessionHasErrors('slip_amount');
 
@@ -81,7 +62,6 @@ class DepositTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-004',
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ])
             ->assertRedirect(route('teller.deposits.create', $this->account))
             ->assertSessionHas('error');
@@ -100,7 +80,6 @@ class DepositTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-005',
                 'slip_amount' => 10000,
-                'physical_cash_amount' => 10000,
             ])
             ->assertRedirect(route('login'));
 

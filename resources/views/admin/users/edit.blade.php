@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Ubah Pengguna — Bank Mini')
-@section('section', 'Administrator — Ubah Pengguna')
+@section('title', 'Ubah Pengguna | Bank Mini')
+@section('section', 'Administrator · Ubah Pengguna')
 
 @section('content')
     <div class="max-w-lg">
@@ -22,19 +22,28 @@
             </div>
             <div>
                 <x-input-label for="email">Email</x-input-label>
-                <x-input id="email" name="email" type="email" :value="$user->email" required placeholder="Untuk verifikasi lupa password" />
+                <x-input id="email" name="email" type="email" :value="$user->email" required placeholder="Tempat kode verifikasi dikirim" />
             </div>
             <div>
                 <x-input-label for="password">Password <span class="text-stone-500 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
-                <x-input id="password" name="password" type="password" minlength="6" />
+                <x-input id="password" name="password" type="password" minlength="8" aria-describedby="password-help" />
+                <p id="password-help" class="text-[13px] text-stone-600 mt-1.5">
+                    Mengisi kolom ini langsung mengganti password. Alasan di bawah wajib diisi dan tersimpan di log audit.
+                </p>
+            </div>
+            <div>
+                <x-input-label for="reset_reason">Alasan Reset Password</x-input-label>
+                <textarea id="reset_reason" name="reset_reason" rows="2" maxlength="255"
+                    class="w-full px-4 py-3 text-[15px] text-stone-900 placeholder:text-stone-500 bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-800 focus:border-brand-800"
+                    placeholder="Contoh: teller-away minta reset, sudah konfirmasi ke kepala sekolah">{{ old('reset_reason') }}</textarea>
+                <x-input-error :message="$errors->first('reset_reason')" />
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <x-input-label for="role">Role</x-input-label>
+                    <x-input-label for="role">Peran</x-input-label>
                     <x-select id="role" name="role" required>
-                        <option value="admin" @selected(old('role', $user->role) === 'admin')>Admin</option>
+                        <option value="admin" @selected(old('role', $user->role) === 'admin')>Administrator</option>
                         <option value="teller" @selected(old('role', $user->role) === 'teller')>Teller</option>
-                        <option value="supervisor" @selected(old('role', $user->role) === 'supervisor')>Supervisor</option>
                     </x-select>
                 </div>
                 <div>

@@ -54,7 +54,6 @@ class MutasiTest extends NasabahTestCase
         $otherTransaction = app(TransactionService::class)->deposit($otherAccount, [
             'slip_number' => 'SLIP-OTHER',
             'slip_amount' => 90000,
-            'physical_cash_amount' => 90000,
             'amount' => 90000,
         ], $this->teller);
 
@@ -168,7 +167,6 @@ class MutasiTest extends NasabahTestCase
         return app(TransactionService::class)->deposit($this->account, [
             'slip_number' => $this->nextSlipNumber(),
             'slip_amount' => $amount,
-            'physical_cash_amount' => $amount,
             'amount' => $amount,
         ], $this->teller);
     }

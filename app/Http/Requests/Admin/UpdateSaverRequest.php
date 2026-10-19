@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSaverRequest extends FormRequest
 {
@@ -29,6 +30,7 @@ class UpdateSaverRequest extends FormRequest
             'phone_number' => ['sometimes', 'nullable', 'string', 'max:20'],
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:savers,email,'.$saverId],
             'pin' => ['sometimes', 'nullable', 'string', 'digits:6'],
+            'reset_reason' => ['sometimes', 'nullable', 'string', 'max:255', Rule::requiredIf($this->filled('pin'))],
             'status' => ['sometimes', 'required', 'in:active,blocked'],
         ];
     }
@@ -39,6 +41,7 @@ class UpdateSaverRequest extends FormRequest
             'email.required' => 'Email wajib diisi untuk pemulihan PIN.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan penabung lain.',
+            'reset_reason.required' => 'Tulis alasan reset PIN. Catatan ini masuk ke log audit.',
         ];
     }
 }

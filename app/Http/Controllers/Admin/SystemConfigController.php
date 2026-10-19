@@ -29,10 +29,9 @@ class SystemConfigController extends Controller
 
         $validated = request()->validate([
             'bank_name' => ['required', 'string', 'max:100'],
-            'operational_hours' => ['nullable', 'string', 'max:100'],
             'minimum_balance' => ['required', 'integer', 'min:0'],
-            'max_withdrawal_without_order' => ['required', 'integer', 'min:0'],
             'min_deposit_to_activate' => ['required', 'integer', 'min:0'],
+            'class_majors' => ['nullable', 'string', 'max:200'],
         ]);
 
         foreach ($validated as $key => $value) {

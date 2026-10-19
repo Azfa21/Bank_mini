@@ -12,7 +12,6 @@ class ReceiptTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-020',
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ]);
 
         return Transaction::where('type', 'deposit')->firstOrFail();

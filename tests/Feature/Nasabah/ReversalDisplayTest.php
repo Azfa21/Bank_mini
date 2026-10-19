@@ -15,10 +15,9 @@ class ReversalDisplayTest extends NasabahTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-DISP-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Koreksi setoran.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Koreksi setoran.');
 
         $this->actingAsNasabah()
             ->get(route('nasabah.mutasi'))
@@ -34,7 +33,7 @@ class ReversalDisplayTest extends NasabahTestCase
             'slip_number' => 'SLIP-DISP-002',
         ], '123456', $this->teller);
 
-        app(ReversalService::class)->reverse($withdrawal, $this->supervisor, 'Koreksi penarikan.');
+        app(ReversalService::class)->reverse($withdrawal, $this->admin2, 'Koreksi penarikan.');
 
         $this->actingAsNasabah()
             ->get(route('nasabah.mutasi'))
@@ -48,10 +47,9 @@ class ReversalDisplayTest extends NasabahTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-DISP-003',
             'slip_amount' => 25000,
-            'physical_cash_amount' => 25000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Koreksi setoran.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Koreksi setoran.');
 
         $this->actingAsNasabah()
             ->get(route('nasabah.statement'))
@@ -90,7 +88,7 @@ class ReversalDisplayTest extends NasabahTestCase
             $this->teller,
         );
 
-        app(ReversalService::class)->reverse($transfer, $this->supervisor, 'Transfer dibatalkan.');
+        app(ReversalService::class)->reverse($transfer, $this->admin2, 'Transfer dibatalkan.');
 
         $this->actingAs($recipient, 'nasabah')
             ->get(route('nasabah.mutasi'))

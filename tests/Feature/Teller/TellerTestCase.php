@@ -18,7 +18,7 @@ abstract class TellerTestCase extends TestCase
 
     protected User $teller;
 
-    protected User $supervisor;
+    protected User $admin2;
 
     protected Saver $nasabah;
 
@@ -46,12 +46,12 @@ abstract class TellerTestCase extends TestCase
             'status' => 'active',
         ]);
 
-        $this->supervisor = User::create([
-            'username' => 'supervisor1',
-            'email' => 'supervisor1@example.test',
+        $this->admin2 = User::create([
+            'username' => 'admin2',
+            'email' => 'admin2@example.test',
             'password_hash' => Hash::make('password'),
-            'full_name' => 'Supervisor Satu',
-            'role' => 'supervisor',
+            'full_name' => 'Admin Dua',
+            'role' => 'admin',
             'status' => 'active',
         ]);
 

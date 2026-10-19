@@ -105,7 +105,7 @@ class PinRateLimitTest extends TellerTestCase
         $this->from(route('password.request'))
             ->post(route('password.otp.request'), [
                 'account_type' => 'nasabah',
-                'email' => $this->nasabah->email,
+                'identifier' => $this->nasabah->student_number,
             ])
             ->assertSessionHas('otp_sent', true);
 
@@ -118,7 +118,7 @@ class PinRateLimitTest extends TellerTestCase
 
         $this->post(route('password.reset.submit'), [
             'account_type' => 'nasabah',
-            'email' => $this->nasabah->email,
+            'identifier' => $this->nasabah->student_number,
             'otp' => $code,
             'pin' => '999999',
             'pin_confirmation' => '999999',

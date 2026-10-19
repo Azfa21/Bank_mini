@@ -12,7 +12,6 @@ class NewEndpointJsonTest extends TellerTestCase
         $this->actingAsTeller()
             ->postJson(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 0,
             ])
             ->assertCreated()
             ->assertJsonPath('success', true)
@@ -24,32 +23,14 @@ class NewEndpointJsonTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-JSON-001',
             'slip_amount' => 20000,
-            'physical_cash_amount' => 20000,
         ], $this->teller);
 
-        $this->actingAs($this->supervisor, 'web')
-            ->postJson(route('supervisor.transactions.reverse', $deposit), [
+        $this->actingAs($this->admin2, 'web')
+            ->postJson(route('admin.transactions.reverse', $deposit), [
                 'reason' => 'Koreksi via API.',
             ])
             ->assertCreated()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.type', 'reversal');
-    }
-
-    public function test_closing_store_rejects_mismatch_as_json(): void
-    {
-        app(TransactionService::class)->deposit($this->account, [
-            'slip_number' => 'SLIP-JSON-002',
-            'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
-        ], $this->teller);
-
-        $this->actingAsTeller()
-            ->postJson(route('teller.closing.store'), [
-                'report_date' => now()->toDateString(),
-                'physical_cash' => 40000,
-            ])
-            ->assertStatus(422)
-            ->assertJsonPath('success', false);
     }
 }

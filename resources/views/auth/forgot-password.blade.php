@@ -3,6 +3,7 @@
     $stepTwo = old('otp') !== null || session('otp_sent');
     $staffStepTwo = $stepTwo && $activeType === 'staff';
     $nasabahStepTwo = $stepTwo && $activeType === 'nasabah';
+    $email = session('email');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -30,8 +31,8 @@
                 </div>
             </div>
 
-            <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Pemulihan Kredensial</h1>
-            <p class="text-sm text-stone-600 mt-1.5">Kode dikirim ke email terdaftar, berlaku {{ config('recovery.otp_expire_minutes', 10) }} menit, dan hanya bisa dipakai sekali.</p>
+            <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Lupa password atau PIN</h1>
+            <p class="text-sm text-stone-600 mt-1.5">Masukkan username atau nomor siswa Anda. Kode dikirim ke email terdaftar atas nama akun itu, berlaku {{ config('recovery.otp_expire_minutes', 10) }} menit, dan hanya bisa dipakai sekali.</p>
         </div>
 
         <!-- Main Card -->
@@ -87,12 +88,18 @@
                 <div id="form-staff" class="{{ $activeType === 'staff' ? '' : 'hidden' }}">
                     @if ($staffStepTwo)
                         <div class="mb-4 p-3.5 bg-stone-50 border border-stone-200 text-stone-600 text-sm rounded-xl">
-                            Kode verifikasi dikirim ke <span class="font-semibold text-stone-800">{{ old('email') }}</span>.
+                            @if ($email)
+                                Kode verifikasi dikirim ke <span class="font-semibold text-stone-800">{{ $email }}</span>.
+                                Cek kotak masuk akun <span class="font-semibold text-stone-800">{{ old('identifier') }}</span>,
+                                lalu masukkan kode dan password baru di bawah ini.
+                            @else
+                                Masukkan kode verifikasi yang dikirim ke email terdaftar akun ini.
+                            @endif
                         </div>
                         <form method="POST" action="{{ route('password.reset.submit') }}" class="space-y-4">
                             @csrf
                             <input type="hidden" name="account_type" value="staff">
-                            <input type="hidden" name="email" value="{{ old('email') }}">
+                            <input type="hidden" name="identifier" value="{{ old('identifier') }}">
 
                             <div>
                                 <x-input-label for="staff_otp">Kode Verifikasi (6 Digit)</x-input-label>
@@ -120,19 +127,23 @@
                         <form method="POST" action="{{ route('password.otp.request') }}" class="mt-4 text-center">
                             @csrf
                             <input type="hidden" name="account_type" value="staff">
-                            <input type="hidden" name="email" value="{{ old('email') }}">
+                            <input type="hidden" name="identifier" value="{{ old('identifier') }}">
                             <button type="submit" class="text-sm font-medium text-brand-700 hover:text-brand-800">Kirim ulang kode</button>
                             <span class="text-stone-300 mx-2">•</span>
-                            <a href="{{ route('password.request') }}" class="text-sm font-medium text-stone-500 hover:text-stone-700">Ganti email</a>
+                            <a href="{{ route('password.request') }}" class="text-sm font-medium text-stone-500 hover:text-stone-700">Ganti username</a>
                         </form>
                     @else
                         <form method="POST" action="{{ route('password.otp.request') }}" class="space-y-4">
                             @csrf
                             <input type="hidden" name="account_type" value="staff">
                             <div>
-                                <x-input-label for="staff_email">Email Terdaftar</x-input-label>
-                                <x-input id="staff_email" name="email" type="email" required
-                                    placeholder="Masukkan email akun pegawai Anda" />
+                                <x-input-label for="staff_identifier">Username Akun</x-input-label>
+                                <x-input id="staff_identifier" name="identifier" required autocomplete="username"
+                                    aria-describedby="staff_identifier-help"
+                                    placeholder="Contoh: teller1" />
+                                <p id="staff_identifier-help" class="text-[13px] text-stone-600 mt-1.5">
+                                    Kalau username lupa, minta Administrator mengatur ulang password Anda di loket.
+                                </p>
                             </div>
 
                             <x-primary-button class="w-full py-2.5 rounded-xl shadow-sm focus:ring-2 focus:ring-brand-600 focus:ring-offset-2">
@@ -146,12 +157,18 @@
                 <div id="form-nasabah" class="{{ $activeType === 'nasabah' ? '' : 'hidden' }}" data-auto-active="{{ $activeType === 'nasabah' ? '1' : '0' }}">
                     @if ($nasabahStepTwo)
                         <div class="mb-4 p-3.5 bg-stone-50 border border-stone-200 text-stone-600 text-sm rounded-xl">
-                            Kode verifikasi dikirim ke <span class="font-semibold text-stone-800">{{ old('email') }}</span>.
+                            @if ($email)
+                                Kode verifikasi dikirim ke <span class="font-semibold text-stone-800">{{ $email }}</span>.
+                                Cek kotak masuk akun nomor siswa <span class="font-semibold text-stone-800">{{ old('identifier') }}</span>,
+                                lalu masukkan kode dan PIN baru di bawah ini.
+                            @else
+                                Masukkan kode verifikasi yang dikirim ke email terdaftar akun ini.
+                            @endif
                         </div>
                         <form method="POST" action="{{ route('password.reset.submit') }}" class="space-y-4">
                             @csrf
                             <input type="hidden" name="account_type" value="nasabah">
-                            <input type="hidden" name="email" value="{{ old('email') }}">
+                            <input type="hidden" name="identifier" value="{{ old('identifier') }}">
 
                             <div>
                                 <x-input-label for="nasabah_otp">Kode Verifikasi (6 Digit)</x-input-label>
@@ -179,19 +196,23 @@
                         <form method="POST" action="{{ route('password.otp.request') }}" class="mt-4 text-center">
                             @csrf
                             <input type="hidden" name="account_type" value="nasabah">
-                            <input type="hidden" name="email" value="{{ old('email') }}">
+                            <input type="hidden" name="identifier" value="{{ old('identifier') }}">
                             <button type="submit" class="text-sm font-medium text-brand-700 hover:text-brand-800">Kirim ulang kode</button>
                             <span class="text-stone-300 mx-2">•</span>
-                            <a href="{{ route('password.request') }}" class="text-sm font-medium text-stone-500 hover:text-stone-700">Ganti email</a>
+                            <a href="{{ route('password.request') }}" class="text-sm font-medium text-stone-500 hover:text-stone-700">Ganti nomor siswa</a>
                         </form>
                     @else
                         <form method="POST" action="{{ route('password.otp.request') }}" class="space-y-4">
                             @csrf
                             <input type="hidden" name="account_type" value="nasabah">
                             <div>
-                                <x-input-label for="nasabah_email">Email Terdaftar</x-input-label>
-                                <x-input id="nasabah_email" name="email" type="email" required
-                                    placeholder="Masukkan email akun nasabah Anda" />
+                                <x-input-label for="nasabah_identifier">Nomor Siswa</x-input-label>
+                                <x-input id="nasabah_identifier" name="identifier" required inputmode="numeric"
+                                    aria-describedby="nasabah_identifier-help"
+                                    placeholder="Contoh: 2023001" />
+                                <p id="nasabah_identifier-help" class="text-[13px] text-stone-600 mt-1.5">
+                                    Masukkan nomor siswa yang tercetak di kartu rekening.
+                                </p>
                             </div>
 
                             <x-primary-button class="w-full py-2.5 rounded-xl shadow-sm focus:ring-2 focus:ring-brand-600 focus:ring-offset-2">

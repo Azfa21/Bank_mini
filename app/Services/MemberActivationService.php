@@ -22,7 +22,7 @@ class MemberActivationService
      * Promote an inactive member into a saver by opening an account and posting
      * the qualifying first deposit, all inside one database transaction.
      *
-     * @param  array{amount: int, physical_cash_amount: int, slip_number?: string|null, denomination_breakdown?: array<int|string, mixed>|null, pin: string, email?: string|null, class_name?: string|null, phone_number?: string|null}  $data
+     * @param  array{amount: int, slip_number?: string|null, pin: string, email?: string|null, class_name?: string|null, phone_number?: string|null}  $data
      * @return array{saver: Saver, account: Account, transaction: Transaction}
      */
     public function activate(Member $member, array $data, User $teller): array
@@ -56,8 +56,6 @@ class MemberActivationService
             $transaction = $this->transactions->deposit($account, [
                 'amount' => (int) $data['amount'],
                 'slip_number' => $data['slip_number'] ?? null,
-                'physical_cash_amount' => (int) $data['physical_cash_amount'],
-                'denomination_breakdown' => $data['denomination_breakdown'] ?? null,
             ], $teller);
 
             $locked->update(['status' => Member::STATUS_ACCOUNT_ACTIVE]);

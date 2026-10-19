@@ -16,8 +16,8 @@ class StoreMemberRequest extends FormRequest
         return [
             'nis' => ['nullable', 'string', 'max:30', 'unique:members,nis'],
             'full_name' => ['required', 'string', 'max:100'],
+            'class_name' => ['nullable', 'string', 'max:30'],
             'graduation_year' => ['nullable', 'string', 'max:10'],
-            'status' => ['nullable', 'in:account_active,account_inactive'],
         ];
     }
 

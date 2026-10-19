@@ -55,7 +55,7 @@ class MemberSearchController extends Controller
 
         $member = Member::with('saver.account')->where('nis', $q)->first();
 
-        if ($member) {
+        if ($member && ! $member->isGraduated()) {
             if ($member->saver?->account) {
                 return $this->redirectToAccount($request, $member->saver->account);
             }
@@ -63,12 +63,17 @@ class MemberSearchController extends Controller
             return $this->redirectToActivation($request, $member);
         }
 
+        // Pencarian daftar hanya untuk penabung aktif dan anggota yang belum lulus, supaya
+        // alumni tidak menumpuk di hasil kerja harian loket.
         $accounts = Account::with('saver')
-            ->where('account_number', 'like', "%{$q}%")
-            ->orWhereHas('saver', function ($query) use ($q) {
-                $query->where('student_number', 'like', "%{$q}%")
-                    ->orWhere('full_name', 'like', "%{$q}%")
-                    ->orWhere('class_name', 'like', "%{$q}%");
+            ->whereHas('saver', fn ($query) => $query->where('status', '!=', Saver::STATUS_GRADUATED))
+            ->where(function ($query) use ($q) {
+                $query->where('account_number', 'like', "%{$q}%")
+                    ->orWhereHas('saver', function ($sub) use ($q) {
+                        $sub->where('student_number', 'like', "%{$q}%")
+                            ->orWhere('full_name', 'like', "%{$q}%")
+                            ->orWhere('class_name', 'like', "%{$q}%");
+                    });
             })
             ->orderBy('account_number')
             ->limit(25)
@@ -76,6 +81,7 @@ class MemberSearchController extends Controller
 
         $members = Member::query()
             ->where('status', Member::STATUS_ACCOUNT_INACTIVE)
+            ->whereNull('graduated_at')
             ->where(function ($query) use ($q) {
                 $query->where('nis', 'like', "%{$q}%")
                     ->orWhere('full_name', 'like', "%{$q}%");

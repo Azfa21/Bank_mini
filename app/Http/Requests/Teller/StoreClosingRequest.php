@@ -16,10 +16,14 @@ class StoreClosingRequest extends FormRequest
     {
         return [
             'report_date' => ['required', 'date_format:Y-m-d'],
-            'physical_cash' => ['required', 'integer', 'min:0'],
-            'denominations' => ['nullable', 'array'],
-            'denominations.*' => ['nullable', 'integer', 'min:0'],
-            'difference_note' => ['nullable', 'string', 'max:500'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'report_date.required' => 'Tanggal laporan wajib diisi.',
+            'report_date.date_format' => 'Tanggal laporan harus dalam format tahun-bulan-tanggal.',
         ];
     }
 }

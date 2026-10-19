@@ -6,7 +6,7 @@ class DailyReportPolicy
 {
     public function viewAny($user): bool
     {
-        return in_array($user?->role, ['teller', 'supervisor']);
+        return in_array($user?->role, ['teller', 'admin']);
     }
 
     public function view($user, $report = null): bool
@@ -15,7 +15,7 @@ class DailyReportPolicy
             return $report !== null && $report->teller_id === $user->id;
         }
 
-        return $user?->role === 'supervisor';
+        return $user?->role === 'admin';
     }
 
     public function create($user): bool
@@ -35,11 +35,11 @@ class DailyReportPolicy
 
     public function approve($user, $report = null): bool
     {
-        return $user?->role === 'supervisor';
+        return $user?->role === 'admin';
     }
 
     public function reject($user, $report = null): bool
     {
-        return $user?->role === 'supervisor';
+        return $user?->role === 'admin';
     }
 }

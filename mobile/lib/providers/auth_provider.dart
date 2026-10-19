@@ -81,16 +81,20 @@ class AuthProvider extends ChangeNotifier {
     await _clearSession();
   }
 
-  Future<void> requestResetOtp({required String email}) async {
-    await _authService.requestResetOtp(email: email);
+  Future<String?> requestResetOtp({required String studentNumber}) async {
+    return _authService.requestResetOtp(studentNumber: studentNumber);
   }
 
   Future<void> resetPin({
-    required String email,
+    required String studentNumber,
     required String otp,
     required String pin,
   }) async {
-    await _authService.resetPin(email: email, otp: otp, pin: pin);
+    await _authService.resetPin(
+      studentNumber: studentNumber,
+      otp: otp,
+      pin: pin,
+    );
   }
 
   Future<void> handleUnauthorized() async {

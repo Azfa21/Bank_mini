@@ -1,8 +1,13 @@
 <?php
 
 use App\Http\Controllers\AccountingReportController;
+use App\Http\Controllers\Admin\AccountClosureController as AdminAccountClosureController;
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\ClassPromotionController;
+use App\Http\Controllers\Admin\CorrectionController;
+use App\Http\Controllers\Admin\DailyReportController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\GraduationController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\SaverController;
 use App\Http\Controllers\Admin\SystemConfigController;
@@ -14,18 +19,17 @@ use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
 use App\Http\Controllers\Nasabah\MutasiController;
 use App\Http\Controllers\QrCodeController;
-use App\Http\Controllers\Supervisor\CorrectionController;
-use App\Http\Controllers\Supervisor\DashboardController as SupervisorDashboardController;
-use App\Http\Controllers\Supervisor\ReportController;
+use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
 use App\Http\Controllers\Teller\ClosingController;
 use App\Http\Controllers\Teller\MemberActivationController;
 use App\Http\Controllers\Teller\MemberRegistrationController;
 use App\Http\Controllers\Teller\MemberSearchController;
 use App\Http\Controllers\Teller\PassbookController;
 use App\Http\Controllers\Teller\TransactionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['role:admin,teller,supervisor,nasabah'])->group(function () {
+Route::middleware(['role:admin,teller,nasabah'])->group(function () {
     Route::get('/qr', [QrCodeController::class, 'show'])->name('qr.show');
     Route::get('/qr/download', [QrCodeController::class, 'download'])->name('qr.download');
 });
@@ -53,19 +57,51 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('savers/{saver}/edit', [SaverController::class, 'edit'])->name('savers.edit');
     Route::put('savers/{saver}', [SaverController::class, 'update'])->name('savers.update');
     Route::patch('savers/{saver}/toggle-status', [SaverController::class, 'toggleStatus'])->name('savers.toggle-status');
-    Route::delete('savers/{saver}', [SaverController::class, 'destroy'])->name('savers.destroy');
 
     Route::get('accounts/{account}/card/print', [AccountController::class, 'printCard'])->name('accounts.card-print');
     Route::get('accounts/{account}', [AccountController::class, 'show'])->name('accounts.show');
+
+    Route::get('closures', [AdminAccountClosureController::class, 'index'])->name('closures.index');
+    Route::get('closures/{closure}', [AdminAccountClosureController::class, 'show'])->name('closures.show');
+    Route::post('closures/{closure}/approve', [AdminAccountClosureController::class, 'approve'])->name('closures.approve');
+    Route::post('closures/{closure}/reject', [AdminAccountClosureController::class, 'reject'])->name('closures.reject');
+
+    Route::get('graduations', [GraduationController::class, 'index'])->name('graduations.index');
+    Route::post('graduations', [GraduationController::class, 'store'])->name('graduations.store');
+    Route::post('graduations/{member}', [GraduationController::class, 'graduateMember'])->name('graduations.member');
+
+    Route::get('class-promotions', [ClassPromotionController::class, 'index'])->name('class-promotions.index');
+    Route::post('class-promotions', [ClassPromotionController::class, 'store'])->name('class-promotions.store');
+    Route::post('class-promotions/move', [ClassPromotionController::class, 'move'])->name('class-promotions.move');
 
     Route::get('config', [SystemConfigController::class, 'edit'])->name('config.edit');
     Route::put('config', [SystemConfigController::class, 'update'])->name('config.update');
 
     Route::get('journals', [JournalController::class, 'index'])->name('journals.index');
+
+    Route::get('daily-reports', [DailyReportController::class, 'index'])->name('daily-reports.index');
+    Route::get('daily-reports/{report}', [DailyReportController::class, 'show'])->name('daily-reports.show');
+    Route::post('daily-reports/{report}/approve', [DailyReportController::class, 'approve'])->name('daily-reports.approve');
+    Route::post('daily-reports/{report}/reject', [DailyReportController::class, 'reject'])->name('daily-reports.reject');
+
+    Route::post('transactions/{transaction}/reverse', [CorrectionController::class, 'store'])->name('transactions.reverse');
+
     Route::get('reports/monthly', [MonthlyReportController::class, 'index'])->name('reports.monthly');
     Route::get('reports/monthly/print', [MonthlyReportController::class, 'print'])->name('reports.monthly.print');
     Route::get('reports/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('reports.general-ledger');
-    Route::get('reports/trial-balance', [AccountingReportController::class, 'trialBalance'])->name('reports.trial-balance');
+
+    // Neraca saldo sekarang satu halaman dengan buku besar. Tautan lama tetap hidup:
+    // filter "date" dipetakan ke "date_to" agar bookmark lama menunjuk rentang yang sama.
+    Route::get('reports/trial-balance', function (Request $request) {
+        $query = $request->query();
+
+        if (array_key_exists('date', $query)) {
+            $query['date_to'] = $query['date'];
+            unset($query['date']);
+        }
+
+        return redirect()->route('admin.reports.general-ledger', $query);
+    })->name('reports.trial-balance');
     Route::get('reports/export/{type?}', [AccountingReportController::class, 'exportCsv'])->name('reports.export');
 });
 
@@ -92,29 +128,14 @@ Route::middleware(['role:teller'])->prefix('teller')->as('teller.')->group(funct
     Route::get('/passbook/{account}', [PassbookController::class, 'show'])->name('passbook.show');
     Route::get('/passbook/{account}/print', [PassbookController::class, 'print'])->name('passbook.print');
 
+    Route::get('/accounts/{account}/closure', [TellerAccountClosureController::class, 'create'])->name('accounts.closure.create');
+    Route::post('/accounts/{account}/closure', [TellerAccountClosureController::class, 'store'])->name('accounts.closure.store');
+
     Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'receipt'])->name('transactions.receipt');
 
     Route::get('/closing', [ClosingController::class, 'index'])->name('closing.index');
     Route::post('/closing', [ClosingController::class, 'store'])->name('closing.store');
     Route::get('/closing/reports/{report}/print', [ClosingController::class, 'print'])->name('closing.print');
-});
-
-Route::middleware(['role:supervisor'])->prefix('supervisor')->group(function () {
-    Route::get('/dashboard', [SupervisorDashboardController::class, 'index'])->name('supervisor.dashboard');
-
-    Route::get('/reports', [ReportController::class, 'index'])->name('supervisor.reports.index');
-    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('supervisor.reports.show');
-    Route::post('/reports/{report}/approve', [ReportController::class, 'approve'])->name('supervisor.reports.approve');
-    Route::post('/reports/{report}/reject', [ReportController::class, 'reject'])->name('supervisor.reports.reject');
-
-    Route::post('/transactions/{transaction}/reverse', [CorrectionController::class, 'store'])->name('supervisor.transactions.reverse');
-
-    Route::get('/journals', [JournalController::class, 'index'])->name('supervisor.journals.index');
-    Route::get('/reports-monthly', [MonthlyReportController::class, 'index'])->name('supervisor.reports.monthly');
-    Route::get('/reports-monthly/print', [MonthlyReportController::class, 'print'])->name('supervisor.reports.monthly.print');
-    Route::get('/reports-accounting/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('supervisor.reports.general-ledger');
-    Route::get('/reports-accounting/trial-balance', [AccountingReportController::class, 'trialBalance'])->name('supervisor.reports.trial-balance');
-    Route::get('/reports-accounting/export/{type?}', [AccountingReportController::class, 'exportCsv'])->name('supervisor.reports.export');
 });
 
 Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {

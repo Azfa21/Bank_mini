@@ -9,7 +9,7 @@ class SearchTest extends TellerTestCase
         $this->actingAsTeller()
             ->get(route('teller.members.search'))
             ->assertOk()
-            ->assertSee('Pencarian Anggota');
+            ->assertSee('Pencarian Penabung');
     }
 
     public function test_search_by_account_number_redirects_to_profile(): void
@@ -62,9 +62,9 @@ class SearchTest extends TellerTestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_supervisor_cannot_access_teller_lookup(): void
+    public function test_admin_cannot_access_teller_lookup(): void
     {
-        $this->actingAs($this->supervisor, 'web')
+        $this->actingAs($this->admin2, 'web')
             ->get(route('teller.members.lookup', ['q' => '2026/2027-001']))
             ->assertRedirect(route('login'));
     }

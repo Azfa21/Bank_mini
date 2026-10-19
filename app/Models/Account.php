@@ -6,6 +6,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -60,5 +61,24 @@ class Account extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    /** @return HasMany<AccountClosure, $this> */
+    public function closures(): HasMany
+    {
+        return $this->hasMany(AccountClosure::class);
+    }
+
+    /** @return HasOne<AccountClosure, $this> */
+    public function pendingClosure(): HasOne
+    {
+        return $this->hasOne(AccountClosure::class)->where('status', AccountClosure::STATUS_PENDING);
+    }
+
+    public function hasPendingClosure(): bool
+    {
+        return $this->relationLoaded('pendingClosure')
+            ? $this->pendingClosure !== null
+            : $this->pendingClosure()->exists();
     }
 }

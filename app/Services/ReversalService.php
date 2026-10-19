@@ -20,9 +20,9 @@ class ReversalService
      * Membuat jurnal pembalik atas transaksi yang telah tersimpan.
      * Saldo rekening dipulihkan dan transaksi asal ditandai "reversed".
      */
-    public function reverse(Transaction $original, User $supervisor, string $reason): Transaction
+    public function reverse(Transaction $original, User $actor, string $reason): Transaction
     {
-        return DB::transaction(function () use ($original, $supervisor, $reason) {
+        return DB::transaction(function () use ($original, $actor, $reason) {
             $this->assertReportNotApproved($original);
 
             $transaction = Transaction::query()->lockForUpdate()->findOrFail($original->id);
@@ -79,7 +79,7 @@ class ReversalService
             $transaction->update([
                 'status' => 'reversed',
                 'reversed_at' => now(),
-                'reversed_by' => $supervisor->id,
+                'reversed_by' => $actor->id,
                 'reversal_reason' => $reason,
             ]);
 
@@ -88,7 +88,7 @@ class ReversalService
                 'account_number' => $account->account_number,
                 'amount' => $amount,
                 'reason' => $reason,
-            ], $supervisor->id);
+            ], $actor->id);
 
             return $reversal;
         });

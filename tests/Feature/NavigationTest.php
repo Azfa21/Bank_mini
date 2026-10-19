@@ -15,18 +15,21 @@ class NavigationTest extends TellerTestCase
             ->assertSee('Kelola Pengguna')
             ->assertSee('Kelola Anggota')
             ->assertSee('Kelola Penabung')
+            ->assertSee('Kelulusan')
+            ->assertSee('Kenaikan Kelas')
+            ->assertSee('Laporan Harian')
             ->assertSee('Konfigurasi')
             ->assertSee('Audit Jurnal');
     }
 
-    public function test_supervisor_dashboard_shows_role_menu(): void
+    public function test_promotion_page_breadcrumb_uses_the_data_group(): void
     {
-        $this->actingAs($this->supervisor, 'web')
-            ->get(route('supervisor.dashboard'))
+        $this->actingAs($this->admin, 'web')
+            ->get(route('admin.class-promotions.index'))
             ->assertOk()
-            ->assertSee('Dashboard')
-            ->assertSee('Laporan Harian')
-            ->assertSee('Audit Jurnal');
+            ->assertSee('aria-label="Posisi halaman"', false)
+            ->assertSee('>Data</li>', false)
+            ->assertSee('>Kenaikan Kelas</li>', false);
     }
 
     public function test_nasabah_dashboard_shows_role_menu(): void
@@ -53,7 +56,7 @@ class NavigationTest extends TellerTestCase
             ->get(route('teller.members.search'))
             ->assertOk()
             ->assertSee(route('teller.dashboard'))
-            ->assertSee('Pencarian Anggota');
+            ->assertSee('Pencarian Penabung');
     }
 
     public function test_nasabah_dashboard_shows_navbar(): void
@@ -62,5 +65,32 @@ class NavigationTest extends TellerTestCase
             ->get(route('nasabah.dashboard'))
             ->assertOk()
             ->assertSee(route('nasabah.dashboard'));
+    }
+
+    public function test_admin_page_shows_breadcrumb_with_the_active_menu_label(): void
+    {
+        $this->actingAs($this->admin, 'web')
+            ->get(route('admin.savers.index'))
+            ->assertOk()
+            ->assertSee('aria-label="Posisi halaman"', false)
+            ->assertSee('aria-current="page" class="font-medium text-stone-900" >Kelola Penabung</li>', false);
+    }
+
+    public function test_teller_breadcrumb_starts_from_the_teller_dashboard(): void
+    {
+        $this->actingAsTeller()
+            ->get(route('teller.members.search'))
+            ->assertOk()
+            ->assertSee('aria-label="Posisi halaman"', false)
+            ->assertSee('>Dashboard</a>', false)
+            ->assertSee(route('teller.dashboard'));
+    }
+
+    public function test_nasabah_pages_have_no_staff_breadcrumb(): void
+    {
+        $this->actingAs($this->nasabah, 'nasabah')
+            ->get(route('nasabah.dashboard'))
+            ->assertOk()
+            ->assertDontSee('aria-label="Posisi halaman"', false);
     }
 }

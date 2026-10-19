@@ -50,14 +50,14 @@
                     <x-input id="identifier" name="identifier" required autofocus autocomplete="username"
                         aria-describedby="identifier-help"
                         placeholder="Contoh: teller1 atau 2023001" />
-                    <p id="identifier-help" class="text-[13px] text-stone-600 mt-1.5">Teller, supervisor, dan administrator memakai username.</p>
+                    <p id="identifier-help" class="text-[13px] text-stone-600 mt-1.5">Administrator dan teller memakai username.</p>
                 </div>
 
                 <div>
                     <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-1.5">
                         <x-input-label for="secret" flush>Password atau PIN</x-input-label>
                         <a href="{{ route('password.request') }}" class="tap-target inline-flex items-center text-[13px] font-semibold text-brand-900 hover:underline">
-                            Pulihkan akun
+                            Lupa password atau PIN?
                         </a>
                     </div>
                     <div class="relative">
@@ -77,7 +77,7 @@
             </form>
         </div>
 
-        <p class="text-[13px] text-stone-600 mt-5">Jam loket {{ \App\Models\SystemConfig::value('operational_hours', '07.30 - 14.00 WIB') }} &middot; &copy; {{ date('Y') }} Bank Mini Sekolah</p>
+        <p class="text-[13px] text-stone-600 mt-5">&copy; {{ date('Y') }} Bank Mini Sekolah</p>
     </main>
 
 </body>

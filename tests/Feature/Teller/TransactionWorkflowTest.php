@@ -125,7 +125,6 @@ class TransactionWorkflowTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-WF-010',
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ])
             ->assertRedirect();
 
@@ -141,7 +140,6 @@ class TransactionWorkflowTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-WF-012',
                 'slip_amount' => 10000,
-                'physical_cash_amount' => 10000,
             ])
             ->assertRedirect();
 
@@ -171,7 +169,6 @@ class TransactionWorkflowTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-WF-020',
                 'slip_amount' => 10000,
-                'physical_cash_amount' => 10000,
             ])
             ->assertRedirect();
 
@@ -204,7 +201,6 @@ class TransactionWorkflowTest extends TellerTestCase
             ->postJson(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-WF-030',
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ])
             ->assertStatus(201)
             ->assertJsonPath('success', true)
@@ -250,7 +246,6 @@ class TransactionWorkflowTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-WF-040',
                 'slip_amount' => -5000,
-                'physical_cash_amount' => -5000,
             ])
             ->assertSessionHasErrors('slip_amount');
 
@@ -266,13 +261,12 @@ class TransactionWorkflowTest extends TellerTestCase
         $this->assertSame(25000, $this->account->refresh()->balance);
     }
 
-    public function test_supervisor_cannot_post_transactions(): void
+    public function test_admin_cannot_post_transactions(): void
     {
-        $this->actingAs($this->supervisor, 'web')
+        $this->actingAs($this->admin2, 'web')
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-WF-050',
                 'slip_amount' => 10000,
-                'physical_cash_amount' => 10000,
             ])
             ->assertRedirect(route('login'));
 

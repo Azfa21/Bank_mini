@@ -6,12 +6,12 @@ class TransactionPolicy
 {
     public function viewAny($user): bool
     {
-        return $user?->role === 'supervisor';
+        return $user?->role === 'admin';
     }
 
     public function view($user, $transaction = null): bool
     {
-        if ($user?->role === 'supervisor') {
+        if ($user?->role === 'admin') {
             return true;
         }
 
@@ -27,7 +27,7 @@ class TransactionPolicy
 
     public function reverse($user, $transaction = null): bool
     {
-        return $user?->role === 'supervisor'
+        return $user?->role === 'admin'
             && $transaction !== null
             && $transaction->status === 'success'
             && $transaction->type !== 'reversal';

@@ -12,10 +12,9 @@ class PassbookReversalTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-PBR-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Koreksi setoran.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Koreksi setoran.');
 
         $this->actingAsTeller()
             ->get(route('teller.passbook.show', $this->account))
@@ -28,10 +27,9 @@ class PassbookReversalTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-PBR-002',
             'slip_amount' => 30000,
-            'physical_cash_amount' => 30000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Koreksi setoran.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Koreksi setoran.');
 
         $this->actingAsTeller()
             ->get(route('teller.passbook.print', ['account' => $this->account, 'start_line' => 1]))

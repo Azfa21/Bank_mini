@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Aktivasi Rekening Anggota — Bank Mini')
+@section('title', 'Aktivasi Rekening Anggota | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -30,44 +30,29 @@
 
                 <x-form-errors />
 
-                <form method="POST" action="{{ route('teller.members.activate.store', $member) }}" class="mt-4 space-y-5" id="activation-form">
+                <form method="POST" action="{{ route('teller.members.activate.store', $member) }}" class="mt-4 space-y-5" id="activation-form" data-confirm="Aktifkan rekening ini? Rekening dan setoran awal langsung tersimpan dan tidak bisa diubah.">
                     @csrf
 
                     <div>
                         <x-input-label for="amount">Nominal setoran awal (Rp) wajib</x-input-label>
-                        <x-input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" :value="old('amount')" placeholder="Minimal sesuai ketentuan" required />
-                        <p class="text-[13px] text-stone-600 mt-1.5">Setoran harus mencapai batas minimal aktivasi.</p>
+                        <x-input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" :value="old('amount')" placeholder="Minimal sesuai ketentuan" required autofocus
+                            aria-describedby="amount-help activation-preview" />
+                        <p id="amount-help" class="text-[13px] text-stone-600 mt-1.5">Setoran harus mencapai batas minimal aktivasi.</p>
+                        <p id="activation-preview" role="status" class="text-[13px] font-medium text-stone-800 mt-1">Terbaca: Rp 0</p>
                         <x-input-error :message="$errors->first('amount')" />
-                    </div>
-
-                    <details class="border-t border-stone-100 pt-5">
-                        <summary class="inline-flex items-center min-h-[44px] cursor-pointer text-[15px] font-bold text-stone-900">
-                            Bantu hitung uang fisik per pecahan (opsional)
-                        </summary>
-                        <div class="mt-3">
-                            <x-denomination-input />
-                            <p role="status" data-denomination-sum class="text-[13px] font-medium text-stone-700 mt-2">Subtotal rincian: Rp 0</p>
-                            <div class="mt-2 flex flex-wrap gap-2">
-                                <button type="button" data-denomination-apply class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-brand-900 border border-brand-800/30 bg-brand-50 rounded-xl hover:bg-brand-100 disabled:opacity-50">
-                                    Pakai total ini
-                                </button>
-                                <button type="button" data-denomination-reset class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-medium text-stone-600 hover:text-stone-900">
-                                    Ulangi
-                                </button>
-                            </div>
-                        </div>
-                    </details>
-
-                    <div>
-                        <x-input-label for="physical_cash_amount">Total uang fisik diterima (Rp) wajib</x-input-label>
-                        <x-input id="physical_cash_amount" name="physical_cash_amount" type="number" min="1" step="1" inputmode="numeric" :value="old('physical_cash_amount')" placeholder="Hasil hitung uang di tangan" required data-denomination-total />
-                        <x-input-error :message="$errors->first('physical_cash_amount')" />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-stone-100 pt-5">
                         <div>
                             <x-input-label for="class_name">Kelas (opsional)</x-input-label>
-                            <x-input id="class_name" name="class_name" :value="old('class_name')" placeholder="Contoh: VII A" />
+                            <x-input id="class_name" name="class_name" :value="old('class_name', $member->class_name)" list="kelas-opsi" placeholder="Contoh: XI RPL 2" aria-describedby="class-name-help" />
+                            <p id="class-name-help" class="text-[13px] text-stone-600 mt-1.5">
+                                @if ($member->class_name)
+                                    Terisi dari data anggota. Ubah kalau sudah naik kelas.
+                                @else
+                                    Belum ada di data anggota, isi kalau kelasnya diketahui.
+                                @endif
+                            </p>
                             <x-input-error :message="$errors->first('class_name')" />
                         </div>
                         <div>
@@ -78,8 +63,14 @@
                     </div>
 
                     <div>
-                        <x-input-label for="email">Email (opsional)</x-input-label>
-                        <x-input id="email" name="email" type="email" :value="old('email')" placeholder="Untuk verifikasi jika lupa PIN" />
+                        <x-input-label for="email">Email Penabung</x-input-label>
+                        <x-input id="email" name="email" type="email" :value="old('email')" required
+                            aria-describedby="email-help"
+                            placeholder="ani.wijaya@sekolah.sch.id" />
+                        <p id="email-help" class="text-[13px] text-stone-600 mt-1.5">
+                            Wajib. Dipakai untuk mengirim kode saat penabung lupa PIN. Sebaiknya alamat
+                            orang tua atau wali, bukan email sekolah yang dipakai bersama.
+                        </p>
                         <x-input-error :message="$errors->first('email')" />
                     </div>
 
@@ -98,4 +89,6 @@
             </div>
         </section>
     </div>
+
+    <x-class-datalist />
 @endsection

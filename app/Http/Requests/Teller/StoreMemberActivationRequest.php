@@ -24,11 +24,11 @@ class StoreMemberActivationRequest extends FormRequest
     {
         return [
             'amount' => ['required', 'integer', 'min:1'],
-            'physical_cash_amount' => ['required', 'integer', 'min:1'],
             'slip_number' => ['nullable', 'string', 'max:30'],
-            'denomination_breakdown' => ['nullable', 'array'],
             'pin' => ['required', 'digits:6'],
-            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:savers,email'],
+            // Tanpa email terdaftar, penabung tidak punya jalur pemulihan PIN
+            // sama sekali: nomor siswa bisa saja ikut hilang bersama kartu.
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:savers,email'],
             'class_name' => ['nullable', 'string', 'max:30'],
             'phone_number' => ['nullable', 'string', 'max:20'],
         ];
@@ -38,11 +38,6 @@ class StoreMemberActivationRequest extends FormRequest
     {
         $validator->after(function (Validator $validator) {
             $amount = (int) $this->input('amount');
-            $physical = (int) $this->input('physical_cash_amount');
-
-            if ($amount !== $physical) {
-                $validator->errors()->add('physical_cash_amount', 'Nominal slip harus sama dengan uang fisik yang diterima.');
-            }
 
             $minimum = SystemConfig::integer('min_deposit_to_activate', 10000);
 
@@ -56,9 +51,9 @@ class StoreMemberActivationRequest extends FormRequest
     {
         return [
             'amount.required' => 'Nominal setoran wajib diisi.',
-            'physical_cash_amount.required' => 'Nominal uang fisik wajib diisi.',
             'pin.required' => 'PIN wajib diisi.',
             'pin.digits' => 'PIN harus tepat 6 digit angka.',
+            'email.required' => 'Email wajib diisi. Ini yang dipakai untuk mengirim kode pemulihan PIN.',
             'email.unique' => 'Email sudah digunakan penabung lain.',
         ];
     }

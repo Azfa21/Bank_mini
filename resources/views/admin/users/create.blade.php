@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Pengguna — Bank Mini')
-@section('section', 'Administrator — Tambah Pengguna')
+@section('title', 'Tambah Pengguna | Bank Mini')
+@section('section', 'Administrator · Tambah Pengguna')
 
 @section('content')
     <div class="max-w-lg">
         <h1 class="text-xl font-semibold text-stone-900 mb-1">Tambah Pengguna Baru</h1>
-        <p class="text-sm text-stone-500 mb-6">Buat akun untuk Administrator, Teller, atau Supervisor.</p>
+        <p class="text-sm text-stone-500 mb-6">Buat akun untuk Administrator atau Teller.</p>
 
         <x-form-errors />
 
@@ -22,7 +22,7 @@
             </div>
             <div>
                 <x-input-label for="email">Email</x-input-label>
-                <x-input id="email" name="email" type="email" required placeholder="Untuk verifikasi lupa password" />
+                <x-input id="email" name="email" type="email" required placeholder="Tempat kode verifikasi dikirim" />
             </div>
             <div>
                 <x-input-label for="password">Password</x-input-label>
@@ -30,11 +30,10 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <x-input-label for="role">Role</x-input-label>
+                    <x-input-label for="role">Peran</x-input-label>
                     <x-select id="role" name="role" required>
-                        <option value="admin" @selected(old('role') === 'admin')>Admin</option>
+                        <option value="admin" @selected(old('role') === 'admin')>Administrator</option>
                         <option value="teller" @selected(old('role') === 'teller')>Teller</option>
-                        <option value="supervisor" @selected(old('role') === 'supervisor')>Supervisor</option>
                     </x-select>
                 </div>
                 <div>

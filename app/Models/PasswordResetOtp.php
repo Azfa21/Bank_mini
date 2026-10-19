@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string $account_type
+ * @property int|null $account_id
  * @property string $email
  * @property string $otp_hash
  * @property int $attempts
@@ -26,6 +27,7 @@ class PasswordResetOtp extends Model
 
     protected $fillable = [
         'account_type',
+        'account_id',
         'email',
         'otp_hash',
         'attempts',

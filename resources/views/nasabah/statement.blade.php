@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Rekening Koran  EBank Mini')
+@section('title', 'Rekening Koran | Bank Mini')
 @section('section', 'Nasabah')
 
 @php
@@ -47,7 +47,7 @@
                 </div>
                 <div class="text-right text-xs space-y-0.5">
                     <p>Nomor Rekening: <span class="font-mono font-semibold">{{ $account->account_number }}</span></p>
-                    <p>Periode: {{ \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') }}  E{{ \Carbon\Carbon::parse($dateTo)->format('d/m/Y') }}</p>
+                    <p>Periode: {{ \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') }} – {{ \Carbon\Carbon::parse($dateTo)->format('d/m/Y') }}</p>
                     <p>Dicetak: {{ now()->format('d/m/Y H:i') }}</p>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                          <tr class="border-b-2 border-stone-800 print:border-black print:border-2">
                          <th class="py-2 text-left print:w-20">Tanggal</th>
                          <th class="py-2 text-left print:w-40">Keterangan</th>
-                         <th class="py-2 text-right print:w-24">Debet</th>
+                         <th class="py-2 text-right print:w-24">Debit</th>
                          <th class="py-2 text-right print:w-24">Kredit</th>
                          <th class="py-2 text-right print:w-28">Saldo</th>
                      </tr>

@@ -13,8 +13,8 @@ class ResetCredentialRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('email')) {
-            $this->merge(['email' => mb_strtolower(trim((string) $this->input('email')))]);
+        if ($this->has('identifier')) {
+            $this->merge(['identifier' => trim((string) $this->input('identifier'))]);
         }
     }
 
@@ -24,7 +24,7 @@ class ResetCredentialRequest extends FormRequest
 
         return [
             'account_type' => ['required', 'in:staff,nasabah'],
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'identifier' => ['required', 'string', 'max:255'],
             'otp' => ['required', 'string', 'digits:6'],
             'password' => $isStaff ? ['required', 'string', 'min:8', 'confirmed'] : ['nullable'],
             'pin' => $isStaff ? ['nullable'] : ['required', 'string', 'digits:6', 'confirmed'],
@@ -36,8 +36,8 @@ class ResetCredentialRequest extends FormRequest
         return [
             'account_type.required' => 'Jenis akun wajib dipilih.',
             'account_type.in' => 'Jenis akun tidak valid.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
+            'identifier.required' => 'Username atau nomor siswa wajib diisi.',
+            'identifier.max' => 'Username atau nomor siswa terlalu panjang.',
             'otp.required' => 'Kode verifikasi wajib diisi.',
             'otp.digits' => 'Kode verifikasi harus 6 digit angka.',
             'password.required' => 'Password baru wajib diisi.',

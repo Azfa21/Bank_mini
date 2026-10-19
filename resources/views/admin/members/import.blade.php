@@ -1,28 +1,28 @@
 @extends('layouts.app')
 
-@section('title', 'Import Anggota — Bank Mini')
-@section('section', 'Administrator · Anggota · Import')
+@section('title', 'Impor Anggota | Bank Mini')
+@section('section', 'Administrator · Anggota · Impor')
 
 @section('content')
     <div class="max-w-2xl">
-        <h1 class="text-xl font-semibold text-stone-900 mb-1">Import Anggota dari CSV</h1>
+        <h1 class="text-xl font-semibold text-stone-900 mb-1">Impor Anggota dari CSV</h1>
         <p class="text-sm text-stone-500 mb-6">Unggah daftar siswa sebagai anggota. Rekening dibuat nanti saat setoran aktivasi di Teller.</p>
 
         <x-form-errors />
-
-        @if (session('error'))
-            <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{{ session('error') }}</div>
-        @endif
 
         @php($summary = session('import_summary'))
 
         @if ($summary)
             <div class="mb-6 bg-white rounded-xl border border-stone-200 p-5">
-                <h2 class="text-sm font-semibold text-stone-900 mb-3">Hasil Import</h2>
-                <div class="grid grid-cols-3 gap-3 text-center">
+                <h2 class="text-sm font-semibold text-stone-900 mb-3">Hasil Impor</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     <div class="bg-olive-50 border border-olive-200 rounded-lg p-3">
                         <div class="text-xl font-semibold text-olive-700">{{ $summary['imported'] }}</div>
                         <div class="text-xs text-brand-800">Berhasil</div>
+                    </div>
+                    <div class="bg-stone-100 border border-stone-200 rounded-lg p-3">
+                        <div class="text-xl font-semibold text-stone-800">{{ $summary['updated'] ?? 0 }}</div>
+                        <div class="text-xs text-stone-600">Kelas diperbarui</div>
                     </div>
                     <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
                         <div class="text-xl font-semibold text-amber-800">{{ $summary['skipped'] }}</div>
@@ -61,8 +61,8 @@
                 @enderror
             </div>
 
-            <div class="flex gap-3 pt-2">
-                <x-primary-button>Import</x-primary-button>
+            <div class="flex flex-wrap gap-3 pt-2">
+                <x-primary-button>Impor</x-primary-button>
                 <a href="{{ route('admin.members.import.template') }}"
                     class="inline-flex items-center border border-stone-300 bg-white text-stone-700 text-sm px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">Unduh Template CSV</a>
                 <x-secondary-button :href="route('admin.members.index')">Kembali</x-secondary-button>
@@ -72,10 +72,11 @@
         <div class="mt-6 bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="text-sm font-semibold text-stone-900 mb-3">Format File</h2>
             <ul class="text-sm text-stone-600 space-y-1.5 list-disc list-inside">
-                <li>Baris pertama berisi header kolom: <code class="font-mono text-xs bg-stone-100 px-1 rounded">nis</code>, <code class="font-mono text-xs bg-stone-100 px-1 rounded">nama</code>, <code class="font-mono text-xs bg-stone-100 px-1 rounded">angkatan_keluar</code></li>
-                <li>Kolom <strong>nis</strong> dan <strong>nama</strong> wajib diisi; angkatan keluar opsional</li>
+                <li>Baris pertama berisi header kolom: <code class="font-mono text-xs bg-stone-100 px-1 rounded">nis</code>, <code class="font-mono text-xs bg-stone-100 px-1 rounded">nama</code>, <code class="font-mono text-xs bg-stone-100 px-1 rounded">angkatan_keluar</code>, <code class="font-mono text-xs bg-stone-100 px-1 rounded">kelas</code></li>
+                <li>Kolom <strong>nis</strong> dan <strong>nama</strong> wajib diisi; angkatan keluar dan kelas opsional</li>
+                <li>Kelas ditulis dengan format tingkat, jurusan, dan rombel, misalnya <strong>X RPL 1</strong> atau <strong>XI TKJ 2</strong></li>
                 <li>Pemisah kolom koma atau titik-koma didukung otomatis</li>
-                <li>NIS yang sudah terdaftar akan dilewati tanpa mengubah data lama</li>
+                <li>NIS yang sudah terdaftar akan dilewati tanpa mengubah data lama. Satu pengecualian: kolom kelas ikut memperbarui data anggota yang sudah ada, sedangkan kelas penabung yang sudah punya rekening tidak berubah</li>
                 <li>Anggota yang diimpor berstatus <strong>rekening tidak aktif</strong> sampai menyetor aktivasi di Teller</li>
             </ul>
         </div>

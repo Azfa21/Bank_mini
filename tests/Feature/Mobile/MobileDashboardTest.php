@@ -17,7 +17,7 @@ class MobileDashboardTest extends MobileTestCase
             ->assertJsonPath('data.account.account_number', '2026/2027-001')
             ->assertJsonPath('data.account.balance', 25000)
             ->assertJsonPath('data.customer.full_name', 'Ani Wijaya')
-            ->assertJsonStructure(['data' => ['bank' => ['name', 'operational_hours']]]);
+            ->assertJsonStructure(['data' => ['bank' => ['name']]]);
     }
 
     public function test_dashboard_returns_last_transaction(): void

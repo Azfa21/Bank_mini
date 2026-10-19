@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\JurnalAkuntansi;
 use App\Services\AccountingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class JournalController extends Controller
 {
@@ -13,40 +12,34 @@ class JournalController extends Controller
     {
         $this->authorize('viewAny', JurnalAkuntansi::class);
 
-        $user = Auth::guard('web')->user();
-        $userRole = $user ? $user->role : null;
-        $indexRoute = $userRole === 'admin'
-            ? route('admin.journals.index')
-            : route('supervisor.journals.index');
-        $journals = JurnalAkuntansi::query()
-            ->with('transaction.account.saver')
-            ->when($request->input('transaction_number'), function ($query, $number) {
-                $query->whereHas('transaction', fn ($q) => $q->where('receipt_number', 'like', "%{$number}%"));
-            })
-            ->when($request->input('account_code'), fn ($query, $code) => $query->where('account_code', $code))
-            ->when($request->input('date_from'), fn ($query, $date) => $query->whereDate('journal_at', '>=', $date))
-            ->when($request->input('date_to'), fn ($query, $date) => $query->whereDate('journal_at', '<=', $date))
+        $indexRoute = route('admin.journals.index');
+
+        // Alasan: dropdown, filter URL, dan total memakai daftar akun tampil yang sama
+        // supaya akun yang disembunyikan tidak bisa muncul lewat kode dari tautan lama.
+        $accounts = AccountingService::presentedAccounts();
+        $requestedCode = (string) $request->input('account_code', '');
+        $accountCode = array_key_exists($requestedCode, $accounts) ? $requestedCode : null;
+        $visibleCodes = array_keys($accounts);
+        $transactionNumber = $request->input('transaction_number');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+
+        $filtered = static function ($query) use ($visibleCodes, $accountCode, $transactionNumber, $dateFrom, $dateTo) {
+            return $query
+                ->whereIn('account_code', $visibleCodes)
+                ->when($transactionNumber, fn ($q, $number) => $q->whereHas('transaction', fn ($sub) => $sub->where('receipt_number', 'like', "%{$number}%")))
+                ->when($accountCode, fn ($q, $code) => $q->where('account_code', $code))
+                ->when($dateFrom, fn ($q, $date) => $q->whereDate('journal_at', '>=', $date))
+                ->when($dateTo, fn ($q, $date) => $q->whereDate('journal_at', '<=', $date));
+        };
+
+        $journals = $filtered(JurnalAkuntansi::query()->with('transaction.account.saver'))
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
 
-        $totalDebit = (int) JurnalAkuntansi::query()
-            ->when($request->input('transaction_number'), function ($query) use ($request) {
-                $query->whereHas('transaction', fn ($q) => $q->where('receipt_number', 'like', "%{$request->input('transaction_number')}%"));
-            })
-            ->when($request->input('account_code'), fn ($query) => $query->where('account_code', $request->input('account_code')))
-            ->when($request->input('date_from'), fn ($query) => $query->whereDate('journal_at', '>=', $request->input('date_from')))
-            ->when($request->input('date_to'), fn ($query) => $query->whereDate('journal_at', '<=', $request->input('date_to')))
-            ->sum('debit_amount');
-
-        $totalCredit = (int) JurnalAkuntansi::query()
-            ->when($request->input('transaction_number'), function ($query) use ($request) {
-                $query->whereHas('transaction', fn ($q) => $q->where('receipt_number', 'like', "%{$request->input('transaction_number')}%"));
-            })
-            ->when($request->input('account_code'), fn ($query) => $query->where('account_code', $request->input('account_code')))
-            ->when($request->input('date_from'), fn ($query) => $query->whereDate('journal_at', '>=', $request->input('date_from')))
-            ->when($request->input('date_to'), fn ($query) => $query->whereDate('journal_at', '<=', $request->input('date_to')))
-            ->sum('credit_amount');
+        $totalDebit = (int) $filtered(JurnalAkuntansi::query())->sum('debit_amount');
+        $totalCredit = (int) $filtered(JurnalAkuntansi::query())->sum('credit_amount');
 
         if ($this->wantsJson($request)) {
             return response()->json([
@@ -59,8 +52,6 @@ class JournalController extends Controller
             ]);
         }
 
-        $accounts = AccountingService::CHART_OF_ACCOUNTS;
-
-        return view('journals.index', compact('journals', 'totalDebit', 'totalCredit', 'userRole', 'indexRoute', 'accounts'));
+        return view('journals.index', compact('journals', 'totalDebit', 'totalCredit', 'indexRoute', 'accounts', 'accountCode'));
     }
 }

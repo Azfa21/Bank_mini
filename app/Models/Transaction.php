@@ -15,8 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property int $amount
  * @property int|null $slip_amount
- * @property int|null $physical_cash_amount
- * @property array<string, int>|null $denomination_breakdown
  * @property int $balance_before
  * @property int $balance_after
  * @property string $receipt_number
@@ -47,8 +45,6 @@ class Transaction extends Model
         'receipt_number',
         'slip_number',
         'slip_amount',
-        'physical_cash_amount',
-        'denomination_breakdown',
         'notes',
         'reversal_of_transaction_id',
         'reversed_at',
@@ -61,8 +57,6 @@ class Transaction extends Model
     protected $casts = [
         'amount' => 'integer',
         'slip_amount' => 'integer',
-        'physical_cash_amount' => 'integer',
-        'denomination_breakdown' => 'array',
         'balance_before' => 'integer',
         'balance_after' => 'integer',
         'reversed_at' => 'datetime',
@@ -130,6 +124,19 @@ class Transaction extends Model
             'transfer' => 'Transfer',
             'reversal' => 'Koreksi',
             default => ucfirst($this->type),
+        };
+    }
+
+    /**
+     * Status transaksi dalam Bahasa Indonesia untuk layar staf. Sebelumnya struk
+     * menampilkan nilai mentah ("SUCCESS"/"success") di dua tempat berbeda.
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'success' => 'Berhasil',
+            'reversed' => 'Dibatalkan',
+            default => ucfirst($this->status),
         };
     }
 

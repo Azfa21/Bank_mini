@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan Harian Teller — Bank Mini')
+@section('title', 'Laporan Harian Teller | Bank Mini')
 @section('section', 'Piket Teller')
 
 @php
@@ -10,9 +10,9 @@
 @section('content')
     <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-            <p class="text-xs font-semibold text-brand-900">DRAF UNTUK SUPERVISOR</p>
+            <p class="text-xs font-semibold text-brand-900">DRAF UNTUK ADMINISTRATOR</p>
             <h1 class="text-2xl font-bold text-stone-900 mt-1">Laporan {{ $report->report_number }}</h1>
-            <p class="text-sm text-stone-600 mt-1">Cetak dan serahkan fisik ke Supervisor untuk validasi.</p>
+            <p class="text-sm text-stone-600 mt-1">Cetak dan serahkan fisik ke Administrator untuk validasi.</p>
         </div>
         <div class="flex flex-wrap gap-2.5 print:hidden">
             <button type="button" data-print class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors">
@@ -23,16 +23,6 @@
             </a>
         </div>
     </div>
-
-    @if (($report->cash_difference ?? 0) !== 0)
-        <div role="alert" class="mb-4 max-w-2xl mx-auto p-4 rounded-2xl border border-amber-300 bg-amber-50 text-amber-900 text-sm">
-            <p class="font-bold">Draf berselisih {{ 'Rp '.number_format(abs($report->cash_difference ?? 0), 0, ',', '.') }} — bukan laporan final.</p>
-            <p class="mt-1">Serahkan ke Supervisor untuk pemeriksaan. Cetak final terkunci sampai selisih diselesaikan.</p>
-            @if ($report->approval_notes)
-                <p class="mt-2 text-[13px]">{{ $report->approval_notes }}</p>
-            @endif
-        </div>
-    @endif
 
     <div class="print-sheet max-w-2xl mx-auto bg-white rounded-2xl border border-stone-200 p-6" id="report">
         <div class="text-center border-b border-dashed border-stone-300 pb-4">
@@ -60,7 +50,7 @@
             </div>
             <div class="flex justify-between gap-3">
                 <dt class="text-stone-600">Status</dt>
-                <dd class="font-semibold text-right">{{ $report->status === 'approved' ? 'Disetujui' : ($report->status === 'rejected' ? 'Ditolak' : 'Menunggu validasi') }}</dd>
+                <dd class="font-semibold text-right">{{ $report->statusLabel() }}</dd>
             </div>
         </dl>
 
@@ -81,56 +71,7 @@
                 <span class="text-stone-900">Saldo akhir sistem</span>
                 <span class="tnum text-stone-900">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between gap-3">
-                <span class="text-stone-600">Uang fisik di laci</span>
-                <span class="tnum">Rp {{ number_format($report->closing_balance_physical ?? 0, 0, ',', '.') }}</span>
-            </div>
-            <div class="flex justify-between gap-3">
-                <span class="text-stone-600">Selisih kas</span>
-                <span class="tnum font-bold {{ $report->cash_difference === 0 ? 'text-brand-900' : 'text-red-800' }}">
-                    Rp {{ number_format($report->cash_difference ?? 0, 0, ',', '.') }}
-                </span>
-            </div>
         </div>
-
-        @if ($report->closing_breakdown)
-            <div class="border-t border-dashed border-stone-300 pt-4">
-                <p class="text-[13px] font-semibold text-stone-700 mb-2">Rincian kertas dan logam</p>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-left text-[13px] text-stone-600">
-                            <th scope="col" class="py-1 font-semibold">Pecahan</th>
-                            <th scope="col" class="py-1 text-center font-semibold">Jumlah</th>
-                            <th scope="col" class="py-1 text-right font-semibold">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-stone-100">
-                        @foreach (\App\Support\CashDenomination::GROUPS as $group => $info)
-                            @php $hasGroup = collect($info['values'])->contains(fn ($v) => isset($report->closing_breakdown[$group.'_'.$v])); @endphp
-                            @if ($hasGroup)
-                                <tr>
-                                    <td colspan="3" class="py-1.5 text-[13px] font-semibold text-stone-700">{{ $info['label'] }}</td>
-                                </tr>
-                                @foreach ($info['values'] as $value)
-                                    @php $key = $group.'_'.$value; @endphp
-                                    @if (isset($report->closing_breakdown[$key]))
-                                        <tr>
-                                            <td class="py-1">{{ \App\Support\CashDenomination::label($value) }}</td>
-                                            <td class="py-1 text-center tnum">{{ $report->closing_breakdown[$key] }}</td>
-                                            <td class="py-1 text-right tnum">Rp {{ number_format($value * $report->closing_breakdown[$key], 0, ',', '.') }}</td>
-                                        </tr>
-                                    @endif
-                                @endforeach
-                            @endif
-                        @endforeach
-                        <tr class="font-bold">
-                            <td class="py-1.5" colspan="2">Total fisik</td>
-                            <td class="py-1.5 text-right tnum">Rp {{ number_format($report->closing_balance_physical ?? 0, 0, ',', '.') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        @endif
 
         @if ($report->status === 'approved' && $report->approver)
             <div class="border-t border-dashed border-stone-300 mt-4 pt-4 text-[13px] text-stone-600 space-y-1">

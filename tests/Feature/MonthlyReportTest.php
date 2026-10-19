@@ -19,7 +19,6 @@ class MonthlyReportTest extends TellerTestCase
             'receipt_number' => 'TRX-MONTH-0001',
             'slip_number' => 'SLIP-MONTH-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'status' => 'success',
             'transaction_at' => now(),
         ]);
@@ -34,16 +33,6 @@ class MonthlyReportTest extends TellerTestCase
             ->assertOk()
             ->assertSee('Laporan bulanan')
             ->assertSee('Rp 100.000');
-    }
-
-    public function test_supervisor_can_open_monthly_report(): void
-    {
-        $this->seedTransaction();
-
-        $this->actingAs($this->supervisor, 'web')
-            ->get(route('supervisor.reports.monthly', ['month' => now()->format('Y-m')]))
-            ->assertOk()
-            ->assertSee('Laporan bulanan');
     }
 
     public function test_monthly_report_print_page_loads(): void

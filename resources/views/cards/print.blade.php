@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Cetak Kartu Nasabah  EBank Mini')
+@section('title', 'Cetak Kartu Nasabah | Bank Mini')
 @section('section', $sectionLabel)
 
 @php
@@ -10,7 +10,7 @@
 @endphp
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between print:hidden">
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between print:hidden">
         <div>
             <h1 class="text-xl font-semibold text-stone-900">Cetak Kartu Nasabah</h1>
             <p class="text-sm text-stone-500 mt-1">Cetak kartu ini, lalu potong dan berikan kepada nasabah.</p>
@@ -28,7 +28,7 @@
     <div class="print-sheet max-w-md mx-auto bg-white rounded-xl border-2 border-stone-800 p-6" id="customer-card">
         <div class="text-center border-b-2 border-stone-800 pb-3">
             <p class="font-bold tracking-wide text-base">{{ $bankName }}</p>
-            <p class="text-xs mt-0.5">Kartu Nasabah{{ $account->academic_year ? '  ET.A. '.$account->academic_year : '' }}</p>
+            <p class="text-xs mt-0.5">Kartu Nasabah{{ $account->academic_year ? ' (T.A. '.$account->academic_year.')' : '' }}</p>
         </div>
 
         <div class="flex items-start justify-between gap-6 mt-5">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Hasil Pencarian — Bank Mini')
+@section('title', 'Hasil Pencarian | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')

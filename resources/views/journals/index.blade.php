@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Audit Jurnal — Bank Mini')
-@section('section', $userRole === 'admin' ? 'Administrator' : 'Supervisor')
+@section('title', 'Audit Jurnal | Bank Mini')
+@section('section', 'Administrator')
 
 @section('content')
     <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-            <p class="text-xs font-semibold text-brand-900">DOUBLE-ENTRY</p>
+            <p class="text-xs font-semibold text-brand-900">JURNAL KAS</p>
             <h1 class="text-2xl font-bold text-stone-900 mt-1">Audit jurnal</h1>
-            <p class="text-sm text-stone-600 mt-1">Setiap transaksi wajib dua baris seimbang: debit sama dengan kredit.</p>
+            <p class="text-sm text-stone-600 mt-1">Hanya sisi kas yang tampil di sini. Keseimbangan debit dan kredit seluruh baris jurnal diperiksa sistem dan diringkas di halaman Buku Besar.</p>
         </div>
-        <a href="{{ $userRole === 'admin' ? route('admin.reports.export', 'journals') : route('supervisor.reports.export', 'journals') }}"
+        <a href="{{ route('admin.reports.export', 'journals') }}"
             class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors sm:shrink-0">
             Unduh CSV
         </a>
@@ -22,11 +22,11 @@
             <x-input id="transaction_number" name="transaction_number" :value="request('transaction_number')" placeholder="Contoh: TRX-..." />
         </div>
         <div class="sm:w-48">
-            <x-input-label for="account_code">Kode akun</x-input-label>
+            <x-input-label for="account_code">Akun</x-input-label>
             <x-select id="account_code" name="account_code">
-                <option value="">Semua akun</option>
+                <option value="">Semua akun kas</option>
                 @foreach (($accounts ?? []) as $code => $info)
-                    <option value="{{ $code }}" @selected((string) request('account_code') === (string) $code)>{{ $code }} — {{ $info['name'] }}</option>
+                    <option value="{{ $code }}" @selected((string) ($accountCode ?? '') === (string) $code)>{{ $info['name'] }}</option>
                 @endforeach
             </x-select>
         </div>
@@ -64,10 +64,10 @@
                         <td class="px-5 py-3 tnum font-medium">{{ $journal->journal_number }}</td>
                         <td class="px-5 py-3 tnum">{{ $journal->transaction?->receipt_number }}</td>
                         <td class="px-5 py-3 tnum">{{ $journal->journal_at?->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-3 tnum">{{ $journal->account_code }}</td>
+                        <td class="px-5 py-3">{{ $accounts[$journal->account_code]['name'] ?? 'Akun '.$journal->account_code }}</td>
                         <td class="px-5 py-3">
                             <span class="inline-flex items-center text-[13px] font-semibold px-2.5 py-1 rounded-full border {{ $journal->entry_type === 'debit' ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-700 border-stone-300' }}">
-                                {{ ucfirst($journal->entry_type) }}
+                                {{ $journal->entry_type === 'debit' ? 'Debit' : 'Kredit' }}
                             </span>
                         </td>
                         <td class="px-5 py-3 text-right tnum">Rp {{ number_format($journal->debit_amount, 0, ',', '.') }}</td>

@@ -8,12 +8,12 @@ class JournalEntryPolicy
 {
     public function viewAny($user): bool
     {
-        return $user?->role === 'admin' || $user?->role === 'supervisor';
+        return $user?->role === 'admin';
     }
 
     public function view($user, ?JurnalAkuntansi $entry = null): bool
     {
-        return $user?->role === 'admin' || $user?->role === 'supervisor';
+        return $user?->role === 'admin';
     }
 
     public function create($user): bool

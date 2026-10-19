@@ -173,8 +173,85 @@ class MemberImportTest extends TellerTestCase
         $content = preg_replace('/^\xEF\xBB\xBF/', '', $response->streamedContent());
         $lines = explode("\n", trim((string) $content));
 
-        $this->assertSame(['nis', 'nama', 'angkatan_keluar'], str_getcsv($lines[0]));
-        $this->assertSame(['20260001', 'Budi Santoso', '2026'], str_getcsv($lines[1]));
+        $this->assertSame(['nis', 'nama', 'angkatan_keluar', 'kelas'], str_getcsv($lines[0]));
+        $this->assertSame(['20260001', 'Budi Santoso', '2029', 'X RPL 1'], str_getcsv($lines[1]));
+    }
+
+    public function test_imports_class_column_and_updates_existing_member_class(): void
+    {
+        $this->actingAs($this->admin, 'web')
+            ->post(route('admin.members.import'), [
+                'file' => $this->csv(
+                    "nis,nama,angkatan_keluar,kelas\n"
+                    ."20260030,Baru Punya Kelas,2029,X RPL 1\n"
+                ),
+            ])
+            ->assertRedirect(route('admin.members.import.form'));
+
+        $this->assertSame('X RPL 1', Member::where('nis', '20260030')->value('class_name'));
+
+        $this->actingAs($this->admin, 'web')
+            ->post(route('admin.members.import'), [
+                'file' => $this->csv(
+                    "nis,nama,angkatan_keluar,kelas\n"
+                    ."20260030,Baru Punya Kelas,2029,XI RPL 2\n"
+                ),
+            ])
+            ->assertRedirect(route('admin.members.import.form'))
+            ->assertSessionHas('import_summary', function (array $summary): bool {
+                $this->assertSame(0, $summary['imported']);
+                $this->assertSame(1, $summary['updated']);
+                $this->assertSame(0, $summary['skipped']);
+
+                return true;
+            });
+
+        $this->assertSame('XI RPL 2', Member::where('nis', '20260030')->value('class_name'));
+    }
+
+    public function test_import_without_class_column_keeps_existing_member_class(): void
+    {
+        Member::create([
+            'nis' => '20260040',
+            'full_name' => 'Sudah Ada',
+            'class_name' => 'X TKJ 1',
+            'status' => Member::STATUS_ACCOUNT_INACTIVE,
+        ]);
+
+        $this->actingAs($this->admin, 'web')
+            ->post(route('admin.members.import'), [
+                'file' => $this->csv(
+                    "nis,nama,angkatan_keluar\n"
+                    ."20260040,Sudah Ada,2029\n"
+                ),
+            ])
+            ->assertSessionHas('import_summary', function (array $summary): bool {
+                $this->assertSame(0, $summary['updated']);
+                $this->assertSame(1, $summary['skipped']);
+
+                return true;
+            });
+
+        $this->assertSame('X TKJ 1', Member::where('nis', '20260040')->value('class_name'));
+    }
+
+    public function test_rejects_row_with_class_longer_than_30_characters(): void
+    {
+        $this->actingAs($this->admin, 'web')
+            ->post(route('admin.members.import'), [
+                'file' => $this->csv(
+                    "nis,nama,angkatan_keluar,kelas\n"
+                    .'20260050,Nama Kelas Panjang,2029,'.str_repeat('X', 31)."\n"
+                ),
+            ])
+            ->assertSessionHas('import_summary', function (array $summary): bool {
+                $this->assertSame(1, $summary['failed']);
+                $this->assertSame('Kolom kelas melebihi 30 karakter.', $summary['issues'][0]['message']);
+
+                return true;
+            });
+
+        $this->assertDatabaseMissing('members', ['nis' => '20260050']);
     }
 
     public function test_non_admin_cannot_import(): void

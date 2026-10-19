@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property int $report_id
- * @property int $supervisor_id
+ * @property int $approved_by
  * @property int $amount
  * @property string $source_location
  * @property string $destination_location
@@ -27,7 +27,7 @@ class CashTransfer extends Model
 
     protected $fillable = [
         'report_id',
-        'supervisor_id',
+        'approved_by',
         'amount',
         'source_location',
         'destination_location',
@@ -50,9 +50,9 @@ class CashTransfer extends Model
     }
 
     /** @return BelongsTo<User, $this> */
-    public function supervisor(): BelongsTo
+    public function approvedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'supervisor_id');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /** @return HasMany<JurnalAkuntansi, $this> */

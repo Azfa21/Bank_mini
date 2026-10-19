@@ -21,8 +21,8 @@ class UpdateMemberRequest extends FormRequest
         return [
             'nis' => ['sometimes', 'required', 'string', 'max:30', Rule::unique('members', 'nis')->ignore($member?->nis, 'nis')],
             'full_name' => ['sometimes', 'required', 'string', 'max:100'],
+            'class_name' => ['sometimes', 'nullable', 'string', 'max:30'],
             'graduation_year' => ['sometimes', 'nullable', 'string', 'max:10'],
-            'status' => ['sometimes', 'required', 'in:account_active,account_inactive'],
         ];
     }
 

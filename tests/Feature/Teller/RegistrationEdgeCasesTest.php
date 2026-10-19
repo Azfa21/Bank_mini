@@ -38,6 +38,24 @@ class RegistrationEdgeCasesTest extends TellerTestCase
         $this->assertSame(0, Member::count());
     }
 
+    public function test_registration_keeps_the_class_for_activation_prefill(): void
+    {
+        $this->actingAsTeller()
+            ->post(route('teller.members.register.store'), [
+                'full_name' => 'Rizky Ramadhan',
+                'class_name' => 'X RPL 1',
+                'graduation_year' => '2026',
+            ])
+            ->assertRedirect(route('teller.members.register'))
+            ->assertSessionHas('registration', function (array $registration): bool {
+                $this->assertSame('X RPL 1', $registration['class_name']);
+
+                return true;
+            });
+
+        $this->assertSame('X RPL 1', Member::where('full_name', 'Rizky Ramadhan')->firstOrFail()->class_name);
+    }
+
     public function test_registration_json_returns_created_member(): void
     {
         $this->actingAsTeller()

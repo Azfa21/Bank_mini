@@ -76,7 +76,6 @@ class DashboardTest extends NasabahTestCase
         return app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-N-001',
             'slip_amount' => $amount,
-            'physical_cash_amount' => $amount,
             'amount' => $amount,
         ], $this->teller);
     }

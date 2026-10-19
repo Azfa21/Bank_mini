@@ -20,14 +20,12 @@ class SlipNumberGenerationTest extends TellerTestCase
         $this->actingAsTeller()
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ])
             ->assertRedirect();
 
         $this->actingAsTeller()
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_amount' => 20000,
-                'physical_cash_amount' => 20000,
             ])
             ->assertRedirect();
 
@@ -77,7 +75,6 @@ class SlipNumberGenerationTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-KERTAS-999',
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ])
             ->assertRedirect();
 

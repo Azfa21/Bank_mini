@@ -101,10 +101,13 @@ body {
         color: black !important;
     }
 
+    /* Alasan: navigasi dan blok yang sengaja ditandai .no-print tidak ikut tercetak.
+       Sebelumnya selektornya `main .mb-6`, yang menyembunyikan blok apa pun berkelas
+       itu tanpa niat eksplisit dan mudah patah saat tata letak diubah. */
     header,
     footer,
     nav,
-    main .mb-6 {
+    .no-print {
         display: none !important;
     }
 
@@ -124,10 +127,6 @@ body {
         box-shadow: none !important;
         border: none !important;
         page-break-after: avoid;
-    }
-
-    .no-print {
-        display: none !important;
     }
 
     table {

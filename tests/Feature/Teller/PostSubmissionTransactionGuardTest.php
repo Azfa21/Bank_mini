@@ -18,13 +18,11 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'PRE-SUBMISSION',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
         $report = app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->toDateString(),
-            50000,
+            now()->toDateString()
         );
 
         $this->assertSame('success', $transaction->status);
@@ -37,8 +35,7 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
         $destination = $this->createDestinationAccount();
         $report = app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->toDateString(),
-            0,
+            now()->toDateString()
         );
         $startingBalance = $this->account->balance;
 
@@ -46,7 +43,6 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
             fn () => app(TransactionService::class)->deposit($this->account, [
                 'slip_number' => 'POST-DEPOSIT',
                 'slip_amount' => 10000,
-                'physical_cash_amount' => 10000,
             ], $this->teller),
             fn () => app(TransactionService::class)->withdraw(
                 $this->account,
@@ -92,8 +88,6 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
             'total_deposit' => 0,
             'total_withdrawal' => 0,
             'closing_balance_system' => 0,
-            'closing_balance_physical' => 0,
-            'cash_difference' => 0,
             'status' => 'rejected',
             'submitted_at' => now(),
         ]);
@@ -101,13 +95,11 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
         app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'AFTER-REJECTION',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
         $resubmitted = app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->toDateString(),
-            50000,
+            now()->toDateString()
         );
 
         $this->assertSame($report->id, $resubmitted->id);
@@ -119,14 +111,12 @@ class PostSubmissionTransactionGuardTest extends TellerTestCase
     {
         app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->subDay()->toDateString(),
-            0,
+            now()->subDay()->toDateString()
         );
 
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'NEW-DATE',
             'slip_amount' => 10000,
-            'physical_cash_amount' => 10000,
         ], $this->teller);
 
         $this->assertSame('success', $transaction->status);

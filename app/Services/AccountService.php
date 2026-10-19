@@ -17,9 +17,18 @@ class AccountService
         protected SequenceService $sequences,
     ) {}
 
+    /**
+     * Tahun ajaran berjalan menurut kalender, misalnya "2026/2027". Dipakai saat membuka
+     * rekening dan sebagai penanda tahun kenaikan kelas.
+     */
+    public static function academicYear(): string
+    {
+        return now()->format('Y').'/'.(now()->format('Y') + 1);
+    }
+
     public function openFor(Saver $saver, int $minimumBalance = self::DEFAULT_MINIMUM_BALANCE): Account
     {
-        $academicYear = now()->format('Y').'/'.(now()->format('Y') + 1);
+        $academicYear = self::academicYear();
 
         $startYear = now()->format('y');
         $endYear = (int) $startYear + 1;

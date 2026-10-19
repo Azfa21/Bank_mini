@@ -53,7 +53,9 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Akun rekening Anda diblokir. Silakan hubungi loket teller atau Administrator.',
+                'message' => $customer->isGraduated()
+                    ? 'Rekening Anda sudah ditutup karena kelulusan. Hubungi Administrator bila masih ada sisa saldo.'
+                    : 'Akun rekening Anda diblokir. Silakan hubungi loket teller atau Administrator.',
             ], 403);
         }
 

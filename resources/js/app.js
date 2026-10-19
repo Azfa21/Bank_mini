@@ -1,4 +1,4 @@
-// Bank Mini Sekolah — interaksi loket (CSP-safe, tanpa inline script).
+// Bank Mini Sekolah: interaksi loket (CSP-safe, tanpa inline script).
 // Semua logika driven by keberadaan elemen / data-* agar lolos `default-src 'self'`.
 
 function rupiah(n) {
@@ -23,7 +23,9 @@ function bindDisableOnSubmit() {
             if (!submit || submit.disabled) return;
             if (submit.dataset.confirm === 'pending') return;
             submit.disabled = true;
-            if (!submit.dataset.originalText) submit.dataset.originalText = submit.textContent;
+            // innerHTML, bukan textContent: tombol yang isinya elemen (mis. penghitung jumlah
+            // baris terpilih) harus kembali utuh saat pengguna membatalkan dialog konfirmasi.
+            if (!submit.dataset.originalHtml) submit.dataset.originalHtml = submit.innerHTML;
             submit.textContent = submit.dataset.loadingText || 'Memproses...';
         });
     });
@@ -43,6 +45,96 @@ function bindMenuToggle() {
             toggle.setAttribute('aria-expanded', 'false');
             toggle.focus();
         }
+    });
+}
+
+// Dropdown grup navigasi: klik/Enter untuk buka, Escape menutup dan mengembalikan fokus,
+// klik di luar menutup. Tanpa hover-only karena layar sentuh tidak punya hover.
+function bindNavGroups() {
+    var groups = Array.prototype.slice.call(document.querySelectorAll('[data-nav-group]'));
+    if (!groups.length) return;
+
+    function parts(group) {
+        return {
+            button: group.querySelector('[data-nav-toggle]'),
+            panel: group.querySelector('[data-nav-panel]')
+        };
+    }
+
+    function close(group) {
+        var p = parts(group);
+        if (!p.button || !p.panel) return;
+        p.panel.classList.add('hidden');
+        p.button.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeAll() {
+        groups.forEach(function (group) {
+            var p = parts(group);
+            if (p.button && p.button.getAttribute('aria-expanded') === 'true') close(group);
+        });
+    }
+
+    function open(group) {
+        var p = parts(group);
+        if (!p.button || !p.panel) return;
+        p.panel.classList.remove('hidden');
+        p.button.setAttribute('aria-expanded', 'true');
+    }
+
+    function items(panel) {
+        return Array.prototype.slice.call(panel.querySelectorAll('a'));
+    }
+
+    groups.forEach(function (group) {
+        var p = parts(group);
+        if (!p.button || !p.panel) return;
+
+        p.button.addEventListener('click', function () {
+            var isOpen = p.button.getAttribute('aria-expanded') === 'true';
+            closeAll();
+            if (!isOpen) open(group);
+        });
+
+        p.button.addEventListener('keydown', function (e) {
+            if (e.key !== 'ArrowDown') return;
+            e.preventDefault();
+            closeAll();
+            open(group);
+            var first = items(p.panel)[0];
+            if (first) first.focus();
+        });
+
+        p.panel.addEventListener('keydown', function (e) {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+            var list = items(p.panel);
+            var i = list.indexOf(document.activeElement);
+            if (i === -1) return;
+            e.preventDefault();
+            var next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+            if (next < 0) {
+                p.button.focus();
+                return;
+            }
+            if (list[next]) list[next].focus();
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        var inside = groups.some(function (group) { return group.contains(e.target); });
+        if (!inside) closeAll();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        var openGroup = groups.filter(function (group) {
+            var p = parts(group);
+            return p.button && p.button.getAttribute('aria-expanded') === 'true';
+        })[0];
+        if (!openGroup) return;
+        close(openGroup);
+        var p = parts(openGroup);
+        if (p.button) p.button.focus();
     });
 }
 
@@ -112,7 +204,10 @@ function bindConfirmForms() {
                 var submit = form.querySelector('[type="submit"]');
                 if (submit) {
                     submit.disabled = false;
-                    if (submit.dataset.originalText) submit.textContent = submit.dataset.originalText;
+                    if (submit.dataset.originalHtml) submit.innerHTML = submit.dataset.originalHtml;
+                    // Tabel dengan pemilihan baris menghitung ulang keadaannya sendiri supaya
+                    // tombol tidak aktif lagi saat tidak ada baris yang dicentang.
+                    form.dispatchEvent(new CustomEvent('confirm-cancelled'));
                 }
             }
         });
@@ -139,105 +234,21 @@ function bindReversalForms() {
     });
 }
 
-// Helper hitung pecahan: tidak lagi memaksa total readonly.
-// - Menampilkan subtotal rincian di [data-denomination-sum]
-// - Tombol [data-denomination-apply] menyalin subtotal ke total utama
-// - Total utama tetap bisa diketik manual (penting untuk selisih Rp1 / uang tak berpecahan)
-function bindDenominationHelpers() {
-    document.querySelectorAll('form').forEach(function (form) {
-        var inputs = form.querySelectorAll('[data-denomination-input]');
-        if (!inputs.length) return;
-        var total = form.querySelector('[data-denomination-total]');
-        var sumLabel = form.querySelector('[data-denomination-sum]');
-        var applyBtn = form.querySelector('[data-denomination-apply]');
-        var resetBtn = form.querySelector('[data-denomination-reset]');
-        var lastSum = 0;
-
-        function sum() {
-            var s = 0;
-            inputs.forEach(function (input) {
-                s += toInt(input.value) * toInt(input.getAttribute('data-value'));
-            });
-            return s;
-        }
-
-        function refreshSum() {
-            lastSum = sum();
-            if (sumLabel) sumLabel.textContent = 'Subtotal rincian: ' + rupiah(lastSum);
-            if (applyBtn) applyBtn.disabled = lastSum <= 0;
-            return lastSum;
-        }
-
-        inputs.forEach(function (input) {
-            input.addEventListener('input', function () {
-                var s = refreshSum();
-                // Auto-isi hanya bila total masih kosong / masih sama dengan hitungan sebelumnya
-                // agar ketikan manual Teller (mis. selisih Rp1) tidak tertimpa.
-                if (total && (total.value === '' || toInt(total.value) === toInt(total.dataset.lastDenom || '0'))) {
-                    total.value = s > 0 ? String(s) : '';
-                    total.dataset.lastDenom = String(s);
-                    total.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            });
-        });
-
-        if (applyBtn && total) {
-            applyBtn.addEventListener('click', function () {
-                var s = sum();
-                total.value = String(s);
-                total.dataset.lastDenom = String(s);
-                total.dispatchEvent(new Event('input', { bubbles: true }));
-                total.focus();
-            });
-        }
-
-        if (resetBtn) {
-            resetBtn.addEventListener('click', function () {
-                inputs.forEach(function (input) { input.value = ''; });
-                refreshSum();
-                if (total) {
-                    total.value = '';
-                    total.dataset.lastDenom = '0';
-                    total.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            });
-        }
-
-        refreshSum();
-    });
-}
-
 function bindDepositPage() {
     var slip = document.getElementById('slip_amount');
-    var total = document.getElementById('physical_cash_amount');
-    if (!slip || !total) return;
+    if (!slip) return;
     var slipPreview = document.getElementById('slip-preview');
-    var match = document.getElementById('cash-match');
     var balancePreview = document.getElementById('deposit-preview');
     var form = document.getElementById('deposit-form');
     var balanceBefore = form ? toInt(form.getAttribute('data-balance-before')) : 0;
 
     function refresh() {
         var slipVal = toInt(slip.value);
-        var cashVal = toInt(total.value);
         if (slipPreview) slipPreview.textContent = 'Terbaca: ' + rupiah(slipVal);
         if (balancePreview) balancePreview.textContent = 'Saldo sesudah: ' + rupiah(balanceBefore + slipVal);
-        if (match) {
-            if (!slipVal || !cashVal) {
-                match.textContent = 'Menunggu isian slip dan uang fisik.';
-                match.className = 'text-[13px] font-semibold mt-1.5 text-stone-600';
-            } else if (slipVal === cashVal) {
-                match.textContent = 'Cocok: slip dan uang fisik sama.';
-                match.className = 'text-[13px] font-semibold mt-1.5 text-brand-900';
-            } else {
-                match.textContent = 'Selisih ' + rupiah(Math.abs(slipVal - cashVal)) + '. Samakan dulu sebelum simpan.';
-                match.className = 'text-[13px] font-semibold mt-1.5 text-red-800';
-            }
-        }
     }
 
     slip.addEventListener('input', refresh);
-    total.addEventListener('input', refresh);
     refresh();
 }
 
@@ -277,65 +288,73 @@ function bindTransferPage() {
     refresh();
 }
 
-function bindClosingPage() {
-    var form = document.getElementById('closing-form');
-    var total = document.getElementById('physical_cash');
-    var match = document.getElementById('closing-match');
-    var submit = document.getElementById('closing-submit');
-    var noteWrap = document.getElementById('difference-note-wrap');
-    var noteInput = document.getElementById('difference_note');
-    if (!form || !total) return;
-    var systemBalance = toInt(form.getAttribute('data-system-balance'));
+function bindActivationPage() {
+    var form = document.getElementById('activation-form');
+    if (!form) return;
+    var amount = document.getElementById('amount');
+    var preview = document.getElementById('activation-preview');
+    if (!amount || !preview) return;
 
     function refresh() {
-        var physical = total.value === '' ? null : toInt(total.value);
-        if (physical === null || total.value === '') {
-            if (match) {
-                match.textContent = 'Ketik total uang laci. Rincian pecahan opsional di bawah.';
-                match.className = 'text-[13px] font-semibold text-stone-600 mt-1.5';
-            }
-            if (noteWrap) noteWrap.classList.add('hidden');
-            if (noteInput) noteInput.required = false;
-            if (submit) submit.textContent = 'Buat laporan harian';
-            return;
-        }
-        var diff = physical - systemBalance;
-        if (diff === 0) {
-            if (match) {
-                match.textContent = 'Cocok dengan saldo sistem ' + rupiah(systemBalance) + '. Siap buat laporan.';
-                match.className = 'text-[13px] font-semibold text-brand-900 mt-1.5';
-            }
-            if (noteWrap) noteWrap.classList.add('hidden');
-            if (noteInput) noteInput.required = false;
-            if (submit) submit.textContent = 'Buat laporan harian';
-        } else {
-            var kurang = diff < 0;
-            if (match) {
-                match.textContent = (kurang ? 'Kurang ' : 'Lebih ') + rupiah(Math.abs(diff)) +
-                    ' dari sistem (' + rupiah(systemBalance) + '). Laporan tetap bisa disimpan dengan berita acara.';
-                match.className = 'text-[13px] font-semibold text-red-800 mt-1.5';
-            }
-            if (noteWrap) noteWrap.classList.remove('hidden');
-            if (noteInput) noteInput.required = true;
-            if (submit) submit.textContent = 'Simpan dengan selisih ' + rupiah(Math.abs(diff));
+        preview.textContent = 'Terbaca: ' + rupiah(toInt(amount.value));
+    }
+
+    amount.addEventListener('input', refresh);
+    refresh();
+}
+
+// Pemilihan baris pada tabel panjang (mis. pindah rombel): kotak "pilih semua" dan
+// penghitung pada tombol supaya jumlah penabung yang ikut terlihat sebelum dikirim.
+function bindRowSelection() {
+    var items = Array.prototype.slice.call(document.querySelectorAll('[data-select-item]'));
+    if (!items.length) return;
+
+    var selectAll = document.querySelector('[data-select-all]');
+    var submit = document.querySelector('[data-select-submit]');
+
+    function refresh() {
+        var checked = items.filter(function (item) { return item.checked; }).length;
+
+        // Dicari ulang tiap kali: tombol bisa dipulihkan dari innerHTML setelah dialog
+        // konfirmasi dibatalkan, sehingga elemen penghitung yang lama sudah lepas dari dokumen.
+        var counter = document.querySelector('[data-select-count]');
+
+        if (counter) counter.textContent = checked;
+        if (submit) submit.disabled = checked === 0;
+
+        if (selectAll) {
+            selectAll.checked = checked === items.length;
+            selectAll.indeterminate = checked > 0 && checked < items.length;
         }
     }
 
-    total.addEventListener('input', refresh);
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            items.forEach(function (item) { item.checked = selectAll.checked; });
+            refresh();
+        });
+    }
+
+    if (submit && submit.form) submit.form.addEventListener('confirm-cancelled', refresh);
+
+    items.forEach(function (item) { item.addEventListener('change', refresh); });
     refresh();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     bindMenuToggle();
+    bindNavGroups();
     bindLoginToggle();
     bindAuthTabs();
     bindPrintButtons();
+    // bindDisableOnSubmit harus lebih dulu dari bindConfirmForms: tombol dinonaktifkan
+    // sebelum dialog muncul, lalu bindConfirmForms mengaktifkan lagi saat pengguna batal.
+    bindDisableOnSubmit();
     bindConfirmForms();
     bindReversalForms();
-    bindDenominationHelpers();
     bindDepositPage();
     bindWithdrawPage();
     bindTransferPage();
-    bindClosingPage();
-    bindDisableOnSubmit();
+    bindActivationPage();
+    bindRowSelection();
 });

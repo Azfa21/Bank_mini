@@ -2,7 +2,6 @@
 
 @php
     use App\Models\SystemConfig;
-    use App\Support\CashDenomination;
     use App\Support\Terbilang;
 
     $bankName = SystemConfig::value('bank_name', 'Bank Mini Sekolah');
@@ -17,7 +16,7 @@
         || ($transaction->type === 'reversal' && $transaction->reversalOf?->type === 'withdrawal');
 @endphp
 
-@section('title', 'Struk Transaksi  EBank Mini')
+@section('title', 'Struk Transaksi | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -42,7 +41,7 @@
 
     @if ($transaction->isReversed())
         <div role="alert" class="max-w-md mx-auto mb-4 bg-red-50 border border-red-200 text-red-800 text-sm rounded-2xl p-4 print:hidden">
-            Transaksi ini sudah <strong>dikoreksi</strong> oleh {{ $transaction->reversedBy->full_name ?? 'Supervisor' }}
+            Transaksi ini sudah <strong>dikoreksi</strong> oleh {{ $transaction->reversedBy->full_name ?? 'Administrator' }}
             {{ $transaction->reversed_at?->format('d/m/Y H:i') }}. Alasan: {{ $transaction->reversal_reason }}
         </div>
     @endif
@@ -134,26 +133,9 @@
             </div>
             <div class="flex justify-between gap-3">
                 <span class="text-stone-600">Status</span>
-                <span class="font-semibold">{{ strtoupper($transaction->status) }}</span>
+                <span class="font-semibold">{{ $transaction->statusLabel() }}</span>
             </div>
         </div>
-
-        @if ($transaction->denomination_breakdown)
-            <div class="border-t border-dashed border-stone-300 pt-4 mt-4">
-                <p class="text-[13px] font-semibold text-stone-700 mb-1.5">Rincian uang tunai</p>
-                <div class="text-[13px] text-stone-700 space-y-1">
-                    @foreach ($transaction->denomination_breakdown as $key => $count)
-                        @php $value = CashDenomination::valueOf((string) $key); @endphp
-                        @if ($value !== null)
-                            <div class="flex justify-between gap-3">
-                                <span>{{ CashDenomination::label($value) }} ÁE{{ $count }}</span>
-                                <span class="tnum">Rp {{ number_format($value * $count, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-        @endif
 
         <div class="border-t border-dashed border-stone-300 mt-4 pt-4">
             <div class="flex justify-between text-[13px] text-stone-600">
@@ -166,7 +148,7 @@
 
     @unless ($transaction->isReversed())
         <div role="status" class="max-w-md mx-auto mt-4 bg-brand-50 border border-brand-200 text-brand-900 text-sm rounded-2xl p-4 print:hidden">
-            Transaksi <strong>{{ $transaction->status }}</strong> dan terkunci. Tidak bisa diubah atau dihapus Teller.
+            Transaksi <strong>{{ $transaction->statusLabel() }}</strong> dan terkunci. Tidak bisa diubah atau dihapus Teller.
         </div>
     @endunless
 @endsection

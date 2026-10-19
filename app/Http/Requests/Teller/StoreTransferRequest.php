@@ -23,6 +23,21 @@ class StoreTransferRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'recipient_account_number.required' => 'Nomor rekening tujuan wajib diisi.',
+            'recipient_account_number.exists' => 'Nomor rekening tujuan tidak ditemukan. Periksa lagi angka pada buku tabungan.',
+            'amount.required' => 'Nominal transfer wajib diisi.',
+            'amount.integer' => 'Nominal transfer harus berupa angka tanpa titik atau koma.',
+            'amount.min' => 'Nominal transfer minimal Rp 1.',
+            'pin.required' => 'PIN pengirim wajib diisi.',
+            'pin.digits' => 'PIN harus tepat 6 digit angka.',
+            'slip_number.max' => 'Nomor slip maksimal 30 karakter.',
+            'notes.max' => 'Keterangan maksimal 255 karakter.',
+        ];
+    }
+
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {

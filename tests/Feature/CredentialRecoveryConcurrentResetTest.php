@@ -17,6 +17,10 @@ class CredentialRecoveryConcurrentResetTest extends TestCase
 
     private const EMAIL = 'concurrent-staff@example.test';
 
+    private const USERNAME = 'race-teller';
+
+    private const ACCOUNT_ID = 4242;
+
     private ?string $connectionName = null;
 
     private string $sqlitePath = '';
@@ -135,7 +139,8 @@ class CredentialRecoveryConcurrentResetTest extends TestCase
         $now = now()->toDateTimeString();
 
         $connection->table('users')->insert([
-            'username' => 'race-teller',
+            'id' => self::ACCOUNT_ID,
+            'username' => self::USERNAME,
             'email' => self::EMAIL,
             'password_hash' => password_hash('OldPass123!', PASSWORD_BCRYPT),
             'full_name' => 'Race Teller',
@@ -147,6 +152,7 @@ class CredentialRecoveryConcurrentResetTest extends TestCase
 
         $connection->table('password_reset_otps')->insert([
             'account_type' => 'staff',
+            'account_id' => self::ACCOUNT_ID,
             'email' => self::EMAIL,
             'otp_hash' => password_hash(self::OTP, PASSWORD_BCRYPT),
             'attempts' => 0,
@@ -231,7 +237,7 @@ class CredentialRecoveryConcurrentResetTest extends TestCase
             $barrier,
             $ready,
             'staff',
-            self::EMAIL,
+            self::USERNAME,
             self::OTP,
             $job['password'],
             $this->connectionName,

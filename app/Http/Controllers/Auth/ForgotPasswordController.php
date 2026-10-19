@@ -25,13 +25,14 @@ class ForgotPasswordController extends Controller
     {
         $result = $this->recovery->requestOtp(
             $request->validated('account_type'),
-            $request->validated('email'),
+            $request->validated('identifier'),
         );
 
         if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => $result['ok'],
                 'message' => $result['message'],
+                'email' => $result['email'],
             ], $result['status']);
         }
 
@@ -39,10 +40,16 @@ class ForgotPasswordController extends Controller
             return back()->withInput()->withErrors([$result['field'] => $result['message']]);
         }
 
-        return back()
+        $redirect = back()
             ->withInput()
             ->with('success', $result['message'])
             ->with('otp_sent', true);
+
+        if ($result['email'] !== null) {
+            $redirect->with('email', $result['email']);
+        }
+
+        return $redirect;
     }
 
     public function resetCredential(ResetCredentialRequest $request): JsonResponse|RedirectResponse
@@ -54,7 +61,7 @@ class ForgotPasswordController extends Controller
 
         $result = $this->recovery->verifyAndReset(
             $accountType,
-            $request->validated('email'),
+            $request->validated('identifier'),
             $request->validated('otp'),
             $newSecret,
         );
@@ -63,14 +70,21 @@ class ForgotPasswordController extends Controller
             return response()->json([
                 'success' => $result['ok'],
                 'message' => $result['message'],
+                'email' => $result['email'],
             ], $result['status']);
         }
 
         if (! $result['ok']) {
-            return back()
+            $redirect = back()
                 ->withInput()
                 ->withErrors([$result['field'] => $result['message']])
                 ->with('otp_sent', true);
+
+            if ($result['email'] !== null) {
+                $redirect->with('email', $result['email']);
+            }
+
+            return $redirect;
         }
 
         return redirect()->route('login')->with('success', $result['message']);

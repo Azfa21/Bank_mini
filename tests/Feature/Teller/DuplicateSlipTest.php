@@ -13,7 +13,6 @@ class DuplicateSlipTest extends TellerTestCase
         $payload = [
             'slip_number' => 'SLIP-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ];
 
         $this->actingAsTeller()
@@ -34,7 +33,6 @@ class DuplicateSlipTest extends TellerTestCase
         app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
         $this->expectException(QueryException::class);
@@ -49,7 +47,6 @@ class DuplicateSlipTest extends TellerTestCase
             'receipt_number' => 'TRX-20260925-9999',
             'slip_number' => 'SLIP-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
             'status' => 'success',
             'transaction_at' => now(),
         ]);

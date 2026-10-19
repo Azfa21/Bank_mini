@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Transaksi Penarikan  EBank Mini')
+@section('title', 'Transaksi Penarikan | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -23,16 +23,12 @@
                     <p class="text-[13px] font-medium text-stone-600">Saldo saat ini</p>
                     <p class="text-2xl font-bold text-stone-900 tnum">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
                     @php
-                        $maxWithoutOrder = (int) \App\Models\SystemConfig::value('max_withdrawal_without_order', 0);
                         $minimumBalance = max(
                             (int) $account->minimum_balance,
                             (int) \App\Models\SystemConfig::value('minimum_balance', 10000)
                         );
                     @endphp
                     <p class="text-[13px] text-stone-600">Saldo mengendap: <span class="tnum font-medium text-stone-800">Rp {{ number_format($minimumBalance, 0, ',', '.') }}</span></p>
-                    @if ($maxWithoutOrder > 0)
-                        <p class="text-[13px] font-semibold text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-2">Batas tanpa pesanan: <span class="tnum">Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}</span></p>
-                    @endif
                     <p id="withdraw-preview" role="status" class="text-[13px] font-medium text-stone-800">Sisa sesudah penarikan: Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
                 </div>
             </div>
@@ -47,21 +43,12 @@
 
                     <div>
                         <x-input-label for="amount">Nominal penarikan (Rp) wajib</x-input-label>
-                        <x-input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 50000" required
+                        <x-input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 50000" required autofocus
                             aria-describedby="amount-help amount-preview" />
                         <p id="amount-help" class="text-[13px] text-stone-600 mt-1.5">Sisa saldo tidak boleh di bawah saldo mengendap.</p>
                         <p id="amount-preview" role="status" class="text-[13px] font-medium text-stone-800 mt-1">Terbaca: Rp 0</p>
                         <x-input-error :message="$errors->first('amount')" />
                     </div>
-
-                    <details class="border-t border-stone-100 pt-5">
-                        <summary class="inline-flex items-center min-h-[44px] cursor-pointer text-[15px] font-bold text-stone-900">
-                            Siapkan pecahan untuk penabung (opsional)
-                        </summary>
-                        <p class="text-[13px] text-stone-600 mt-1 mb-3">Bantu teller menyiapkan uang yang diserahkan. Tidak memengaruhi nominal.</p>
-                        <x-denomination-input />
-                        <p role="status" data-denomination-sum class="text-[13px] font-medium text-stone-700 mt-2">Subtotal rincian: Rp 0</p>
-                    </details>
 
                     <div>
                         <x-input-label for="pin">PIN penabung 6 digit wajib</x-input-label>
@@ -75,7 +62,7 @@
                     <x-primary-button variant="danger" id="withdraw-submit" data-loading-text="Memeriksa PIN dan saldo..." class="w-full">
                         Simpan penarikan
                     </x-primary-button>
-                    <p class="text-[13px] text-stone-600 text-center">Periksa pecahan dan PIN dulu. Transaksi tersimpan tidak bisa diubah.</p>
+                    <p class="text-[13px] text-stone-600 text-center">Periksa nominal dan PIN dulu. Transaksi tersimpan tidak bisa diubah.</p>
                 </form>
             </div>
         </section>

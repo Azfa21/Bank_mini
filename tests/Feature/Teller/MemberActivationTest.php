@@ -25,7 +25,6 @@ class MemberActivationTest extends TellerTestCase
         $this->actingAsTeller()
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
-                'physical_cash_amount' => 50000,
                 'pin' => '654321',
                 'class_name' => 'VII A',
                 'email' => 'budi.santoso@example.test',
@@ -48,6 +47,35 @@ class MemberActivationTest extends TellerTestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'member_activated']);
     }
 
+    public function test_activation_form_prefills_class_from_member_data(): void
+    {
+        $member = $this->makeMember();
+        $member->update(['class_name' => 'X RPL 1']);
+
+        $this->actingAsTeller()
+            ->get(route('teller.members.activate', $member))
+            ->assertOk()
+            ->assertSee('Terisi dari data anggota. Ubah kalau sudah naik kelas.')
+            ->assertSee('value="X RPL 1"', false);
+    }
+
+    public function test_activation_uses_the_class_submitted_by_the_teller(): void
+    {
+        $member = $this->makeMember();
+        $member->update(['class_name' => 'X RPL 1']);
+
+        $this->actingAsTeller()
+            ->post(route('teller.members.activate.store', $member), [
+                'amount' => 50000,
+                'pin' => '654321',
+                'class_name' => 'X RPL 2',
+                'email' => 'budi.santoso@example.test',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('X RPL 2', Saver::where('member_nis', '20260001')->firstOrFail()->class_name);
+    }
+
     public function test_activation_rejects_deposit_below_threshold(): void
     {
         $member = $this->makeMember();
@@ -56,29 +84,14 @@ class MemberActivationTest extends TellerTestCase
             ->from(route('teller.members.activate', $member))
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 5000,
-                'physical_cash_amount' => 5000,
                 'pin' => '654321',
+
+                'email' => 'wali.test@smp.test',
             ])
             ->assertSessionHasErrors('amount');
 
         $this->assertSame(0, Saver::where('member_nis', '20260001')->count());
         $this->assertSame(Member::STATUS_ACCOUNT_INACTIVE, $member->fresh()->status);
-    }
-
-    public function test_activation_rejects_mismatched_physical_cash(): void
-    {
-        $member = $this->makeMember();
-
-        $this->actingAsTeller()
-            ->from(route('teller.members.activate', $member))
-            ->post(route('teller.members.activate.store', $member), [
-                'amount' => 50000,
-                'physical_cash_amount' => 40000,
-                'pin' => '654321',
-            ])
-            ->assertSessionHasErrors('physical_cash_amount');
-
-        $this->assertSame(0, Saver::where('member_nis', '20260001')->count());
     }
 
     public function test_activation_rejects_member_that_is_already_active(): void
@@ -90,8 +103,9 @@ class MemberActivationTest extends TellerTestCase
             ->from(route('teller.members.activate', $member))
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
-                'physical_cash_amount' => 50000,
                 'pin' => '654321',
+
+                'email' => 'wali.test@smp.test',
             ])
             ->assertSessionHas('error');
 
@@ -105,8 +119,9 @@ class MemberActivationTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
-                'physical_cash_amount' => 50000,
                 'pin' => '654321',
+
+                'email' => 'wali.test@smp.test',
             ])
             ->assertRedirect(route('login'));
 

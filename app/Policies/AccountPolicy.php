@@ -6,12 +6,12 @@ class AccountPolicy
 {
     public function viewAny($user): bool
     {
-        return in_array($user?->role, ['admin', 'teller', 'supervisor']);
+        return in_array($user?->role, ['admin', 'teller']);
     }
 
     public function view($user, $account = null): bool
     {
-        return in_array($user?->role, ['admin', 'teller', 'supervisor']);
+        return in_array($user?->role, ['admin', 'teller']);
     }
 
     public function create($user): bool

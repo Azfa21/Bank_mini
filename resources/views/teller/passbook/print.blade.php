@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Cetak Buku Tabungan  EBank Mini')
+@section('title', 'Cetak Buku Tabungan | Bank Mini')
 @section('section', 'Piket Teller')
 
 @php
@@ -26,7 +26,7 @@
     <div class="print-sheet max-w-3xl mx-auto bg-white rounded-xl border-2 border-stone-800 p-6 text-stone-900" id="passbook">
         <div class="text-center border-b-2 border-stone-800 pb-3">
             <p class="font-bold tracking-wide text-base">{{ $bankName }}</p>
-            <p class="text-xs mt-0.5">Buku Tabungan Siswa  ETahun Ajaran {{ $account->academic_year }}</p>
+            <p class="text-xs mt-0.5">Buku Tabungan Siswa · Tahun Ajaran {{ $account->academic_year }}</p>
         </div>
 
         <div class="flex items-center justify-between text-xs py-3 border-b border-stone-400">
@@ -46,7 +46,7 @@
                     <th class="py-1.5 text-left w-8">No</th>
                     <th class="py-1.5 text-left">Tanggal</th>
                     <th class="py-1.5 text-left">Transaksi / Referensi</th>
-                    <th class="py-1.5 text-right">Debet</th>
+                    <th class="py-1.5 text-right">Debit</th>
                     <th class="py-1.5 text-right">Kredit</th>
                     <th class="py-1.5 text-right">Saldo</th>
                 </tr>

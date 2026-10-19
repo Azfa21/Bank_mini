@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Konfigurasi Sistem  EBank Mini')
+@section('title', 'Konfigurasi Sistem | Bank Mini')
 @section('section', 'Administrator · Konfigurasi')
 
 @section('content')
@@ -13,19 +13,11 @@
             @csrf @method('PUT')
 
             <div>
-                <x-input-label for="bank_name">Nama bank mini wajib</x-input-label>
+                <x-input-label for="bank_name">Nama bank mini</x-input-label>
                 <x-input id="bank_name" name="bank_name" :value="$configs->get('bank_name')->config_value ?? 'Bank Mini Sekolah'" required
                     aria-describedby="bank-name-help" />
                 <p id="bank-name-help" class="text-[13px] text-stone-600 mt-1.5">Tampil di struk, laporan, dan kartu penabung.</p>
                 <x-input-error :message="$errors->first('bank_name')" />
-            </div>
-
-            <div>
-                <x-input-label for="operational_hours">Jam layanan loket</x-input-label>
-                <x-input name="operational_hours" id="operational_hours" :value="$configs->get('operational_hours')->config_value ?? '07.30 - 14.00 WIB'"
-                    aria-describedby="hours-help" />
-                <p id="hours-help" class="text-[13px] text-stone-600 mt-1.5">Tampil di dashboard Teller dan footer.</p>
-                <x-input-error :message="$errors->first('operational_hours')" />
             </div>
 
             <div>
@@ -37,19 +29,19 @@
             </div>
 
             <div>
-                <x-input-label for="max_withdrawal_without_order">Batas penarikan tanpa pesanan (Rp) wajib</x-input-label>
-                <x-input id="max_withdrawal_without_order" name="max_withdrawal_without_order" type="number" inputmode="numeric" :value="$configs->get('max_withdrawal_without_order')->config_value ?? 0" min="0" required
-                    aria-describedby="limit-help" />
-                <p id="limit-help" class="text-[13px] text-stone-600 mt-1.5">Di atas batas ini transaksi ditolak. Isi 0 untuk nonaktif.</p>
-                <x-input-error :message="$errors->first('max_withdrawal_without_order')" />
-            </div>
-
-            <div>
                 <x-input-label for="min_deposit_to_activate">Setoran minimal aktivasi anggota (Rp) wajib</x-input-label>
                 <x-input id="min_deposit_to_activate" name="min_deposit_to_activate" type="number" inputmode="numeric" :value="$configs->get('min_deposit_to_activate')->config_value ?? 10000" min="0" required
                     aria-describedby="activate-help" />
                 <p id="activate-help" class="text-[13px] text-stone-600 mt-1.5">Anggota otomatis menjadi penabung setelah setoran minimal ini.</p>
                 <x-input-error :message="$errors->first('min_deposit_to_activate')" />
+            </div>
+
+            <div>
+                <x-input-label for="class_majors">Jurusan <span class="text-stone-500 font-normal">(pisahkan dengan koma)</span></x-input-label>
+                <x-input id="class_majors" name="class_majors" :value="$configs->get('class_majors')->config_value ?? implode(', ', \App\Support\ClassRoom::DEFAULT_MAJORS)"
+                    aria-describedby="majors-help" />
+                <p id="majors-help" class="text-[13px] text-stone-600 mt-1.5">Pilihan jurusan saat mengisi kelas penabung dan memproses kenaikan kelas. Contoh: RPL, TKJ, DKV.</p>
+                <x-input-error :message="$errors->first('class_majors')" />
             </div>
 
             <div class="pt-1">

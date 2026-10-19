@@ -77,13 +77,13 @@ class SecurityTest extends TestCase
         $blocked = User::create([
             'username' => 'blocked2',
             'password_hash' => Hash::make('password'),
-            'full_name' => 'Blocked Supervisor',
-            'role' => 'supervisor',
+            'full_name' => 'Blocked Admin',
+            'role' => 'admin',
             'status' => 'blocked',
         ]);
 
         $this->actingAs($blocked, 'web')
-            ->get('/supervisor/dashboard')
+            ->get('/admin/dashboard')
             ->assertRedirect(route('login'));
     }
 

@@ -73,15 +73,24 @@ class AuthService {
     await _api.postJson('/mobile/logout');
   }
 
-  Future<void> requestResetOtp({required String email}) async {
-    await _api.postJson(
+  /// Mengembalikan alamat email terdaftar yang menerima kode verifikasi,
+  /// atau null bila tidak ada. Nomor siswa yang belum terdaftar sebagai
+  /// penabung ditolak server lewat [ApiException], bukan lewat nilai null.
+  Future<String?> requestResetOtp({required String studentNumber}) async {
+    final response = await _api.postJson(
       '/mobile/forgot-pin/request-otp',
-      data: {'account_type': 'nasabah', 'email': email},
+      data: {'account_type': 'nasabah', 'identifier': studentNumber},
     );
+
+    final email = response['email'];
+    if (email is String && email.isNotEmpty) {
+      return email;
+    }
+    return null;
   }
 
   Future<void> resetPin({
-    required String email,
+    required String studentNumber,
     required String otp,
     required String pin,
   }) async {
@@ -89,7 +98,7 @@ class AuthService {
       '/mobile/forgot-pin/reset',
       data: {
         'account_type': 'nasabah',
-        'email': email,
+        'identifier': studentNumber,
         'otp': otp,
         'pin': pin,
         'pin_confirmation': pin,

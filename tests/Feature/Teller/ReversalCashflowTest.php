@@ -17,10 +17,9 @@ class ReversalCashflowTest extends TellerTestCase
         $deposit = $service->deposit($this->account, [
             'slip_number' => 'SLIP-CF-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Setoran dibatalkan hari yang sama.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Setoran dibatalkan hari yang sama.');
 
         $recap = $this->actingAsTeller()
             ->get(route('teller.closing.index'))
@@ -34,13 +33,11 @@ class ReversalCashflowTest extends TellerTestCase
         $this->actingAsTeller()
             ->post(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 0,
             ])
             ->assertRedirect();
 
         $report = DailyReport::firstOrFail();
         $this->assertSame(0, $report->closing_balance_system);
-        $this->assertSame(0, $report->cash_difference);
     }
 
     public function test_same_day_withdrawal_reversal_keeps_closing_cash_balanced(): void
@@ -52,7 +49,7 @@ class ReversalCashflowTest extends TellerTestCase
             'slip_number' => 'SLIP-CF-002',
         ], '123456', $this->teller);
 
-        app(ReversalService::class)->reverse($withdrawal, $this->supervisor, 'Penarikan dibatalkan.');
+        app(ReversalService::class)->reverse($withdrawal, $this->admin2, 'Penarikan dibatalkan.');
 
         $recap = $this->actingAsTeller()
             ->get(route('teller.closing.index'))
@@ -82,7 +79,7 @@ class ReversalCashflowTest extends TellerTestCase
 
         $deposit = Transaction::where('receipt_number', 'TRX-CF-YDAY-001')->firstOrFail();
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Koreksi setoran hari sebelumnya.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Koreksi setoran hari sebelumnya.');
 
         $this->assertSame(25000, $this->account->refresh()->balance);
 
@@ -103,10 +100,9 @@ class ReversalCashflowTest extends TellerTestCase
         $deposit = $service->deposit($this->account, [
             'slip_number' => 'SLIP-CF-004',
             'slip_amount' => 40000,
-            'physical_cash_amount' => 40000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Koreksi tunggal.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Koreksi tunggal.');
 
         $recap = app(DailyReportService::class)->recap($this->teller, now()->toDateString());
 

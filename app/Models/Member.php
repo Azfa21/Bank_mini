@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property string $nis
  * @property string $full_name
+ * @property string|null $class_name
  * @property string|null $graduation_year
+ * @property CarbonInterface|null $graduated_at
  * @property string $status
  * @property int|null $created_by
  * @property CarbonInterface|null $created_at
@@ -33,19 +35,22 @@ class Member extends Model
     protected $fillable = [
         'nis',
         'full_name',
+        'class_name',
         'graduation_year',
+        'graduated_at',
         'status',
         'created_by',
     ];
 
     protected $casts = [
+        'graduated_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    public function isAccountActive(): bool
+    public function isGraduated(): bool
     {
-        return $this->status === self::STATUS_ACCOUNT_ACTIVE;
+        return $this->graduated_at !== null;
     }
 
     /** @return HasOne<Saver, $this> */

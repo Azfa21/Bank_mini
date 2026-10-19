@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Transfer Antar Rekening  EBank Mini')
+@section('title', 'Transfer Antar Rekening | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -38,7 +38,7 @@
                     <div>
                         <x-input-label for="recipient_account_number">Nomor rekening tujuan wajib</x-input-label>
                         <x-input id="recipient_account_number" name="recipient_account_number"
-                            class="tnum" placeholder="Contoh: 1026270002" required autocomplete="off"
+                            class="tnum" placeholder="Contoh: 1026270002" required autocomplete="off" autofocus
                             aria-describedby="recipient-help" />
                         <p id="recipient-help" class="text-[13px] text-stone-600 mt-1.5">Minta penabung menyebutkan atau menunjukkan nomor tujuan.</p>
                         <x-input-error :message="$errors->first('recipient_account_number')" />

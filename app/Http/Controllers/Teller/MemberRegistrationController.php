@@ -28,6 +28,7 @@ class MemberRegistrationController extends Controller
         $member = $this->registrations->register([
             'nis' => $request->validated('nis'),
             'full_name' => $request->validated('full_name'),
+            'class_name' => $request->validated('class_name'),
             'graduation_year' => $request->validated('graduation_year'),
         ], $request->user()->id);
 
@@ -44,6 +45,7 @@ class MemberRegistrationController extends Controller
             ->with('registration', [
                 'full_name' => $member->full_name,
                 'nis' => $member->nis,
+                'class_name' => $member->class_name,
                 'graduation_year' => $member->graduation_year,
             ]);
     }

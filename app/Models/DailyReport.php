@@ -17,9 +17,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $total_deposit
  * @property int $total_withdrawal
  * @property int $closing_balance_system
- * @property int|null $closing_balance_physical
- * @property array<string, int>|null $closing_breakdown
- * @property int|null $cash_difference
  * @property string $status
  * @property int|null $approved_by
  * @property CarbonInterface|null $approved_at
@@ -41,9 +38,6 @@ class DailyReport extends Model
         'total_deposit',
         'total_withdrawal',
         'closing_balance_system',
-        'closing_balance_physical',
-        'closing_breakdown',
-        'cash_difference',
         'status',
         'approved_by',
         'approved_at',
@@ -57,9 +51,6 @@ class DailyReport extends Model
         'total_deposit' => 'integer',
         'total_withdrawal' => 'integer',
         'closing_balance_system' => 'integer',
-        'closing_balance_physical' => 'integer',
-        'closing_breakdown' => 'array',
-        'cash_difference' => 'integer',
         'approved_at' => 'datetime',
         'submitted_at' => 'datetime',
         'created_at' => 'datetime',
@@ -69,6 +60,22 @@ class DailyReport extends Model
     public function teller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teller_id');
+    }
+
+    /**
+     * Label status untuk layar staf. Sebelumnya setiap view menulis ulang pemetaan ini
+     * dan "submitted" muncul sebagai "Menunggu" di satu tempat, "Menunggu validasi" di
+     * tempat lain; satu sumber membuat istilahnya seragam.
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Draf',
+            'submitted' => 'Menunggu validasi',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+            default => ucfirst($this->status),
+        };
     }
 
     /** @return BelongsTo<User, $this> */

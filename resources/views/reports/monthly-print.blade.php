@@ -4,11 +4,11 @@
     $months = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     $periodLabel = $months[(int) $start->format('n')].' '.$start->format('Y');
     $bankName = \App\Models\SystemConfig::value('bank_name', 'Bank Mini Sekolah');
-    $backRoute = $isSupervisor ? route('supervisor.reports.monthly') : route('admin.reports.monthly');
+    $backRoute = route('admin.reports.monthly');
 @endphp
 
-@section('title', 'Cetak Laporan Bulanan — Bank Mini')
-@section('section', $isSupervisor ? 'Supervisor' : 'Administrator')
+@section('title', 'Cetak Laporan Bulanan | Bank Mini')
+@section('section', 'Administrator')
 
 @section('content')
     <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between print:hidden">
@@ -66,7 +66,7 @@
                 <tbody class="divide-y divide-stone-100">
                     @forelse ($perTeller as $row)
                         <tr>
-                            <td class="py-2">{{ $tellers[$row->teller_id]->full_name ?? '—' }}</td>
+                            <td class="py-2">{{ $tellers[$row->teller_id]->full_name ?? '-' }}</td>
                             <td class="py-2 text-right tnum">{{ number_format($row->total) }}</td>
                             <td class="py-2 text-right tnum">Rp {{ number_format($row->deposit, 0, ',', '.') }}</td>
                             <td class="py-2 text-right tnum">Rp {{ number_format($row->withdrawal, 0, ',', '.') }}</td>
@@ -81,28 +81,17 @@
         <div class="border-t border-dashed border-stone-300 mt-4 pt-4">
             <p class="text-sm font-semibold text-stone-900 mb-2">Laporan harian</p>
             <p class="text-sm text-stone-600">
-                Total {{ $reportSummary['total'] }} laporan —
+                Total {{ $reportSummary['total'] }} laporan,
                 disetujui {{ $reportSummary['approved'] }},
                 menunggu {{ $reportSummary['submitted'] }},
                 ditolak {{ $reportSummary['rejected'] }}.
             </p>
-            <p class="text-sm text-stone-600 mt-1">
-                Total uang fisik Rp {{ number_format($reportSummary['physical'], 0, ',', '.') }},
-                total selisih Rp {{ number_format($reportSummary['difference'], 0, ',', '.') }}.
-            </p>
         </div>
 
-        <div class="border-t border-dashed border-stone-300 mt-6 pt-4 grid grid-cols-2 gap-8 text-sm text-center">
-            <div>
-                <p class="text-stone-600">Dibuat oleh</p>
-                <div class="h-16"></div>
-                <p class="border-t border-stone-300 pt-1">Administrator</p>
-            </div>
-            <div>
-                <p class="text-stone-600">Disetujui oleh</p>
-                <div class="h-16"></div>
-                <p class="border-t border-stone-300 pt-1">Supervisor</p>
-            </div>
+        <div class="border-t border-dashed border-stone-300 mt-6 pt-4 max-w-xs mx-auto text-sm text-center">
+            <p class="text-stone-600">Disahkan oleh</p>
+            <div class="h-16"></div>
+            <p class="border-t border-stone-300 pt-1">Administrator</p>
         </div>
     </div>
 @endsection

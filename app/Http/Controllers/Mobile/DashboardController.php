@@ -60,7 +60,6 @@ class DashboardController extends Controller
                 ],
                 'bank' => [
                     'name' => (string) SystemConfig::value('bank_name', 'Bank Mini Sekolah'),
-                    'operational_hours' => (string) SystemConfig::value('operational_hours', '07.30 - 14.00 WIB'),
                 ],
                 'last_transaction' => $lastTransaction,
             ],

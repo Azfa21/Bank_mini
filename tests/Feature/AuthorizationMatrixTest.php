@@ -13,7 +13,6 @@ class AuthorizationMatrixTest extends TellerTestCase
         return app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-AUTH-001',
             'slip_amount' => 30000,
-            'physical_cash_amount' => 30000,
         ], $this->teller);
     }
 
@@ -24,24 +23,24 @@ class AuthorizationMatrixTest extends TellerTestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_admin_cannot_reverse_transaction(): void
+    public function test_admin_can_reverse_transaction(): void
     {
         $transaction = $this->seedTransaction();
 
         $this->actingAs($this->admin, 'web')
-            ->post(route('supervisor.transactions.reverse', $transaction), ['reason' => 'Coba koreksi.'])
-            ->assertRedirect(route('login'));
+            ->post(route('admin.transactions.reverse', $transaction), ['reason' => 'Coba koreksi.'])
+            ->assertRedirect();
 
-        $this->assertSame('success', $transaction->refresh()->status);
+        $this->assertSame('reversed', $transaction->refresh()->status);
     }
 
-    public function test_supervisor_cannot_access_teller_registration(): void
+    public function test_admin_cannot_access_teller_registration(): void
     {
-        $this->actingAs($this->supervisor, 'web')
+        $this->actingAs($this->admin2, 'web')
             ->get(route('teller.members.register'))
             ->assertRedirect(route('login'));
 
-        $this->actingAs($this->supervisor, 'web')
+        $this->actingAs($this->admin2, 'web')
             ->post(route('teller.members.register.store'), [
                 'full_name' => 'Bukan Tugasnya',
                 'class_name' => 'VII A',
@@ -55,7 +54,7 @@ class AuthorizationMatrixTest extends TellerTestCase
         $transaction = $this->seedTransaction();
 
         $this->actingAs($this->nasabah, 'nasabah')
-            ->post(route('supervisor.transactions.reverse', $transaction), ['reason' => 'Coba koreksi.'])
+            ->post(route('admin.transactions.reverse', $transaction), ['reason' => 'Coba koreksi.'])
             ->assertRedirect(route('login'));
 
         $this->assertSame('success', $transaction->refresh()->status);

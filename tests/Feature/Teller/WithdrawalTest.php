@@ -24,7 +24,6 @@ class WithdrawalTest extends TellerTestCase
         $this->assertSame(25000, $transaction->balance_before);
         $this->assertSame(15000, $transaction->balance_after);
         $this->assertSame('SLIP-010', $transaction->slip_number);
-        $this->assertNull($transaction->physical_cash_amount);
 
         $this->assertSame(15000, $this->account->refresh()->balance);
 

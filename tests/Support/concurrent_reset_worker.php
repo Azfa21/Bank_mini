@@ -10,7 +10,7 @@ require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
-[$token, $barrier, $readyFile, $accountType, $email, $otp, $password, $connectionName, $connectionConfig] = array_slice($argv, 1);
+[$token, $barrier, $readyFile, $accountType, $identifier, $otp, $password, $connectionName, $connectionConfig] = array_slice($argv, 1);
 
 config([
     'mail.default' => 'array',
@@ -41,7 +41,7 @@ while (! file_exists($barrier)) {
 try {
     $result = app(CredentialRecoveryService::class)->verifyAndReset(
         $accountType,
-        $email,
+        $identifier,
         $otp,
         Hash::make($password),
     );

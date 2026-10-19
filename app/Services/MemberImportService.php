@@ -14,7 +14,7 @@ class MemberImportService
     private const MAX_REPORTED_ISSUES = 50;
 
     /**
-     * @return array{imported: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}
+     * @return array{imported: int, updated: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}
      */
     public function importFromCsv(string $path, int $actorId): array
     {
@@ -58,7 +58,7 @@ class MemberImportService
 
     /**
      * @param  array<int, string|false|null>  $headers
-     * @return array{nis: int, nama: int, angkatan_keluar: ?int}
+     * @return array{nis: int, nama: int, angkatan_keluar: ?int, kelas: ?int}
      */
     private function mapHeaders(array $headers): array
     {
@@ -72,6 +72,7 @@ class MemberImportService
             'nis' => array_search('nis', $normalized, true),
             'nama' => array_search('nama', $normalized, true),
             'angkatan_keluar' => array_search('angkatan_keluar', $normalized, true),
+            'kelas' => array_search('kelas', $normalized, true),
         ];
 
         if ($columns['nis'] === false || $columns['nama'] === false) {
@@ -82,17 +83,18 @@ class MemberImportService
             'nis' => (int) $columns['nis'],
             'nama' => (int) $columns['nama'],
             'angkatan_keluar' => $columns['angkatan_keluar'] === false ? null : (int) $columns['angkatan_keluar'],
+            'kelas' => $columns['kelas'] === false ? null : (int) $columns['kelas'],
         ];
     }
 
     /**
      * @param  resource  $handle
-     * @param  array{nis: int, nama: int, angkatan_keluar: ?int}  $columns
-     * @return array{imported: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}
+     * @param  array{nis: int, nama: int, angkatan_keluar: ?int, kelas: ?int}  $columns
+     * @return array{imported: int, updated: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}
      */
     private function processRows($handle, string $delimiter, array $columns, int $actorId): array
     {
-        $summary = ['imported' => 0, 'skipped' => 0, 'failed' => 0, 'issues' => []];
+        $summary = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'issues' => []];
         $seenNis = [];
         $buffer = [];
 
@@ -106,12 +108,15 @@ class MemberImportService
             $angkatan = $columns['angkatan_keluar'] !== null && isset($raw[$columns['angkatan_keluar']])
                 ? trim((string) $raw[$columns['angkatan_keluar']])
                 : '';
+            $kelas = $columns['kelas'] !== null && isset($raw[$columns['kelas']])
+                ? trim((string) $raw[$columns['kelas']])
+                : '';
 
-            if ($nis === '' && $nama === '' && $angkatan === '') {
+            if ($nis === '' && $nama === '' && $angkatan === '' && $kelas === '') {
                 continue;
             }
 
-            $error = $this->validateRow($nis, $nama, $angkatan, $seenNis);
+            $error = $this->validateRow($nis, $nama, $angkatan, $kelas, $seenNis);
 
             if ($error !== null) {
                 $summary['failed']++;
@@ -121,7 +126,7 @@ class MemberImportService
             }
 
             $seenNis[$nis] = true;
-            $buffer[] = compact('nis', 'nama', 'angkatan');
+            $buffer[] = compact('nis', 'nama', 'angkatan', 'kelas');
 
             if (count($buffer) >= self::CHUNK_SIZE) {
                 $this->flushBuffer($buffer, $actorId, $summary);
@@ -134,7 +139,7 @@ class MemberImportService
         return $summary;
     }
 
-    private function validateRow(string $nis, string $nama, string $angkatan, array $seenNis): ?string
+    private function validateRow(string $nis, string $nama, string $angkatan, string $kelas, array $seenNis): ?string
     {
         if ($nis === '') {
             return 'Kolom nis wajib diisi.';
@@ -160,12 +165,16 @@ class MemberImportService
             return 'Kolom angkatan_keluar melebihi 10 karakter.';
         }
 
+        if (mb_strlen($kelas) > 30) {
+            return 'Kolom kelas melebihi 30 karakter.';
+        }
+
         return null;
     }
 
     /**
-     * @param  array<int, array{nis: string, nama: string, angkatan: string}>  $buffer
-     * @param  array{imported: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}  $summary
+     * @param  array<int, array{nis: string, nama: string, angkatan: string, kelas: string}>  $buffer
+     * @param  array{imported: int, updated: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}  $summary
      */
     private function flushBuffer(array &$buffer, int $actorId, array &$summary): void
     {
@@ -176,11 +185,22 @@ class MemberImportService
         DB::transaction(function () use (&$buffer, $actorId, &$summary) {
             $existing = Member::query()
                 ->whereIn('nis', array_column($buffer, 'nis'))
-                ->pluck('nis')
-                ->all();
+                ->pluck('class_name', 'nis');
 
             foreach ($buffer as $entry) {
-                if (in_array($entry['nis'], $existing, true)) {
+                if ($existing->has($entry['nis'])) {
+                    // Alasan: anggota yang sudah ada tidak ditimpa, kecuali kelasnya. Berkas
+                    // daftar siswa yang diunggah ulang jadi cara mengisi kelas seluruh roster
+                    // tanpa mengetik satu per satu, sementara kelas penabung tidak tersentuh.
+                    $current = trim((string) $existing->get($entry['nis']));
+
+                    if ($entry['kelas'] !== '' && $entry['kelas'] !== $current) {
+                        Member::query()->whereKey($entry['nis'])->update(['class_name' => $entry['kelas']]);
+                        $summary['updated']++;
+
+                        continue;
+                    }
+
                     $summary['skipped']++;
                     $this->reportIssue($summary, null, "NIS {$entry['nis']} sudah terdaftar.");
 
@@ -190,6 +210,7 @@ class MemberImportService
                 Member::create([
                     'nis' => $entry['nis'],
                     'full_name' => $entry['nama'],
+                    'class_name' => $entry['kelas'] !== '' ? $entry['kelas'] : null,
                     'graduation_year' => $entry['angkatan'] !== '' ? $entry['angkatan'] : null,
                     'status' => Member::STATUS_ACCOUNT_INACTIVE,
                     'created_by' => $actorId,
@@ -203,7 +224,7 @@ class MemberImportService
     }
 
     /**
-     * @param  array{imported: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}  $summary
+     * @param  array{imported: int, updated: int, skipped: int, failed: int, issues: array<int, array{row: int|null, message: string}>}  $summary
      */
     private function reportIssue(array &$summary, ?int $row, string $message): void
     {

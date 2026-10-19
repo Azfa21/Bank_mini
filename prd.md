@@ -135,7 +135,16 @@ Requirements Fitur
 - Akun yang diblokir tidak dapat login.
 2. Pengelolaan profil nasabah
 - Administrator dapat membuat dan mengelola data nasabah atau siswa.
+- Daftar Anggota hanya menampilkan siswa yang belum memiliki rekening penabung dan belum lulus. Siswa yang sudah menjadi penabung dikelola di daftar Penabung, dan yang sudah lulus di halaman Kelulusan.
+- Status rekening anggota diatur sistem: `account_inactive` saat didaftarkan, lalu `account_active` setelah aktivasi di Teller. Administrator tidak mengubahnya lewat form Anggota.
+- Status penabung: `active` (dapat bertransaksi), `blocked` (dihentikan sementara), dan `graduated` (alumni, rekening sudah ditutup).
+- Penabung tidak dihapus dari daftar. Untuk menghentikan aktivitasnya sementara, Administrator memblokir penabung: rekeningnya tidak dapat ditransaksikan dan penabung tidak dapat login.
 - Profil nasabah dapat dihubungkan dengan satu rekening aktif.
+- Data penabung, rekening, dan riwayat transaksi disimpan permanen, termasuk setelah siswa lulus. Tidak ada penghapusan baris; yang berubah hanya status dan kolom `graduated_at`.
+- Saat siswa lulus, Teller mencairkan seluruh saldo di loket (termasuk saldo mengendap) lewat penutupan rekening, lalu Administrator menyetujui. Persetujuan menutup rekening (`closed`) dan menandai penabung sebagai alumni (`graduated`).
+- Penolakan penutupan mengembalikan saldo dan mengaktifkan kembali rekening. Alumni tidak dapat login, baik di web maupun aplikasi nasabah.
+- Administrator dapat mengarsipkan satu angkatan sekaligus dari halaman Kelulusan. Anggota tanpa rekening dan penabung bersaldo nol langsung diarsipkan; penabung yang masih bersaldo menunggu penyelesaian di loket.
+- Perintah `php artisan bankmini:graduate --year=Tahun [--dry-run]` menyiapkan arsip angkatan yang sama dari CLI.
 3. Pembuatan nomor rekening otomatis
 - Nomor rekening dibuat berdasarkan tahun ajaran dan nomor urut siswa.
 - Nomor rekening harus unik.
@@ -317,7 +326,7 @@ Sub-Fitur
 - Pencarian nasabah berdasarkan nama/NIS/nomor rekening
 - Registrasi nasabah didampingi Teller
 - Neraca Saldo dan Buku Besar
-- Konfigurasi produk (nama bank, jam operasional, batas penarikan tanpa pesanan)
+- Konfigurasi produk (nama bank, saldo mengendap, setoran minimal aktivasi)
 Requirements Fitur
 1. Rincian uang kertas & logam
 - Teller dapat mencatat jumlah lembar/keping per pecahan pada setoran, penarikan, dan penutupan kas.
@@ -342,14 +351,13 @@ Requirements Fitur
 - Administrator dan Supervisor dapat melihat Buku Besar dan Neraca Saldo (aset, kewajiban) dengan status keseimbangan.
 - Bank Mini tidak mencatat pendapatan maupun beban karena tidak mencari keuntungan; dana murni untuk menabung.
 7. Konfigurasi produk
-- Administrator mengatur nama bank, jam operasional, dan batas penarikan tanpa pesanan.
-- Batas penarikan tanpa pesanan diterapkan sebagai validasi server sebelum penarikan diproses.
+- Administrator mengatur nama bank, saldo mengendap, dan setoran minimal aktivasi anggota.
 Field Wajib
 - transactions.denomination_breakdown
 - transactions.reversal_of_transaction_id
 - transactions.reversed_at, transactions.reversed_by, transactions.reversal_reason
 - daily_reports.closing_breakdown
-- system_configs (bank_name, operational_hours, max_withdrawal_without_order)
+- system_configs (bank_name, minimum_balance, min_deposit_to_activate)
 4. User Flow
 4.1 Flow Login Pengguna
 1. Pengguna membuka halaman login.
@@ -624,6 +632,7 @@ ACCOUNTING_JOURNALS	Menyimpan jurnal double-entry yang dihasilkan dari transaksi
 DAILY_CASH_REPORTS	Menyimpan laporan penutupan kas harian Teller dan hasil rekonsiliasinya.
 CASH_TRANSFERS	Menyimpan otorisasi pemindahan kas dari laci Teller ke brankas utama.
 AUDIT_LOGS	Menyimpan jejak aktivitas dan perubahan penting untuk kebutuhan audit.
+ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, pencairan saldo oleh Teller, dan keputusan Administrator.
 6.3 Aturan Integritas Database
 - Seluruh tabel operasional menggunakan engine transaksional.
 - Seluruh nominal rupiah menggunakan BIGINT atau tipe integer presisi, bukan floating point.
@@ -643,14 +652,15 @@ AUDIT_LOGS	Menyimpan jejak aktivitas dan perubahan penting untuk kebutuhan audit
 - Validasi penting tidak boleh hanya dilakukan di frontend.
 - Validasi nominal, saldo minimum, role, PIN, dan status rekening wajib dilakukan di server.
 - Waktu transaksi dan waktu approval harus menggunakan sumber waktu server.
-- Sistem harus mencegah saldo rekening menjadi negatif atau lebih kecil dari saldo minimum.
+- Sistem harus mencegah saldo rekening menjadi negatif atau lebih kecil dari saldo minimum. Pengecualian hanya pada penutupan rekening yang disetujui, di mana seluruh saldo termasuk saldo mengendap dicairkan.
+- Penutupan rekening wajib disetujui Administrator sebelum rekening ditutup dan penabung menjadi alumni. Rekening dengan permintaan penutupan yang masih menunggu tidak dapat ditransaksikan.
 - Sistem harus menjaga konsistensi antara saldo rekening, transaksi, dan jurnal.
 - Sistem harus menyediakan rollback jika proses transaksi gagal.
 - Sistem harus tetap dapat menampilkan riwayat transaksi dalam jumlah besar melalui pagination.
 - Pencarian nomor rekening dan QR Code harus memberikan hasil dengan cepat pada kondisi operasional loket.
 - Sistem harus mampu mencatat audit log tanpa menyimpan password atau PIN asli.
 - Penghapusan data master tidak boleh menghapus histori transaksi dan jurnal.
-- Pengecualian: perintah `bankmini:reset-nasabah` boleh menghapus permanen seluruh histori untuk membersihkan data testing sebelum peluncuran. Perintah ini menolak berjalan saat `APP_ENV=production` dan menulis satu entri audit log setiap kali dijalankan.
+- Pengecualian: perintah `bankmini:reset-nasabah` boleh menghapus permanen seluruh histori untuk membersihkan data testing sebelum peluncuran. Akun pengguna (`users`) dan konfigurasi sistem (`system_configs`) tetap utuh; data yang direset mencakup member, penabung, rekening, transaksi, jurnal, laporan kas, permintaan penutupan, OTP lupa PIN, token aplikasi mobile, audit log, sesi login, cache, dan antrean. Perintah ini menulis satu entri audit log setiap kali dijalankan, menolak dijalankan di `APP_ENV=production` tanpa `--allow-production` dengan `--operator`, dan di production wajib mengetik "HAPUS" sebagai konfirmasi (tidak bisa dilewati `--force`).
 - Penggunaan browser cache harus dimatikan pada seluruh respons (Cache-Control: no-store) untuk mencegah akses back-button setelah logout.
 - Library pihak ketiga untuk fitur front-end (seperti QR Scanner) wajib di-bundle secara lokal untuk mematuhi kebijakan CSP.
 7.2 Panduan Desain Antarmuka

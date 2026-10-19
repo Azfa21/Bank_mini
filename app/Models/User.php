@@ -72,6 +72,12 @@ class User extends Authenticatable
         return $this->hasMany(DailyReport::class, 'teller_id');
     }
 
+    /** @return HasMany<Transaction, $this> */
+    public function reversedTransactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'reversed_by');
+    }
+
     /** @return HasMany<DailyReport, $this> */
     public function approvedReports(): HasMany
     {

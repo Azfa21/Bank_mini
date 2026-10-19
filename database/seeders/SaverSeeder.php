@@ -82,7 +82,6 @@ class SaverSeeder extends Seeder
             app(TransactionService::class)->deposit($account, [
                 'slip_number' => 'SLIP-SEED-'.$studentNumber,
                 'slip_amount' => $openingBalance,
-                'physical_cash_amount' => $openingBalance,
                 'amount' => $openingBalance,
             ], $teller);
 

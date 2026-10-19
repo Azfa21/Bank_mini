@@ -46,8 +46,6 @@ class CashSweepIntegrityTest extends TellerTestCase
             'total_deposit' => 100000,
             'total_withdrawal' => 20000,
             'closing_balance_system' => 60000,
-            'closing_balance_physical' => 60000,
-            'cash_difference' => 0,
             'status' => 'approved',
             'approved_by' => 1,
             'approved_at' => now()->subDay(),
@@ -83,14 +81,12 @@ class CashSweepIntegrityTest extends TellerTestCase
             'total_deposit' => 98000,
             'total_withdrawal' => 0,
             'closing_balance_system' => 98000,
-            'closing_balance_physical' => 98000,
-            'cash_difference' => 0,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
 
-        $this->actingAs($this->supervisor, 'web')
-            ->post(route('supervisor.reports.approve', $report), [
+        $this->actingAs($this->admin2, 'web')
+            ->post(route('admin.daily-reports.approve', $report), [
                 'approval_notes' => 'OK',
             ])
             ->assertRedirect()

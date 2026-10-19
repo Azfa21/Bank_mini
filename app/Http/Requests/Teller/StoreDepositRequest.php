@@ -17,22 +17,16 @@ class StoreDepositRequest extends FormRequest
         return [
             'slip_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'slip_amount' => ['required', 'integer', 'min:1'],
-            'physical_cash_amount' => ['required', 'integer', 'min:1'],
-            'denomination_breakdown' => ['nullable', 'array'],
-            'denomination_breakdown.*' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
-    public function withValidator($validator): void
+    public function messages(): array
     {
-        $validator->after(function ($validator) {
-            if ($validator->errors()->isEmpty()) {
-                $validator->errors()->addIf(
-                    $this->integer('slip_amount') !== $this->integer('physical_cash_amount'),
-                    'physical_cash_amount',
-                    'Nominal uang fisik harus sama dengan nominal slip.'
-                );
-            }
-        });
+        return [
+            'slip_amount.required' => 'Nominal pada slip wajib diisi.',
+            'slip_amount.integer' => 'Nominal pada slip harus berupa angka tanpa titik atau koma.',
+            'slip_amount.min' => 'Nominal pada slip minimal Rp 1.',
+            'slip_number.max' => 'Nomor slip maksimal 30 karakter.',
+        ];
     }
 }

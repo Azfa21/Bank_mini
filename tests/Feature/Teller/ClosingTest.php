@@ -35,7 +35,6 @@ class ClosingTest extends TellerTestCase
             'receipt_number' => 'TRX-20260802-0001',
             'slip_number' => 'SLIP-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'status' => 'success',
             'transaction_at' => now(),
         ]);
@@ -62,7 +61,7 @@ class ClosingTest extends TellerTestCase
             ->assertSee('Rp 50.000');
     }
 
-    public function test_create_report_when_cash_matches(): void
+    public function test_create_report_uses_system_balance(): void
     {
         Transaction::create([
             'account_id' => $this->account->id,
@@ -81,7 +80,6 @@ class ClosingTest extends TellerTestCase
         $this->actingAsTeller()
             ->post(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 100000,
             ])
             ->assertRedirect();
 
@@ -93,8 +91,6 @@ class ClosingTest extends TellerTestCase
         $this->assertSame(100000, $report->total_deposit);
         $this->assertSame(0, $report->total_withdrawal);
         $this->assertSame(100000, $report->closing_balance_system);
-        $this->assertSame(100000, $report->closing_balance_physical);
-        $this->assertSame(0, $report->cash_difference);
         $this->assertNotNull($report->report_number);
         $this->assertNotNull($report->submitted_at);
 
@@ -122,8 +118,6 @@ class ClosingTest extends TellerTestCase
         $this->actingAsTeller()
             ->post(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 0,
-                'difference_note' => 'Laci kosong, saldo sistem negatif dari penarikan.',
             ])
             ->assertRedirect();
 
@@ -131,51 +125,6 @@ class ClosingTest extends TellerTestCase
 
         $this->assertSame(-5000, $report->opening_balance);
         $this->assertSame(-5000, $report->closing_balance_system);
-        $this->assertSame(5000, $report->cash_difference);
-    }
-
-    public function test_create_report_rejects_when_cash_differs(): void
-    {
-        Transaction::create([
-            'account_id' => $this->account->id,
-            'teller_id' => $this->teller->id,
-            'type' => 'deposit',
-            'amount' => 100000,
-            'balance_before' => 25000,
-            'balance_after' => 125000,
-            'receipt_number' => 'TRX-20260802-0004',
-            'slip_number' => 'SLIP-004',
-            'slip_amount' => 100000,
-            'status' => 'success',
-            'transaction_at' => now(),
-        ]);
-
-        $this->actingAsTeller()
-            ->from(route('teller.closing.index'))
-            ->post(route('teller.closing.store'), [
-                'report_date' => now()->toDateString(),
-                'physical_cash' => 95000,
-            ])
-            ->assertRedirect(route('teller.closing.index'))
-            ->assertSessionHas('error');
-
-        $this->assertSame(0, DailyReport::count());
-
-        $this->assertDatabaseHas('audit_logs', [
-            'action' => 'daily_report_creation_blocked',
-        ]);
-    }
-
-    public function test_create_report_rejects_negative_physical_cash(): void
-    {
-        $this->actingAsTeller()
-            ->post(route('teller.closing.store'), [
-                'report_date' => now()->toDateString(),
-                'physical_cash' => -1000,
-            ])
-            ->assertSessionHasErrors('physical_cash');
-
-        $this->assertSame(0, DailyReport::count());
     }
 
     public function test_cannot_create_duplicate_report_for_same_date(): void
@@ -188,8 +137,6 @@ class ClosingTest extends TellerTestCase
             'total_deposit' => 100000,
             'total_withdrawal' => 0,
             'closing_balance_system' => 100000,
-            'closing_balance_physical' => 100000,
-            'cash_difference' => 0,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
@@ -198,7 +145,6 @@ class ClosingTest extends TellerTestCase
             ->from(route('teller.closing.index'))
             ->post(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 100000,
             ])
             ->assertRedirect(route('teller.closing.index'))
             ->assertSessionHas('error');
@@ -230,23 +176,18 @@ class ClosingTest extends TellerTestCase
             'total_deposit' => 100000,
             'total_withdrawal' => 0,
             'closing_balance_system' => 100000,
-            'closing_balance_physical' => 95000,
-            'cash_difference' => -5000,
             'status' => 'rejected',
         ]);
 
         $this->actingAsTeller()
             ->post(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 100000,
             ])
             ->assertRedirect();
 
         $report = DailyReport::first();
 
         $this->assertSame('submitted', $report->status);
-        $this->assertSame(100000, $report->closing_balance_physical);
-        $this->assertSame(0, $report->cash_difference);
         $this->assertSame(1, DailyReport::count());
     }
 
@@ -255,7 +196,6 @@ class ClosingTest extends TellerTestCase
         $this->actingAsTeller()
             ->post(route('teller.closing.store'), [
                 'report_date' => now()->toDateString(),
-                'physical_cash' => 0,
             ])
             ->assertRedirect();
 
@@ -281,8 +221,6 @@ class ClosingTest extends TellerTestCase
             'total_deposit' => 100000,
             'total_withdrawal' => 0,
             'closing_balance_system' => 100000,
-            'closing_balance_physical' => 100000,
-            'cash_difference' => 0,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
@@ -312,8 +250,6 @@ class ClosingTest extends TellerTestCase
             'total_deposit' => 100000,
             'total_withdrawal' => 0,
             'closing_balance_system' => 100000,
-            'closing_balance_physical' => 100000,
-            'cash_difference' => 0,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);

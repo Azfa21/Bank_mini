@@ -32,30 +32,28 @@ php artisan serve
 
 ### Membersihkan Data Testing (Peluncuran)
 ```bash
-# A. Untuk Testing Sehari-hari
-# Jalankan di terminal proyek:
+# Hapus permanen seluruh data hasil testing: member, penabung, rekening, transaksi, jurnal,
+# laporan kas, permintaan penutupan rekening, OTP lupa PIN, token aplikasi mobile, audit log,
+# sesi login, cache, dan antrean. Akun staff (halaman Pengguna, beserta password) dan
+# konfigurasi sistem tetap utuh.
+#
+# Perintah ini sengaja melanggar aturan aplikasi bahwa anggota yang sudah menabung tidak dapat
+# dihapus permanen, sehingga data yang terhapus TIDAK dapat dikembalikan. Semua sesi login
+# berakhir; nomor dokumen (NIS, no. rekening, no. bukti) mulai dari awal kembali.
+#
+# Lihat dulu apa yang akan dihapus, tanpa menghapus apa pun (boleh di production):
+php artisan bankmini:reset-nasabah --dry-run
 
-bash
-# Dengan konfirmasi interaktif:
+# Non-production: prompt konfirmasi seluruh tabel, atau --force untuk skrip otomatis
 php artisan bankmini:reset-nasabah
-# Atau langsung eksekusi tanpa prompt (misal untuk alur cepat):
 php artisan bankmini:reset-nasabah --force
-# Atau sertakan nama operator di audit log:
-php artisan bankmini:reset-nasabah --operator="Nama Anda"
 
-#B. Untuk Persiapan Release ke Production
-# Karena perintah ini memiliki Production Guard, lakukan langkah berikut:
+# Production (hanya untuk peluncuran): perlu --allow-production dan --operator,
+# lalu ketik HAPUS saat diminta. Konfirmasi ketik ini TIDAK bisa dilewati --force.
+php artisan bankmini:reset-nasabah --allow-production --force --operator="Nama Anda"
 
-# Jalankan pembersihan saat APP_ENV masih local atau staging:
-bash
-php artisan bankmini:reset-nasabah --operator="Admin Rilis"
-# Pastikan di /admin/users hanya tersisa akun-akun resmi yang memang dibutuhkan untuk operasional sekolah.
-# Setelah database bersih, ubah file .env ke mode produksi:
-env
-APP_ENV=production
-APP_DEBUG=false
-# Setelah berada di mode produksi, perintah ini otomatis terkunci dan tidak bisa menghapus data nasabah lagi.
-# Catatan Operasional: Jika selama masa pengujian Anda sempat mencoba fitur penutupan rekening (account_closures), pastikan tabel # tersebut tidak menahan foreign key relasi rekening lama saat reset dijalankan.
+# Catat nama operator pada entri audit log (opsional, berlaku di semua environment)
+php artisan bankmini:reset-nasabah --operator="Nama Operator"
 ```
 
 ### Menjalankan Pengujian (Testing)

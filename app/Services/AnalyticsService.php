@@ -35,7 +35,8 @@ class AnalyticsService
             'total_savings' => $savings,
             'liquidity_ratio_percent' => $liquidityRatio,
             'total_accounts' => Account::where('status', 'active')->count(),
-            'total_savers' => Saver::where('status', 'active')->count(),
+            'total_savers' => Saver::where('status', Saver::STATUS_ACTIVE)->count(),
+            'total_alumni' => Saver::where('status', Saver::STATUS_GRADUATED)->count(),
             'total_users' => User::where('status', 'active')->count(),
         ];
     }

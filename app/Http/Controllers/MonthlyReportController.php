@@ -83,8 +83,6 @@ class MonthlyReportController extends Controller
             'approved' => $reports->where('status', 'approved')->count(),
             'submitted' => $reports->where('status', 'submitted')->count(),
             'rejected' => $reports->where('status', 'rejected')->count(),
-            'physical' => (int) $reports->sum(fn (DailyReport $report) => (int) ($report->closing_balance_physical ?? $report->closing_balance_system)),
-            'difference' => (int) $reports->sum('cash_difference'),
         ];
 
         return [
@@ -100,7 +98,6 @@ class MonthlyReportController extends Controller
             'tellers' => $tellers,
             'reports' => $reports,
             'reportSummary' => $reportSummary,
-            'isSupervisor' => $request->routeIs('supervisor.*'),
         ];
     }
 }

@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\AccountingReportController;
+use App\Http\Controllers\Admin\AccountClosureController as AdminAccountClosureController;
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\DailyReportController;
+use App\Http\Controllers\Admin\GraduationController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\SaverController;
 use App\Http\Controllers\Admin\SystemConfigController;
@@ -15,7 +18,7 @@ use App\Http\Controllers\Mobile\MutasiController as MobileMutasiController;
 use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
 use App\Http\Controllers\Nasabah\MutasiController;
-use App\Http\Controllers\Supervisor\ReportController;
+use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
 use App\Http\Controllers\Teller\ClosingController;
 use App\Http\Controllers\Teller\MemberActivationController;
 use App\Http\Controllers\Teller\MemberRegistrationController;
@@ -61,14 +64,28 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/savers', [SaverController::class, 'index']);
     Route::match(['put', 'patch'], '/savers/{saver}', [SaverController::class, 'update']);
     Route::patch('/savers/{saver}/toggle-status', [SaverController::class, 'toggleStatus']);
-    Route::delete('/savers/{saver}', [SaverController::class, 'destroy']);
 
     Route::get('/accounts/{account}', [AccountController::class, 'show']);
+
+    Route::get('/closures', [AdminAccountClosureController::class, 'index']);
+    Route::get('/closures/{closure}', [AdminAccountClosureController::class, 'show']);
+    Route::post('/closures/{closure}/approve', [AdminAccountClosureController::class, 'approve']);
+    Route::post('/closures/{closure}/reject', [AdminAccountClosureController::class, 'reject']);
+
+    Route::get('/graduations', [GraduationController::class, 'index']);
+    Route::post('/graduations', [GraduationController::class, 'store']);
+    Route::post('/graduations/{member}', [GraduationController::class, 'graduateMember']);
 
     Route::get('/config', [SystemConfigController::class, 'edit']);
     Route::put('/config', [SystemConfigController::class, 'update']);
 
     Route::get('/journals', [JournalController::class, 'index']);
+
+    Route::get('/daily-reports', [DailyReportController::class, 'index']);
+    Route::get('/daily-reports/{report}', [DailyReportController::class, 'show']);
+    Route::post('/daily-reports/{report}/approve', [DailyReportController::class, 'approve']);
+    Route::post('/daily-reports/{report}/reject', [DailyReportController::class, 'reject']);
+
     Route::get('/reports/monthly', [MonthlyReportController::class, 'index']);
     Route::get('/reports/general-ledger', [AccountingReportController::class, 'generalLedger']);
     Route::get('/reports/trial-balance', [AccountingReportController::class, 'trialBalance']);
@@ -87,23 +104,14 @@ Route::middleware(['role:teller'])->prefix('teller')->group(function () {
     Route::post('/transfers/{account}', [TransactionController::class, 'storeTransfer']);
     Route::get('/passbook/{account}', [PassbookController::class, 'show']);
     Route::get('/passbook/{account}/print', [PassbookController::class, 'print']);
+
+    Route::get('/accounts/{account}/closure', [TellerAccountClosureController::class, 'create']);
+    Route::post('/accounts/{account}/closure', [TellerAccountClosureController::class, 'store']);
     Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'receipt']);
 
     Route::get('/closing', [ClosingController::class, 'index']);
     Route::post('/closing', [ClosingController::class, 'store']);
     Route::get('/closing/reports/{report}/print', [ClosingController::class, 'print']);
-});
-
-Route::middleware(['role:supervisor'])->prefix('supervisor')->group(function () {
-    Route::get('/reports', [ReportController::class, 'index']);
-    Route::get('/reports/{report}', [ReportController::class, 'show']);
-    Route::post('/reports/{report}/approve', [ReportController::class, 'approve']);
-    Route::post('/reports/{report}/reject', [ReportController::class, 'reject']);
-    Route::get('/journals', [JournalController::class, 'index']);
-    Route::get('/reports-monthly', [MonthlyReportController::class, 'index']);
-    Route::get('/reports-accounting/general-ledger', [AccountingReportController::class, 'generalLedger']);
-    Route::get('/reports-accounting/trial-balance', [AccountingReportController::class, 'trialBalance']);
-    Route::get('/reports-accounting/export/{type?}', [AccountingReportController::class, 'exportCsv']);
 });
 
 Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {

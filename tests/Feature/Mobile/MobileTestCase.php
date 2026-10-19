@@ -30,7 +30,6 @@ abstract class MobileTestCase extends TellerTestCase
         return app(TransactionService::class)->deposit($this->account, [
             'slip_number' => $slip,
             'slip_amount' => $amount,
-            'physical_cash_amount' => $amount,
             'amount' => $amount,
         ], $this->teller);
     }

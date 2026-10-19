@@ -8,7 +8,6 @@ use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Support\CashDenomination;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +27,7 @@ class DailyReportService
         $sweptBefore = (int) DailyReport::where('teller_id', $teller->id)
             ->whereDate('report_date', '<', $date)
             ->where('status', 'approved')
-            ->sum(DB::raw('COALESCE(closing_balance_physical, closing_balance_system)'));
+            ->sum('closing_balance_system');
 
         $opening = $before['deposit'] - $before['withdrawal'] - $sweptBefore;
 
@@ -84,20 +83,10 @@ class DailyReportService
         return ['deposit' => $deposit, 'withdrawal' => $withdrawal];
     }
 
-    public function createReport(User $teller, string $date, int $physicalCash, array $breakdown = [], ?string $differenceNote = null): DailyReport
+    public function createReport(User $teller, string $date): DailyReport
     {
-        return DB::transaction(function () use ($teller, $date, $physicalCash, $breakdown, $differenceNote) {
+        return DB::transaction(function () use ($teller, $date) {
             $recap = $this->recap($teller, $date);
-
-            $cashDifference = $physicalCash - $recap['closing_balance_system'];
-
-            $differenceNote = trim((string) ($differenceNote ?? ''));
-
-            if ($cashDifference !== 0 && mb_strlen($differenceNote) < 10) {
-                throw new TransactionValidationException(
-                    'Terdapat selisih kas sebesar Rp '.number_format(abs($cashDifference)).'. Tulis berita acara selisih (min 10 karakter) agar laporan tetap bisa disimpan dan diperiksa Supervisor.'
-                );
-            }
 
             $existing = DailyReport::where('teller_id', $teller->id)
                 ->whereDate('report_date', $date)
@@ -119,8 +108,6 @@ class DailyReportService
                 ? $report->report_number
                 : $this->generateReportNumber($date);
 
-            $normalizedBreakdown = CashDenomination::normalize($breakdown);
-
             $values = [
                 'report_number' => $reportNumber,
                 'teller_id' => $teller->id,
@@ -129,14 +116,11 @@ class DailyReportService
                 'total_deposit' => $recap['total_deposit'],
                 'total_withdrawal' => $recap['total_withdrawal'],
                 'closing_balance_system' => $recap['closing_balance_system'],
-                'closing_balance_physical' => $physicalCash,
-                'closing_breakdown' => $normalizedBreakdown === [] ? null : $normalizedBreakdown,
-                'cash_difference' => $cashDifference,
                 'status' => 'submitted',
                 'approved_by' => null,
                 'approved_at' => null,
                 'submitted_at' => now(),
-                'approval_notes' => $cashDifference !== 0 ? 'Berita acara Teller: '.$differenceNote : null,
+                'approval_notes' => null,
             ];
 
             if ($report) {
@@ -149,7 +133,6 @@ class DailyReportService
                 'report_number' => $report->report_number,
                 'report_date' => $date,
                 'closing_balance_system' => $recap['closing_balance_system'],
-                'closing_balance_physical' => $physicalCash,
             ], $teller->id);
 
             return $report;
@@ -160,9 +143,9 @@ class DailyReportService
 
     public const ACCOUNT_CODE_CASH_VAULT = AccountingService::ACCOUNT_CODE_CASH_VAULT;
 
-    public function approve(DailyReport $report, User $supervisor, string $notes): DailyReport
+    public function approve(DailyReport $report, User $approver, string $notes): DailyReport
     {
-        return DB::transaction(function () use ($report, $supervisor, $notes) {
+        return DB::transaction(function () use ($report, $approver, $notes) {
             $locked = DailyReport::query()->lockForUpdate()->findOrFail($report->id);
 
             if ($locked->transactions()->exists()) {
@@ -179,28 +162,22 @@ class DailyReportService
                 }
             }
 
-            if ($locked->teller_id === $supervisor->id) {
-                throw new TransactionValidationException('Supervisor tidak dapat menyetujui laporan miliknya sendiri.');
+            if ($locked->teller_id === $approver->id) {
+                throw new TransactionValidationException('Admin tidak dapat menyetujui laporan miliknya sendiri.');
             }
 
             if ($locked->status !== 'submitted') {
                 throw new TransactionValidationException('Hanya laporan berstatus menunggu validasi yang dapat disetujui.');
             }
 
-            if ((int) ($locked->cash_difference ?? 0) !== 0) {
-                throw new TransactionValidationException(
-                    'Laporan berselisih Rp '.number_format(abs((int) $locked->cash_difference)).' tidak bisa disetujui. Tolak laporan dan minta Teller koreksi / hitung ulang, atau selesaikan via koreksi transaksi.'
-                );
-            }
-
             $locked->update([
                 'status' => 'approved',
-                'approved_by' => $supervisor->id,
+                'approved_by' => $approver->id,
                 'approved_at' => now(),
                 'approval_notes' => $notes,
             ]);
 
-            $transferAmount = $locked->closing_balance_physical ?? $locked->closing_balance_system;
+            $transferAmount = $locked->closing_balance_system;
 
             if ($transferAmount > 0 && $this->cashLedgerHasEntries()) {
                 $drawerBalance = $this->cashTellerLedgerBalance();
@@ -214,7 +191,7 @@ class DailyReportService
 
             $cashTransfer = CashTransfer::create([
                 'report_id' => $locked->id,
-                'supervisor_id' => $supervisor->id,
+                'approved_by' => $approver->id,
                 'amount' => $transferAmount,
                 'source_location' => 'Laci Teller',
                 'destination_location' => 'Brankas Utama',
@@ -264,21 +241,21 @@ class DailyReportService
             AuditLogService::record('daily_report_approved', 'daily_report', $locked->id, [
                 'report_number' => $locked->report_number,
                 'approval_notes' => $notes,
-            ], $supervisor->id);
+            ], $approver->id);
 
             AuditLogService::record('cash_transferred', 'daily_report', $locked->id, [
                 'amount' => $transferAmount,
                 'source_location' => 'Laci Teller',
                 'destination_location' => 'Brankas Utama',
-            ], $supervisor->id);
+            ], $approver->id);
 
             return $locked;
         });
     }
 
-    public function reject(DailyReport $report, User $supervisor, string $notes): DailyReport
+    public function reject(DailyReport $report, User $approver, string $notes): DailyReport
     {
-        return DB::transaction(function () use ($report, $supervisor, $notes) {
+        return DB::transaction(function () use ($report, $approver, $notes) {
             $locked = DailyReport::query()->lockForUpdate()->findOrFail($report->id);
 
             if ($locked->status !== 'submitted') {
@@ -295,7 +272,7 @@ class DailyReportService
             AuditLogService::record('daily_report_rejected', 'daily_report', $locked->id, [
                 'report_number' => $locked->report_number,
                 'approval_notes' => $notes,
-            ], $supervisor->id);
+            ], $approver->id);
 
             return $locked;
         });

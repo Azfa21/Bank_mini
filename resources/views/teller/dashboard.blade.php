@@ -1,19 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Teller  EBank Mini')
+@section('title', 'Dashboard Teller | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
     <div class="mb-5 sm:mb-6">
         <p class="text-xs font-semibold text-brand-900">LOKET HARI INI</p>
         <h1 class="text-2xl font-bold text-stone-900 mt-1">Cari penabung, layani transaksi</h1>
-        <p class="text-sm text-stone-600 mt-1">
-            Jam operasional: {{ \App\Models\SystemConfig::value('operational_hours', '07.30 - 14.00 WIB') }}
-            @php $maxWithoutOrder = (int) \App\Models\SystemConfig::value('max_withdrawal_without_order', 0); @endphp
-            @if ($maxWithoutOrder > 0)
-                · Batas penarikan tanpa pesanan: <span class="tnum font-medium text-stone-800">Rp {{ number_format($maxWithoutOrder, 0, ',', '.') }}</span>
-            @endif
-        </p>
     </div>
 
     @php
@@ -39,7 +32,7 @@
                     Cari penabung
                 </a>
                 <a href="{{ route('teller.members.register') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors">
-                    Daftarkan penabung baru
+                    Daftarkan anggota baru
                 </a>
             </div>
         </div>
@@ -63,12 +56,12 @@
         </dl>
         <dl class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5">
             <dt class="text-[13px] font-medium text-stone-600">Laporan kas</dt>
-            <dd class="text-base sm:text-lg font-bold text-stone-900 mt-1">{{ $report ? ucfirst($report->status) : 'Belum dibuat' }}</dd>
+            <dd class="text-base sm:text-lg font-bold text-stone-900 mt-1">{{ $report ? $report->statusLabel() : 'Belum dibuat' }}</dd>
             <dd class="text-xs text-stone-600 mt-1">
                 @if ($report)
                     {{ $report->report_number }}
                 @else
-                    Buat saat tutup kas
+                    Wajib sebelum tutup loket
                 @endif
             </dd>
         </dl>
@@ -79,18 +72,7 @@
             <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p>Belum ada laporan kas hari ini. Setelah loket tutup, buka <a href="{{ route('teller.closing.index') }}" class="font-semibold underline">Penutupan kas</a> untuk rekonsiliasi dan serahkan ke Supervisor.</p>
+            <p>Belum ada laporan kas hari ini. Setelah loket tutup, buka <a href="{{ route('teller.closing.index') }}" class="font-semibold underline">Penutupan kas</a> untuk rekonsiliasi dan serahkan ke Administrator.</p>
         </div>
     @endif
-
-    <section aria-label="Menu loket" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <a href="{{ route('teller.members.search') }}" class="bg-white rounded-2xl border border-stone-200 p-5 hover:border-brand-800 transition-colors">
-            <p class="text-[15px] font-semibold text-stone-900">Setoran dan penarikan</p>
-            <p class="text-[13px] text-stone-600 mt-1">Temukan penabung dulu, lalu pilih setoran, penarikan, atau transfer.</p>
-        </a>
-        <a href="{{ route('teller.closing.index') }}" class="bg-white rounded-2xl border border-stone-200 p-5 hover:border-brand-800 transition-colors">
-            <p class="text-[15px] font-semibold text-stone-900">Penutupan kas</p>
-            <p class="text-[13px] text-stone-600 mt-1">Hitung uang laci per pecahan, samakan dengan saldo sistem.</p>
-        </a>
-    </section>
 @endsection

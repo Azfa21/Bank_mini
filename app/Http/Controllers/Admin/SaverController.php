@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSaverRequest;
 use App\Models\Saver;
+use App\Services\AuditLogService;
 use Illuminate\View\View;
 
 class SaverController extends Controller
 {
     public function index()
     {
-        $savers = Saver::with('account')
+        $savers = Saver::with(['account', 'member'])
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
             ->when(request('search'), function ($query, $search) {
                 $search = trim($search);
@@ -25,7 +26,8 @@ class SaverController extends Controller
                 }
             })
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -50,7 +52,16 @@ class SaverController extends Controller
             $data['pin_hash'] = $request->pin;
         }
 
+        $resetPin = $request->filled('pin');
         $saver->update($data);
+
+        if ($resetPin) {
+            AuditLogService::record('pin_reset._by_admin', 'saver', $saver->id, [
+                'actor_id' => $request->user()->id,
+                'actor_name' => $request->user()->full_name,
+                'reason' => $request->validated('reset_reason'),
+            ], $request->user()->id);
+        }
 
         if ($this->wantsJson($request)) {
             return response()->json([
@@ -78,24 +89,5 @@ class SaverController extends Controller
         }
 
         return redirect()->route('admin.savers.index')->with('success', "Penabung {$saver->full_name} berhasil {$label}.");
-    }
-
-    public function destroy(Saver $saver)
-    {
-        $name = $saver->full_name;
-
-        $saver->account?->update(['status' => 'closed', 'closed_at' => now()]);
-
-        $saver->delete();
-
-        if ($this->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Penabung {$name} berhasil dihapus. Histori transaksi tetap tersimpan.",
-            ]);
-        }
-
-        return redirect()->route('admin.savers.index')
-            ->with('success', "Penabung {$name} berhasil dihapus. Histori transaksi tetap tersimpan.");
     }
 }

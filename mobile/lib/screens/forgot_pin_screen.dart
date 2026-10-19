@@ -17,6 +17,10 @@ import '../widgets/page_header.dart';
 /// Web menyediakan tab Pegawai/Nasabah di halaman ini. Aplikasi ini hanya
 /// melayani nasabah, jadi tab itu sengaja tidak dibawa: tab ke alur yang tidak
 /// ada akan jadi tautan mati.
+///
+/// Yang diminta di langkah pertama adalah nomor siswa, bukan email. Nomor siswa
+/// ada di kartu rekening yang dipegang peminjamnya, sedangkan alamat email
+/// bisa saja milik orang lain.
 class ForgotPinScreen extends StatefulWidget {
   const ForgotPinScreen({super.key});
 
@@ -26,7 +30,7 @@ class ForgotPinScreen extends StatefulWidget {
 
 class _ForgotPinScreenState extends State<ForgotPinScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _studentNumberController = TextEditingController();
   final _otpController = TextEditingController();
   final _pinController = TextEditingController();
   final _confirmController = TextEditingController();
@@ -37,7 +41,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _studentNumberController.dispose();
     _otpController.dispose();
     _pinController.dispose();
     _confirmController.dispose();
@@ -56,8 +60,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     });
 
     try {
-      await context.read<AuthProvider>().requestResetOtp(
-        email: _emailController.text.trim(),
+      final email = await context.read<AuthProvider>().requestResetOtp(
+        studentNumber: _studentNumberController.text.trim(),
       );
 
       if (!mounted) {
@@ -66,7 +70,11 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
 
       setState(() {
         _step = 2;
-        _notice = 'Kode verifikasi telah dikirim ke email Anda.';
+        _notice = email != null && email.isNotEmpty
+            ? 'Kode verifikasi dikirim ke $email. '
+                'Cek kotak masuk itu, lalu masukkan kode dan PIN baru.'
+            : 'Masukkan kode verifikasi yang dikirim ke email terdaftar '
+                'akun ini.';
       });
     } on ApiException catch (error) {
       if (mounted) {
@@ -96,7 +104,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
 
     try {
       await context.read<AuthProvider>().resetPin(
-        email: _emailController.text.trim(),
+        studentNumber: _studentNumberController.text.trim(),
         otp: _otpController.text.trim(),
         pin: _pinController.text,
       );
@@ -171,8 +179,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                     eyebrow: 'PEMULIHAN KREDENSIAL',
                     title: 'Atur ulang PIN',
                     subtitle:
-                        'Pakai email yang terdaftar untuk menerima kode '
-                        'verifikasi.',
+                        'Masukkan nomor siswa dari kartu rekening untuk '
+                        'menerima kode verifikasi.',
                   ),
                   const SizedBox(height: 20),
                   LedgerCard(
@@ -209,17 +217,18 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   List<Widget> _buildStepOne() {
     return [
       _Field(
-        controller: _emailController,
-        label: 'Email terdaftar',
-        hint: 'Contoh: ani.wijaya@example.test',
-        keyboardType: TextInputType.emailAddress,
+        controller: _studentNumberController,
+        label: 'Nomor siswa',
+        hint: 'Contoh: 2023001',
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         validator: (value) {
-          final email = value?.trim() ?? '';
-          if (email.isEmpty) {
-            return 'Email wajib diisi.';
+          final studentNumber = value?.trim() ?? '';
+          if (studentNumber.isEmpty) {
+            return 'Nomor siswa wajib diisi.';
           }
-          if (!email.contains('@') || !email.contains('.')) {
-            return 'Format email tidak valid.';
+          if (studentNumber.length < 4) {
+            return 'Nomor siswa terlalu pendek.';
           }
           return null;
         },
@@ -237,8 +246,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   List<Widget> _buildStepTwo() {
     return [
       _Field(
-        controller: _emailController,
-        label: 'Email terdaftar',
+        controller: _studentNumberController,
+        label: 'Nomor siswa',
         readOnly: true,
       ),
       const SizedBox(height: 16),

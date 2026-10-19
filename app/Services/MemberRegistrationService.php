@@ -12,7 +12,7 @@ class MemberRegistrationService
     ) {}
 
     /**
-     * @param  array{nis?: string|null, full_name: string, graduation_year?: string|null}  $data
+     * @param  array{nis?: string|null, full_name: string, class_name?: string|null, graduation_year?: string|null}  $data
      */
     public function register(array $data, ?int $createdBy = null): Member
     {
@@ -32,6 +32,7 @@ class MemberRegistrationService
             $member = Member::create([
                 'nis' => $nis,
                 'full_name' => $data['full_name'],
+                'class_name' => $data['class_name'] ?? null,
                 'graduation_year' => $data['graduation_year'] ?? null,
                 'status' => Member::STATUS_ACCOUNT_INACTIVE,
                 'created_by' => $createdBy,
@@ -40,6 +41,7 @@ class MemberRegistrationService
             AuditLogService::record('member_registered', 'member', null, [
                 'nis' => $member->nis,
                 'full_name' => $member->full_name,
+                'class_name' => $member->class_name,
                 'graduation_year' => $member->graduation_year,
             ], $createdBy);
 

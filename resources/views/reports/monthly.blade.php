@@ -3,12 +3,12 @@
 @php
     $months = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     $periodLabel = $months[(int) $start->format('n')].' '.$start->format('Y');
-    $indexRoute = $isSupervisor ? route('supervisor.reports.monthly') : route('admin.reports.monthly');
-    $printRoute = $isSupervisor ? route('supervisor.reports.monthly.print') : route('admin.reports.monthly.print');
+    $indexRoute = route('admin.reports.monthly');
+    $printRoute = route('admin.reports.monthly.print');
 @endphp
 
-@section('title', 'Laporan Bulanan — Bank Mini')
-@section('section', $isSupervisor ? 'Supervisor' : 'Administrator')
+@section('title', 'Laporan Bulanan | Bank Mini')
+@section('section', 'Administrator')
 
 @section('content')
     <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between print:hidden">
@@ -59,7 +59,7 @@
                 <tbody class="divide-y divide-stone-100">
                     @forelse ($perTeller as $row)
                         <tr class="hover:bg-stone-50">
-                            <td class="px-5 py-3">{{ $tellers[$row->teller_id]->full_name ?? '—' }}</td>
+                            <td class="px-5 py-3">{{ $tellers[$row->teller_id]->full_name ?? '-' }}</td>
                             <td class="px-5 py-3 text-right tnum">{{ number_format($row->total) }}</td>
                             <td class="px-5 py-3 text-right tnum">Rp {{ number_format($row->deposit, 0, ',', '.') }}</td>
                             <td class="px-5 py-3 text-right tnum">Rp {{ number_format($row->withdrawal, 0, ',', '.') }}</td>
@@ -78,10 +78,8 @@
             <dl class="mt-3 space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-stone-600">Total laporan</dt><dd class="font-semibold">{{ $reportSummary['total'] }}</dd></div>
                 <div class="flex justify-between"><dt class="text-stone-600">Disetujui</dt><dd class="font-semibold text-brand-900">{{ $reportSummary['approved'] }}</dd></div>
-                <div class="flex justify-between"><dt class="text-stone-600">Menunggu</dt><dd class="font-semibold text-amber-800">{{ $reportSummary['submitted'] }}</dd></div>
+                <div class="flex justify-between"><dt class="text-stone-600">Menunggu validasi</dt><dd class="font-semibold text-amber-800">{{ $reportSummary['submitted'] }}</dd></div>
                 <div class="flex justify-between"><dt class="text-stone-600">Ditolak</dt><dd class="font-semibold text-red-800">{{ $reportSummary['rejected'] }}</dd></div>
-                <div class="flex justify-between border-t border-stone-100 pt-2"><dt class="text-stone-600">Total uang fisik</dt><dd class="font-semibold tnum">Rp {{ number_format($reportSummary['physical'], 0, ',', '.') }}</dd></div>
-                <div class="flex justify-between"><dt class="text-stone-600">Total selisih</dt><dd class="font-semibold tnum {{ $reportSummary['difference'] === 0 ? 'text-brand-900' : 'text-red-800' }}">Rp {{ number_format($reportSummary['difference'], 0, ',', '.') }}</dd></div>
             </dl>
         </div>
     </div>
@@ -94,8 +92,6 @@
                     <th class="px-5 py-3">Tanggal</th>
                     <th class="px-5 py-3">Teller</th>
                     <th class="px-5 py-3 text-right">Saldo sistem</th>
-                    <th class="px-5 py-3 text-right">Uang fisik</th>
-                    <th class="px-5 py-3 text-right">Selisih</th>
                     <th class="px-5 py-3">Status</th>
                 </tr>
             </thead>
@@ -104,15 +100,13 @@
                     <tr class="hover:bg-stone-50">
                         <td class="px-5 py-3 tnum font-medium">{{ $report->report_number }}</td>
                         <td class="px-5 py-3 tnum">{{ $report->report_date->format('d/m/Y') }}</td>
-                        <td class="px-5 py-3">{{ $report->teller->full_name ?? '—' }}</td>
+                        <td class="px-5 py-3">{{ $report->teller->full_name ?? '-' }}</td>
                         <td class="px-5 py-3 text-right tnum">Rp {{ number_format($report->closing_balance_system, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3 text-right tnum">Rp {{ number_format($report->closing_balance_physical ?? 0, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3 text-right tnum font-semibold {{ (int) $report->cash_difference === 0 ? 'text-brand-900' : 'text-red-800' }}">Rp {{ number_format($report->cash_difference ?? 0, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3">{{ ['draft' => 'Draf', 'submitted' => 'Menunggu', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'][$report->status] ?? ucfirst($report->status) }}</td>
+                        <td class="px-5 py-3">{{ $report->statusLabel() }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-8 text-center text-sm text-stone-600">Belum ada laporan harian pada bulan ini.</td>
+                        <td colspan="5" class="px-5 py-8 text-center text-sm text-stone-600">Belum ada laporan harian pada bulan ini.</td>
                     </tr>
                 @endforelse
             </tbody>

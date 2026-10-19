@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Transaksi Setoran  EBank Mini')
+@section('title', 'Transaksi Setoran | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -8,7 +8,7 @@
         <div>
             <p class="text-xs font-semibold text-brand-900">SETORAN TUNAI</p>
             <h1 class="text-2xl font-bold text-stone-900 mt-1">Terima setoran</h1>
-            <p class="text-sm text-stone-600 mt-1">Slip dan uang fisik harus sama persis sebelum disimpan.</p>
+            <p class="text-sm text-stone-600 mt-1">Angka pada slip langsung menjadi nominal setoran. Periksa dulu sebelum disimpan.</p>
         </div>
         <a href="{{ route('teller.members.show', $account) }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline">&larr; Kembali ke profil</a>
     </div>
@@ -36,37 +36,11 @@
 
                     <div>
                         <x-input-label for="slip_amount">Nominal pada slip (Rp) wajib</x-input-label>
-                        <x-input id="slip_amount" name="slip_amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 100000" required
+                        <x-input id="slip_amount" name="slip_amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 100000" required autofocus
                             aria-describedby="slip-help slip-preview" />
                         <p id="slip-help" class="text-[13px] text-stone-600 mt-1.5">Salin angka dari slip setoran siswa.</p>
                         <p id="slip-preview" role="status" class="text-[13px] font-medium text-stone-800 mt-1">Terbaca: Rp 0</p>
                         <x-input-error :message="$errors->first('slip_amount')" />
-                    </div>
-
-                    <details class="border-t border-stone-100 pt-5">
-                        <summary class="inline-flex items-center min-h-[44px] cursor-pointer text-[15px] font-bold text-stone-900">
-                            Bantu hitung uang fisik per pecahan (opsional)
-                        </summary>
-                        <p class="text-[13px] text-stone-600 mt-1 mb-3">Isi jumlah lembar atau keping bila perlu, lalu pakai totalnya. Bisa juga langsung ketik total di bawah.</p>
-                        <x-denomination-input />
-                        <p role="status" data-denomination-sum class="text-[13px] font-medium text-stone-700 mt-2">Subtotal rincian: Rp 0</p>
-                        <div class="mt-2 flex flex-wrap gap-2">
-                            <button type="button" data-denomination-apply class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-brand-900 border border-brand-800/30 bg-brand-50 rounded-xl hover:bg-brand-100 disabled:opacity-50">
-                                Pakai total ini
-                            </button>
-                            <button type="button" data-denomination-reset class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-medium text-stone-600 hover:text-stone-900">
-                                Ulangi
-                            </button>
-                        </div>
-                    </details>
-
-                    <div>
-                        <x-input-label for="physical_cash_amount">Total uang fisik diterima (Rp) wajib</x-input-label>
-                        <x-input id="physical_cash_amount" name="physical_cash_amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Hasil hitung uang di tangan" required data-denomination-total
-                            aria-describedby="cash-help cash-match" />
-                        <p id="cash-help" class="text-[13px] text-stone-600 mt-1.5">Harus sama dengan nominal slip, kalau beda transaksi ditolak.</p>
-                        <p id="cash-match" role="status" class="text-[13px] font-semibold mt-1.5 text-stone-600">Menunggu isian slip dan uang fisik.</p>
-                        <x-input-error :message="$errors->first('physical_cash_amount')" />
                     </div>
 
                     <x-primary-button id="deposit-submit" data-loading-text="Menyimpan setoran..." class="w-full">

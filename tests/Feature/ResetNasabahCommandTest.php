@@ -3,17 +3,21 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\AccountClosure;
 use App\Models\AuditLog;
 use App\Models\CashTransfer;
 use App\Models\DailyReport;
 use App\Models\DocumentSequence;
 use App\Models\JurnalAkuntansi;
 use App\Models\Member;
+use App\Models\MobileToken;
+use App\Models\PasswordResetOtp;
 use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\TransactionService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\Feature\Teller\TellerTestCase;
 
@@ -26,7 +30,6 @@ class ResetNasabahCommandTest extends TellerTestCase
         app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-RESET-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'amount' => 100000,
         ], $this->teller);
 
@@ -38,25 +41,111 @@ class ResetNasabahCommandTest extends TellerTestCase
             'total_deposit' => 100000,
             'total_withdrawal' => 0,
             'closing_balance_system' => 100000,
-            'closing_balance_physical' => 100000,
-            'cash_difference' => 0,
             'status' => 'draft',
+        ]);
+
+        AccountClosure::create([
+            'account_id' => $this->account->id,
+            'saver_id' => $this->nasabah->id,
+            'requested_by' => $this->teller->id,
+            'payout_amount' => 25000,
+            'status' => AccountClosure::STATUS_PENDING,
+        ]);
+
+        PasswordResetOtp::create([
+            'account_type' => PasswordResetOtp::TYPE_NASABAH,
+            'account_id' => $this->nasabah->id,
+            'email' => 'otp-reset-test@example.test',
+            'otp_hash' => 'otp-hash-reset-test',
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        MobileToken::create([
+            'saver_id' => $this->nasabah->id,
+            'token_hash' => 'mobile-token-hash-reset-test',
+            'expires_at' => now()->addDays(30),
+            'created_at' => now(),
+        ]);
+
+        DB::table('sessions')->insert([
+            'id' => 'reset-test-session-id',
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'reset-test',
+            'payload' => 'reset-test',
+            'last_activity' => time(),
+        ]);
+
+        DB::table('cache')->insert([
+            'key' => 'reset-test-cache-key',
+            'value' => 'reset-test',
+            'expiration' => time() + 60,
+        ]);
+
+        DB::table('cache_locks')->insert([
+            'key' => 'reset-test-lock-key',
+            'owner' => 'reset-test',
+            'expiration' => time() + 60,
+        ]);
+
+        DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => '{"reset":"test"}',
+            'attempts' => 0,
+            'available_at' => time(),
+            'created_at' => time(),
+        ]);
+
+        DB::table('job_batches')->insert([
+            'id' => 'reset-test-batch',
+            'name' => 'reset-test',
+            'total_jobs' => 1,
+            'pending_jobs' => 1,
+            'failed_jobs' => 0,
+            'failed_job_ids' => '',
+            'created_at' => time(),
+        ]);
+
+        DB::table('failed_jobs')->insert([
+            'uuid' => 'reset-test-uuid',
+            'connection' => 'database',
+            'queue' => 'default',
+            'payload' => '{"reset":"test"}',
+            'exception' => 'reset-test exception',
+            'failed_at' => now(),
         ]);
     }
 
-    public function test_reset_deletes_nasabah_related_data_and_keeps_users_and_config(): void
+    public function test_reset_deletes_all_testing_data_and_keeps_users_and_config(): void
     {
         $this->assertGreaterThan(0, Saver::count());
         $this->assertGreaterThan(0, JurnalAkuntansi::count());
         $this->assertGreaterThan(0, DocumentSequence::count());
         $this->assertGreaterThan(0, AuditLog::count());
 
+        $this->assertExtraTargetsPopulated();
+
         $this->artisan('bankmini:reset-nasabah', ['--force' => true])
             ->assertExitCode(0)
             ->run();
 
-        foreach ([JurnalAkuntansi::class, Transaction::class, CashTransfer::class, DailyReport::class, Account::class, Saver::class, DocumentSequence::class] as $model) {
+        foreach ([
+            JurnalAkuntansi::class,
+            Transaction::class,
+            CashTransfer::class,
+            DailyReport::class,
+            Account::class,
+            Saver::class,
+            AccountClosure::class,
+            PasswordResetOtp::class,
+            MobileToken::class,
+            Member::class,
+            DocumentSequence::class,
+        ] as $model) {
             $this->assertSame(0, $model::query()->count(), "Tabel {$model} harus kosong setelah reset.");
+        }
+
+        foreach ($this->infrastructureTargets() as $table) {
+            $this->assertSame(0, DB::table($table)->count(), "Tabel {$table} harus kosong setelah reset.");
         }
 
         // Audit log lama ikut terhapus, tetapi jejak reset ditulis setelah commit sehingga bertahan.
@@ -100,12 +189,29 @@ class ResetNasabahCommandTest extends TellerTestCase
         $this->assertSame(0, Saver::withTrashed()->count());
     }
 
-    public function test_reset_is_blocked_in_production_environment(): void
+    public function test_dry_run_only_reports_counts(): void
+    {
+        $this->artisan('bankmini:reset-nasabah', ['--dry-run' => true])
+            ->assertSuccessful();
+
+        // Tidak ada yang dihapus, termasuk tabel tanpa model.
+        $this->assertSame(1, Saver::query()->count());
+        $this->assertSame(1, Account::query()->count());
+        $this->assertSame(1, DB::table('sessions')->count());
+        $this->assertSame(1, DB::table('jobs')->count());
+
+        $this->assertExtraTargetsPopulated();
+        // Dry-run bersifat baca saja, jadi belum ada jejak audit reset_nasabah.
+        $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
+    }
+
+    public function test_reset_is_refused_in_production_without_explicit_allowance(): void
     {
         $this->app['env'] = 'production';
 
         $this->artisan('bankmini:reset-nasabah', ['--force' => true])
-            ->expectsOutputToContain('diblokir pada environment production')
+            ->expectsOutputToContain('ditolak pada environment production')
+            ->expectsOutputToContain('--allow-production')
             ->assertFailed();
 
         $this->assertGreaterThan(0, Saver::withTrashed()->count());
@@ -114,9 +220,65 @@ class ResetNasabahCommandTest extends TellerTestCase
         $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
     }
 
+    public function test_production_reset_requires_operator_name(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->artisan('bankmini:reset-nasabah', ['--force' => true, '--allow-production' => true])
+            ->expectsOutputToContain('--operator wajib diisi')
+            ->assertFailed();
+
+        $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
+        $this->assertGreaterThan(0, Saver::query()->count());
+    }
+
+    public function test_production_confirmation_cannot_be_skipped_by_force(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->artisan('bankmini:reset-nasabah', [
+            '--force' => true,
+            '--allow-production' => true,
+            '--operator' => 'Operator Rilis',
+        ])
+            ->expectsQuestion('Anda di environment production. Ketik HAPUS untuk menghapus permanen data', 'ya')
+            ->expectsOutputToContain('Konfirmasi tidak cocok')
+            ->assertFailed();
+
+        $this->assertGreaterThan(0, Saver::query()->count());
+        $this->assertGreaterThan(0, Transaction::query()->count());
+        $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
+    }
+
+    public function test_production_reset_runs_after_typed_confirmation(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->artisan('bankmini:reset-nasabah', [
+            '--force' => true,
+            '--allow-production' => true,
+            '--operator' => 'Operator Rilis',
+        ])
+            ->expectsQuestion('Anda di environment production. Ketik HAPUS untuk menghapus permanen data', 'HAPUS')
+            ->assertSuccessful();
+
+        $this->assertSame(0, Saver::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
+        $this->assertSame(0, DB::table('sessions')->count());
+        $this->assertSame(0, DB::table('jobs')->count());
+
+        $this->assertSame(3, User::query()->count());
+
+        $log = AuditLog::query()->firstOrFail();
+        $this->assertSame('reset_nasabah', $log->action);
+        $this->assertSame('production', $log->metadata['environment']);
+        $this->assertSame('Operator Rilis', $log->metadata['operator']);
+        $this->assertGreaterThan(0, $log->metadata['deleted']['savers']);
+    }
+
     public function test_reset_writes_audit_log_that_survives_the_wipe(): void
     {
-        $this->artisan('bankmini:reset-nasabah', ['--force' => true, '--operator' => 'Supervisor Uji'])
+        $this->artisan('bankmini:reset-nasabah', ['--force' => true, '--operator' => 'Administrator Uji'])
             ->assertExitCode(0)
             ->run();
 
@@ -125,7 +287,7 @@ class ResetNasabahCommandTest extends TellerTestCase
 
         $this->assertSame('reset_nasabah', $log->action);
         $this->assertSame('data_nasabah', $log->entity_name);
-        $this->assertSame('Supervisor Uji', $log->metadata['operator']);
+        $this->assertSame('Administrator Uji', $log->metadata['operator']);
         $this->assertSame('testing', $log->metadata['environment']);
         $this->assertSame(1, $log->metadata['deleted']['savers']);
     }
@@ -152,5 +314,24 @@ class ResetNasabahCommandTest extends TellerTestCase
 
         $this->assertSame(1, Saver::query()->count());
         $this->assertSame(1, Account::query()->count());
+    }
+
+    /** @return list<string> */
+    protected function extraTargets(): array
+    {
+        return ['account_closures', 'password_reset_otps', 'mobile_tokens'];
+    }
+
+    /** @return list<string> */
+    protected function infrastructureTargets(): array
+    {
+        return ['sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs'];
+    }
+
+    protected function assertExtraTargetsPopulated(): void
+    {
+        foreach (array_merge($this->extraTargets(), $this->infrastructureTargets()) as $table) {
+            $this->assertGreaterThan(0, DB::table($table)->count(), "Tabel {$table} harus terisi sebelum reset.");
+        }
     }
 }

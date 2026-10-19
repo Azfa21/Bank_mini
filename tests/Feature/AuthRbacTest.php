@@ -22,8 +22,6 @@ class AuthRbacTest extends TestCase
 
     protected User $teller;
 
-    protected User $supervisor;
-
     protected Saver $nasabah;
 
     protected function setUp(): void
@@ -46,14 +44,6 @@ class AuthRbacTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->supervisor = User::create([
-            'username' => 'supervisor1',
-            'password_hash' => Hash::make('password'),
-            'full_name' => 'Supervisor 1',
-            'role' => 'supervisor',
-            'status' => 'active',
-        ]);
-
         $this->nasabah = Saver::create([
             'student_number' => '2023001',
             'full_name' => 'Ani',
@@ -64,9 +54,9 @@ class AuthRbacTest extends TestCase
         ]);
     }
 
-    public function test_teller_accessing_supervisor_dashboard_redirects_to_login(): void
+    public function test_teller_accessing_admin_dashboard_redirects_to_login(): void
     {
-        $response = $this->actingAs($this->teller, 'web')->get('/supervisor/dashboard');
+        $response = $this->actingAs($this->teller, 'web')->get('/admin/dashboard');
 
         $response->assertRedirect(route('login'));
     }
@@ -99,13 +89,6 @@ class AuthRbacTest extends TestCase
             ->assertOk();
     }
 
-    public function test_supervisor_can_access_own_dashboard(): void
-    {
-        $this->actingAs($this->supervisor, 'web')
-            ->get('/supervisor/dashboard')
-            ->assertOk();
-    }
-
     public function test_nasabah_can_access_own_dashboard(): void
     {
         $this->actingAs($this->nasabah, 'nasabah')
@@ -116,13 +99,6 @@ class AuthRbacTest extends TestCase
     public function test_admin_is_forbidden_from_creating_transactions(): void
     {
         $this->actingAs($this->admin, 'web');
-
-        $this->assertFalse(Gate::allows('create', Transaction::class));
-    }
-
-    public function test_supervisor_is_forbidden_from_creating_transactions(): void
-    {
-        $this->actingAs($this->supervisor, 'web');
 
         $this->assertFalse(Gate::allows('create', Transaction::class));
     }
@@ -151,12 +127,9 @@ class AuthRbacTest extends TestCase
         $this->assertFalse(Gate::allows('viewAny', JurnalAkuntansi::class));
     }
 
-    public function test_admin_and_supervisor_can_view_journal_entries(): void
+    public function test_admin_can_view_journal_entries(): void
     {
         $this->actingAs($this->admin, 'web');
-        $this->assertTrue(Gate::allows('viewAny', JurnalAkuntansi::class));
-
-        $this->actingAs($this->supervisor, 'web');
         $this->assertTrue(Gate::allows('viewAny', JurnalAkuntansi::class));
     }
 
@@ -251,13 +224,6 @@ class AuthRbacTest extends TestCase
         $this->assertTrue(Gate::allows('update', $this->teller));
         $this->assertTrue(Gate::allows('delete', $this->teller));
 
-        $this->actingAs($this->supervisor, 'web');
-        $this->assertTrue(Gate::allows('viewAny', User::class));
-        $this->assertTrue(Gate::allows('view', $this->teller));
-        $this->assertFalse(Gate::allows('create', User::class));
-        $this->assertFalse(Gate::allows('update', $this->teller));
-        $this->assertFalse(Gate::allows('delete', $this->teller));
-
         $this->actingAs($this->teller, 'web');
         $this->assertFalse(Gate::allows('viewAny', User::class));
         $this->assertFalse(Gate::allows('view', $this->admin));
@@ -284,10 +250,6 @@ class AuthRbacTest extends TestCase
         $this->assertFalse(Gate::allows('create', Account::class));
         $this->assertFalse(Gate::allows('update', $account));
 
-        $this->actingAs($this->supervisor, 'web');
-        $this->assertTrue(Gate::allows('view', $account));
-        $this->assertFalse(Gate::allows('create', Account::class));
-
         $this->actingAs($this->nasabah, 'nasabah');
         $this->assertFalse(Gate::allows('view', $account));
     }
@@ -309,14 +271,10 @@ class AuthRbacTest extends TestCase
         $this->assertTrue(Gate::allows('view', $report));
         $this->assertFalse(Gate::allows('approve', $report));
 
-        $this->actingAs($this->supervisor, 'web');
+        $this->actingAs($this->admin, 'web');
         $this->assertTrue(Gate::allows('view', $report));
         $this->assertTrue(Gate::allows('approve', $report));
         $this->assertFalse(Gate::allows('create', DailyReport::class));
-
-        $this->actingAs($this->admin, 'web');
-        $this->assertFalse(Gate::allows('view', $report));
-        $this->assertFalse(Gate::allows('approve', $report));
 
         $this->actingAs($this->nasabah, 'nasabah');
         $this->assertFalse(Gate::allows('view', $report));
@@ -333,7 +291,7 @@ class AuthRbacTest extends TestCase
         $this->assertTrue(Gate::allows('view', $config));
         $this->assertTrue(Gate::allows('update', $config));
 
-        foreach ([$this->teller, $this->supervisor] as $user) {
+        foreach ([$this->teller] as $user) {
             $this->actingAs($user, 'web');
             $this->assertFalse(Gate::allows('view', $config));
             $this->assertFalse(Gate::allows('update', $config));

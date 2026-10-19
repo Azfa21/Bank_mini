@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profil Penabung — Bank Mini')
+@section('title', 'Profil Penabung | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -33,6 +33,7 @@
                         {{ $account->status === 'active' ? 'Aktif, bisa transaksi' : 'Tidak aktif' }}
                     </span>
                 </dd>
+                <dd class="text-[13px] text-stone-600 mt-1.5">Status penabung: {{ $account->saver->statusLabel() }}</dd>
             </div>
             <div class="p-5 sm:p-6 bg-stone-50/60">
                 <dt class="text-[13px] font-medium text-stone-600">Saldo berjalan</dt>
@@ -42,9 +43,30 @@
         </dl>
 
         <div class="border-t border-stone-100 p-5 sm:p-6">
-            @if ($account->status === 'active')
+            @php($pendingClosure = $account->pendingClosure)
+            @if ($account->saver->isGraduated())
+                <p role="status" class="text-sm font-medium text-stone-700 bg-stone-50 border border-stone-200 rounded-xl p-4">
+                    Penabung ini sudah lulus. Rekeningnya ditutup dan tercatat sebagai alumni, riwayat transaksinya tetap tersimpan.
+                </p>
+                <div class="mt-3">
+                    <a href="{{ route('teller.passbook.show', $account) }}"
+                        class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-stone-700 rounded-xl hover:bg-stone-100">
+                        Buku tabungan
+                    </a>
+                </div>
+            @elseif ($pendingClosure)
+                <p role="alert" class="text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    Permintaan penutupan rekening diajukan {{ $pendingClosure->created_at?->format('d/m/Y H:i') }} dan menunggu persetujuan Administrator. Transaksi baru ditahan sampai permintaan ini diputuskan.
+                </p>
+                <div class="mt-3">
+                    <a href="{{ route('teller.passbook.show', $account) }}"
+                        class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-stone-700 rounded-xl hover:bg-stone-100">
+                        Buku tabungan
+                    </a>
+                </div>
+            @elseif ($account->status === 'active')
                 <h2 class="text-[13px] font-semibold text-stone-700 mb-3">Pilih transaksi untuk rekening ini</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     <a href="{{ route('teller.deposits.create', $account) }}"
                         class="inline-flex items-center justify-center gap-2 min-h-[52px] px-4 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors">
                         Setoran tunai
@@ -61,7 +83,12 @@
                         class="inline-flex items-center justify-center min-h-[52px] px-4 text-[15px] font-semibold text-stone-700 rounded-xl hover:bg-stone-100 transition-colors">
                         Buku tabungan
                     </a>
+                    <a href="{{ route('teller.accounts.closure.create', $account) }}"
+                        class="inline-flex items-center justify-center min-h-[52px] px-4 text-[15px] font-semibold text-red-800 bg-white border border-red-300 rounded-xl hover:bg-red-50 transition-colors sm:col-span-2 lg:col-span-1">
+                        Tutup rekening (lulus)
+                    </a>
                 </div>
+                <p class="text-[13px] text-stone-600 mt-3">Pakai penutupan rekening hanya untuk siswa yang sudah lulus. Saldo dicairkan penuh lalu disetujui Administrator.</p>
             @else
                 <p role="alert" class="text-sm font-medium text-red-800 bg-red-50 border border-red-200 rounded-xl p-4">Rekening tidak aktif. Transaksi tidak dapat diproses. Hubungi Administrator untuk aktivasi.</p>
             @endif

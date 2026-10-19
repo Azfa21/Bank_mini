@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Rekening  EBank Mini')
+@section('title', 'Detail Rekening | Bank Mini')
 @section('section', 'Administrator · Rekening')
 
 @section('content')
@@ -16,7 +16,7 @@
                 </div>
                 <div>
                     <div class="text-xs text-stone-500 mb-0.5">Tahun Ajaran</div>
-                    <div class="text-sm font-semibold">{{ $account->academic_year ?? ' E }}</div>
+                    <div class="text-sm font-semibold">{{ $account->academic_year ?? '-' }}</div>
                 </div>
             </div>
 
@@ -58,13 +58,21 @@
             <hr class="border-stone-100">
 
             <div class="grid grid-cols-2 gap-4 text-xs text-stone-500">
-                <div>Dibuka: {{ $account->opened_at?->format('d/m/Y H:i') ?? ' E }}</div>
-                <div>Ditutup: {{ $account->closed_at?->format('d/m/Y H:i') ?? ' E }}</div>
+                <div>Dibuka: {{ $account->opened_at?->format('d/m/Y H:i') ?? '-' }}</div>
+                <div>Ditutup: {{ $account->closed_at?->format('d/m/Y H:i') ?? '-' }}</div>
             </div>
         </div>
 
         <div class="mt-4">
-            <a href="{{ route('admin.savers.index') }}" class="text-sm text-stone-600 border border-stone-300 px-4 py-2 rounded-lg hover:bg-stone-50">&larr; Kembali ke Daftar Penabung</a>
+            @php
+                // Alasan: daftar penabung mengirim filter aktifnya lewat parameter `from`.
+                // Tautan di luar daftar (atau parameter yang diubah tangan) diabaikan supaya
+                // tombol kembali tidak pernah menuju ke alamat luar.
+                $indexUrl = route('admin.savers.index');
+                $from = (string) request('from');
+                $backUrl = str_starts_with($from, $indexUrl) ? $from : $indexUrl;
+            @endphp
+            <a href="{{ $backUrl }}" class="text-sm text-stone-600 border border-stone-300 px-4 py-2 rounded-lg hover:bg-stone-50">&larr; Kembali ke Daftar Penabung</a>
         </div>
     </div>
 

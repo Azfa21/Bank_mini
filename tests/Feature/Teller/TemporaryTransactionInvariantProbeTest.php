@@ -7,80 +7,22 @@ use App\Models\Transaction;
 use App\Services\DailyReportService;
 use App\Services\ReversalService;
 use App\Services\TransactionService;
-use App\Support\CashDenomination;
 
 class TemporaryTransactionInvariantProbeTest extends TellerTestCase
 {
-    public function test_deposit_denomination_total_may_disagree_with_cash_and_slip(): void
-    {
-        $this->actingAsTeller()
-            ->postJson(route('teller.deposits.store', $this->account), [
-                'slip_number' => 'SLIP-001',
-                'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
-                'denomination_breakdown' => ['kertas_100000' => 1],
-            ])
-            ->assertCreated();
-
-        $transaction = Transaction::where('type', 'deposit')->firstOrFail();
-
-        $this->assertSame(50000, $transaction->amount);
-        $this->assertSame(100000, CashDenomination::total($transaction->denomination_breakdown));
-        $this->assertSame(['kertas_100000' => 1], $transaction->denomination_breakdown);
-    }
-
-    public function test_withdrawal_denomination_total_may_disagree_with_amount(): void
-    {
-        $this->actingAsTeller()
-            ->postJson(route('teller.withdrawals.store', $this->account), [
-                'slip_number' => 'SLIP-001',
-                'amount' => 10000,
-                'pin' => '123456',
-                'denomination_breakdown' => ['kertas_100000' => 1],
-            ])
-            ->assertCreated();
-
-        $transaction = Transaction::where('type', 'withdrawal')->firstOrFail();
-
-        $this->assertSame(15000, $transaction->balance_after);
-        $this->assertSame(['kertas_100000' => 1], $transaction->denomination_breakdown);
-    }
-
-    public function test_report_can_be_created_without_matching_physical_breakdown(): void
-    {
-        app(TransactionService::class)->deposit($this->account, [
-            'slip_number' => 'SLIP-001',
-            'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
-        ], $this->teller);
-
-        $report = app(DailyReportService::class)->createReport(
-            $this->teller,
-            now()->toDateString(),
-            50000,
-            ['kertas_100000' => 1]
-        );
-
-        $this->assertSame(50000, $report->closing_balance_physical);
-        $this->assertSame(0, $report->cash_difference);
-        $this->assertSame(['kertas_100000' => 1], $report->closing_breakdown);
-    }
-
     public function test_report_is_frozen_at_submission_while_reversal_changes_related_state(): void
     {
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
         $report = app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->toDateString(),
-            50000
+            now()->toDateString()
         );
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Correction after submission');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Correction after submission');
 
         $freshRecap = app(DailyReportService::class)->recap($this->teller, now()->toDateString());
 
@@ -94,27 +36,24 @@ class TemporaryTransactionInvariantProbeTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
         $report = app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->toDateString(),
-            50000
+            now()->toDateString()
         );
 
-        app(DailyReportService::class)->approve($report, $this->supervisor, 'Approved');
+        app(DailyReportService::class)->approve($report, $this->admin2, 'Approved');
 
         $this->expectException(TransactionValidationException::class);
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Correction after approval');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Correction after approval');
     }
 
     public function test_withdrawal_after_report_submission_is_rejected(): void
     {
         app(DailyReportService::class)->createReport(
             $this->teller,
-            now()->toDateString(),
-            0
+            now()->toDateString()
         );
 
         $this->expectException(TransactionValidationException::class);
@@ -134,7 +73,6 @@ class TemporaryTransactionInvariantProbeTest extends TellerTestCase
             app(TransactionService::class)->deposit($this->account, [
                 'slip_number' => 'SLIP-001',
                 'slip_amount' => PHP_INT_MAX,
-                'physical_cash_amount' => PHP_INT_MAX,
             ], $this->teller);
         } catch (\Throwable) {
             // Expected: the transaction must fail because balance_after is unsigned bigint.

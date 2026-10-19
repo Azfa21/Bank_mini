@@ -1,57 +1,87 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Admin  EBank Mini')
+@section('title', 'Dashboard Admin | Bank Mini')
 @section('section', 'Administrator')
 
 @section('content')
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-stone-900">Dashboard Administrator</h1>
-        <p class="text-sm text-stone-500 mt-1">Ringkasan operasional, kesehatan likuiditas, dan performa teller.</p>
+        <p class="text-sm text-stone-500 mt-1">Validasi kas teller dan ringkasan operasional.</p>
     </div>
+
+    <section aria-label="Antrean validasi laporan" class="bg-white rounded-xl border {{ $waiting > 0 ? 'border-amber-300' : 'border-stone-200' }} ledger-rule p-5 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+            <div>
+                @if ($waiting > 0)
+                    <h2 class="text-lg font-bold text-stone-900">{{ $waiting }} laporan menunggu validasi</h2>
+                    <p class="text-sm text-stone-600 mt-1">Periksa arus kas laporan sebelum menyetujui. Persetujuan memindahkan kas laci ke brankas utama.</p>
+                @else
+                    <h2 class="text-lg font-bold text-stone-900">Tidak ada laporan menunggu</h2>
+                    <p class="text-sm text-stone-600 mt-1">Semua laporan harian teller sudah divalidasi. Antrean baru muncul setiap penutupan kas.</p>
+                @endif
+            </div>
+            <a href="{{ route('admin.daily-reports.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors sm:shrink-0">
+                {{ $waiting > 0 ? 'Periksa laporan' : 'Lihat semua laporan' }}
+            </a>
+        </div>
+        <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-stone-100">
+            <div class="flex sm:flex-col justify-between sm:justify-start gap-3">
+                <dt class="text-[13px] font-medium text-stone-600">Menunggu validasi</dt>
+                <dd class="text-xl font-bold text-amber-800 tnum sm:mt-1">{{ $waiting }}</dd>
+            </div>
+            <div class="flex sm:flex-col justify-between sm:justify-start gap-3">
+                <dt class="text-[13px] font-medium text-stone-600">Sudah disetujui</dt>
+                <dd class="text-xl font-bold text-brand-900 tnum sm:mt-1">{{ $approved }}</dd>
+            </div>
+            <div class="flex sm:flex-col justify-between sm:justify-start gap-3">
+                <dt class="text-[13px] font-medium text-stone-600">Transaksi hari ini</dt>
+                <dd class="text-xl font-bold text-stone-900 tnum sm:mt-1">{{ $todayTransactions }}</dd>
+            </div>
+        </dl>
+    </section>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <a href="{{ route('admin.users.index') }}" class="bg-white rounded-xl border border-stone-200 p-5 hover:border-brand-300 transition-colors">
-            <div class="text-sm text-stone-500">Pengguna Internal Aktif</div>
+            <div class="text-sm text-stone-500">Pengguna internal aktif</div>
             <div class="text-2xl font-semibold text-stone-900 mt-1">{{ $summary['total_users'] }}</div>
         </a>
+        <div class="bg-white rounded-xl border border-stone-200 p-5">
+            <a href="{{ route('admin.savers.index') }}" class="block hover:opacity-80">
+                <div class="text-sm text-stone-500">Penabung aktif</div>
+                <div class="text-2xl font-semibold text-stone-900 mt-1">{{ $summary['total_savers'] }}</div>
+            </a>
+            <a href="{{ route('admin.graduations.index') }}" class="text-xs font-medium text-brand-900 hover:underline mt-1.5 inline-block">
+                {{ $summary['total_alumni'] }} alumni diarsipkan
+            </a>
+        </div>
         <a href="{{ route('admin.savers.index') }}" class="bg-white rounded-xl border border-stone-200 p-5 hover:border-brand-300 transition-colors">
-            <div class="text-sm text-stone-500">Penabung Aktif</div>
-            <div class="text-2xl font-semibold text-stone-900 mt-1">{{ $summary['total_savers'] }}</div>
-        </a>
-        <a href="{{ route('admin.savers.index') }}" class="bg-white rounded-xl border border-stone-200 p-5 hover:border-brand-300 transition-colors">
-            <div class="text-sm text-stone-500">Rekening Aktif</div>
+            <div class="text-sm text-stone-500">Rekening aktif</div>
             <div class="text-2xl font-semibold text-stone-900 mt-1">{{ $summary['total_accounts'] }}</div>
         </a>
         <a href="{{ route('admin.config.edit') }}" class="bg-white rounded-xl border border-stone-200 p-5 hover:border-brand-300 transition-colors">
-            <div class="text-sm text-stone-500">Saldo Minimum</div>
+            <div class="text-sm text-stone-500">Saldo minimum</div>
             <div class="text-2xl font-semibold text-stone-900 mt-1">Rp {{ number_format((int) (\App\Models\SystemConfig::find('minimum_balance')->config_value ?? 10000), 0, ',', '.') }}</div>
         </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="text-sm text-stone-500">Kas Teller (Laci)</div>
+            <div class="text-sm text-stone-500">Kas teller (laci)</div>
             <div class="text-xl font-semibold text-stone-900 mt-1">Rp {{ number_format($summary['cash_teller'], 0, ',', '.') }}</div>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="text-sm text-stone-500">Kas Brankas (102)</div>
+            <div class="text-sm text-stone-500">Kas brankas</div>
             <div class="text-xl font-semibold text-stone-900 mt-1">Rp {{ number_format($summary['cash_vault'], 0, ',', '.') }}</div>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="text-sm text-stone-500">Kewajiban Simpanan (201)</div>
-            <div class="text-xl font-semibold text-stone-900 mt-1">Rp {{ number_format($summary['total_savings'], 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="text-sm text-stone-500">Rasio Likuiditas</div>
-            <div class="text-xl font-semibold {{ $summary['liquidity_ratio_percent'] >= 100 ? 'text-brand-800' : 'text-red-600' }} mt-1">
-                {{ number_format($summary['liquidity_ratio_percent'], 2, ',', '.') }}%
-            </div>
+            <div class="text-sm text-stone-500">Total kas (laci + brankas)</div>
+            <div class="text-xl font-semibold text-brand-900 mt-1">Rp {{ number_format($summary['total_cash'], 0, ',', '.') }}</div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="lg:col-span-2 bg-white rounded-xl border border-stone-200 p-5">
-            <h2 class="text-sm font-medium text-stone-900 mb-4">Tren Setoran vs Penarikan (7 Hari Terakhir)</h2>
+            <h2 class="text-sm font-medium text-stone-900 mb-4">Tren setoran vs penarikan (7 hari terakhir)</h2>
             @php
                 $maxVal = max(1, $trend->max(fn ($r) => max($r['deposit'], $r['withdrawal'])));
                 $chartW = 640;
@@ -80,7 +110,7 @@
         </div>
 
         <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <h2 class="text-sm font-medium text-stone-900 mb-4">Top Penabung Aktif</h2>
+            <h2 class="text-sm font-medium text-stone-900 mb-4">Setoran terbesar (kumulatif)</h2>
             <div class="space-y-3">
                 @forelse ($topDepositors as $item)
                     <div class="flex items-center justify-between text-sm">
@@ -136,9 +166,9 @@
                 <div class="text-sm font-medium text-stone-900">Kelola Penabung</div>
                 <div class="text-xs text-stone-500 mt-1">Profil siswa, rekening, dan saldo.</div>
             </a>
-            <a href="{{ route('admin.reports.trial-balance') }}" class="block rounded-lg border border-stone-200 p-4 hover:border-brand-300 transition-colors">
-                <div class="text-sm font-medium text-stone-900">Neraca Saldo</div>
-                <div class="text-xs text-stone-500 mt-1">Periksa keseimbangan dan likuiditas.</div>
+            <a href="{{ route('admin.reports.general-ledger') }}" class="block rounded-lg border border-stone-200 p-4 hover:border-brand-300 transition-colors">
+                <div class="text-sm font-medium text-stone-900">Buku Besar &amp; Neraca Saldo</div>
+                <div class="text-xs text-stone-500 mt-1">Saldo akun kas dan mutasi per akun.</div>
             </a>
             <a href="{{ route('admin.config.edit') }}" class="block rounded-lg border border-stone-200 p-4 hover:border-brand-300 transition-colors">
                 <div class="text-sm font-medium text-stone-900">Konfigurasi Sistem</div>
@@ -146,4 +176,25 @@
             </a>
         </div>
     </div>
+
+    <section aria-label="Aktivitas terbaru" class="mt-6 bg-white rounded-xl border border-stone-200 p-5">
+        <h2 class="text-sm font-medium text-stone-900 mb-4">Aktivitas terbaru (5 terakhir)</h2>
+        <div class="space-y-3">
+            @forelse ($recentLogs as $log)
+                <div class="flex items-start justify-between gap-3 text-sm border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                    <div class="min-w-0">
+                        <p class="tnum text-[13px] font-medium text-stone-800">{{ $log->action }}</p>
+                        <p class="text-[13px] text-stone-600 mt-0.5">
+                            @if ($log->metadata)
+                                {{ collect($log->metadata)->filter(fn ($v) => is_scalar($v))->take(2)->map(fn ($v, $k) => $k.': '.$v)->implode(' · ') }}
+                            @endif
+                        </p>
+                    </div>
+                    <p class="text-[13px] text-stone-500 shrink-0 tnum">{{ $log->created_at?->format('d/m/Y H:i') }}</p>
+                </div>
+            @empty
+                <p class="text-sm text-stone-600">Belum ada aktivitas tercatat. Persetujuan laporan dan koreksi transaksi tampil di sini.</p>
+            @endforelse
+        </div>
+    </section>
 @endsection

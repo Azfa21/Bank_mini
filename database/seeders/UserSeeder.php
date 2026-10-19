@@ -15,7 +15,6 @@ class UserSeeder extends Seeder
             ['admin', 'Administrator Bank', 'admin'],
             ['teller1', 'Teller Satu', 'teller'],
             ['teller2', 'Teller Dua', 'teller'],
-            ['supervisor1', 'Supervisor Satu', 'supervisor'],
         ];
 
         foreach ($users as [$username, $fullName, $role]) {

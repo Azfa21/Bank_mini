@@ -62,7 +62,6 @@ class MobileMutasiTest extends MobileTestCase
         app(TransactionService::class)->deposit($otherAccount, [
             'slip_number' => 'SLIP-OTHER-001',
             'slip_amount' => 99000,
-            'physical_cash_amount' => 99000,
             'amount' => 99000,
         ], $this->teller);
 

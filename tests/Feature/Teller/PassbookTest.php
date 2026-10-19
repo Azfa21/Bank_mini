@@ -15,7 +15,6 @@ class PassbookTest extends TellerTestCase
             $service->deposit($this->account, [
                 'slip_number' => 'SLIP-PB-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
                 'slip_amount' => 1000 * $i,
-                'physical_cash_amount' => 1000 * $i,
             ], $this->teller);
         }
     }

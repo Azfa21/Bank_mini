@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Registrasi Anggota — Bank Mini')
+@section('title', 'Registrasi Anggota | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
@@ -20,6 +20,7 @@
             <dl class="mt-3 text-sm text-brand-950 space-y-1.5">
                 <div class="flex justify-between gap-3"><dt>Nama</dt><dd class="font-semibold">{{ $reg['full_name'] }}</dd></div>
                 <div class="flex justify-between gap-3"><dt>NIS</dt><dd class="tnum font-semibold">{{ $reg['nis'] }}</dd></div>
+                <div class="flex justify-between gap-3"><dt>Kelas</dt><dd class="font-semibold">{{ $reg['class_name'] ?? '-' }}</dd></div>
                 <div class="flex justify-between gap-3"><dt>Angkatan keluar</dt><dd class="font-semibold">{{ $reg['graduation_year'] ?? '-' }}</dd></div>
             </dl>
             <p class="mt-3 text-[13px] text-brand-900">Anggota ini akan menjadi penabung setelah menyetor aktivasi di Teller.</p>
@@ -43,6 +44,13 @@
             </div>
 
             <div>
+                <x-input-label for="class_name">Kelas (opsional)</x-input-label>
+                <x-input id="class_name" name="class_name" :value="old('class_name')" list="kelas-opsi" placeholder="Contoh: X RPL 1" aria-describedby="class-name-help" />
+                <p id="class-name-help" class="text-[13px] text-stone-600 mt-1.5">Terisi otomatis di loket saat anggota mengaktivasi rekening.</p>
+                <x-input-error :message="$errors->first('class_name')" />
+            </div>
+
+            <div>
                 <x-input-label for="graduation_year">Angkatan keluar (opsional)</x-input-label>
                 <x-input id="graduation_year" name="graduation_year" :value="old('graduation_year')" placeholder="Contoh: 2026" />
                 <x-input-error :message="$errors->first('graduation_year')" />
@@ -54,4 +62,5 @@
         </form>
     </div>
 
+    <x-class-datalist />
 @endsection

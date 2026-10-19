@@ -18,22 +18,10 @@ class JournalTest extends TellerTestCase
             ->assertSee('Audit jurnal');
     }
 
-    public function test_supervisor_can_access_journal_audit(): void
-    {
-        $this->actingAs($this->supervisor, 'web')
-            ->get(route('supervisor.journals.index'))
-            ->assertOk()
-            ->assertSee('Audit jurnal');
-    }
-
     public function test_teller_cannot_access_journal_audit(): void
     {
         $this->actingAsTeller()
             ->get(route('admin.journals.index'))
-            ->assertRedirect(route('login'));
-
-        $this->actingAsTeller()
-            ->get(route('supervisor.journals.index'))
             ->assertRedirect(route('login'));
     }
 
@@ -42,26 +30,22 @@ class JournalTest extends TellerTestCase
         $this->actingAs($this->nasabah, 'nasabah')
             ->get(route('admin.journals.index'))
             ->assertRedirect(route('login'));
-
-        $this->actingAs($this->nasabah, 'nasabah')
-            ->get(route('supervisor.journals.index'))
-            ->assertRedirect(route('login'));
     }
 
-    public function test_journal_audit_shows_double_entry_rows_for_deposit(): void
+    public function test_journal_audit_shows_cash_rows_for_deposit(): void
     {
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-001',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'amount' => 100000,
         ], $this->teller);
 
-        $response = $this->actingAs($this->admin, 'web')
+        $this->actingAs($this->admin, 'web')
             ->get(route('admin.journals.index'))
             ->assertOk()
             ->assertSee('101')
-            ->assertSee('201')
+            ->assertDontSee('value="201"', false)
+            ->assertDontSee('Tabungan Nasabah')
             ->assertSee('Debit')
             ->assertSee('Kredit')
             ->assertSee($transaction->receipt_number)
@@ -73,7 +57,6 @@ class JournalTest extends TellerTestCase
         app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-002',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
             'amount' => 50000,
         ], $this->teller);
 
@@ -86,12 +69,11 @@ class JournalTest extends TellerTestCase
         $this->assertContains('201', $rows->pluck('account_code')->all());
     }
 
-    public function test_journal_audit_totals_debit_and_credit_are_balanced(): void
+    public function test_journal_audit_shows_cash_side_totals(): void
     {
         app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-003',
             'slip_amount' => 75000,
-            'physical_cash_amount' => 75000,
             'amount' => 75000,
         ], $this->teller);
 
@@ -103,8 +85,10 @@ class JournalTest extends TellerTestCase
         $this->actingAs($this->admin, 'web')
             ->get(route('admin.journals.index'))
             ->assertOk()
-            ->assertSee('Rp 100.000');
+            ->assertSee('Rp 75.000')
+            ->assertSee('Rp 25.000');
 
+        // Double-entry tetap utuh di database walaupun sisi simpanan tidak ditampilkan.
         $totalDebit = (int) JurnalAkuntansi::sum('debit_amount');
         $totalCredit = (int) JurnalAkuntansi::sum('credit_amount');
 
@@ -116,14 +100,12 @@ class JournalTest extends TellerTestCase
         $first = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-005',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'amount' => 100000,
         ], $this->teller);
 
         $second = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-006',
             'slip_amount' => 200000,
-            'physical_cash_amount' => 200000,
             'amount' => 200000,
         ], $this->teller);
 
@@ -139,12 +121,11 @@ class JournalTest extends TellerTestCase
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-007',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'amount' => 100000,
         ], $this->teller);
 
-        $this->actingAs($this->supervisor, 'web')
-            ->get(route('supervisor.journals.index', ['account_code' => '101']))
+        $this->actingAs($this->admin2, 'web')
+            ->get(route('admin.journals.index', ['account_code' => '101']))
             ->assertOk()
             ->assertSee($transaction->receipt_number.'-01')
             ->assertDontSee($transaction->receipt_number.'-02');
@@ -155,7 +136,6 @@ class JournalTest extends TellerTestCase
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-008',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'amount' => 100000,
         ], $this->teller);
 
@@ -170,24 +150,42 @@ class JournalTest extends TellerTestCase
             ->assertDontSee($transaction->receipt_number);
     }
 
-    public function test_journal_filter_offers_every_account_in_chart(): void
+    public function test_journal_filter_only_offers_presented_accounts(): void
     {
         $response = $this->actingAs($this->admin, 'web')
             ->get(route('admin.journals.index'))
             ->assertOk();
 
-        foreach (AccountingService::CHART_OF_ACCOUNTS as $code => $info) {
+        foreach (AccountingService::presentedAccounts() as $code => $info) {
             $response->assertSee('value="'.$code.'"', false);
             $response->assertSee($info['name']);
         }
+
+        $response->assertDontSee('value="201"', false);
+        $response->assertDontSee('Tabungan Nasabah');
     }
 
-    public function test_supervisor_can_filter_journal_by_vault_account(): void
+    public function test_journal_audit_ignores_hidden_account_code_from_url(): void
+    {
+        $transaction = app(TransactionService::class)->deposit($this->account, [
+            'slip_number' => 'SLIP-J-010',
+            'slip_amount' => 100000,
+            'amount' => 100000,
+        ], $this->teller);
+
+        $this->actingAs($this->admin, 'web')
+            ->get(route('admin.journals.index', ['account_code' => '201']))
+            ->assertOk()
+            ->assertDontSee('value="201" selected', false)
+            ->assertDontSee('Tabungan Nasabah')
+            ->assertSee($transaction->receipt_number.'-01');
+    }
+
+    public function test_admin_can_filter_journal_by_vault_account(): void
     {
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-J-009',
             'slip_amount' => 100000,
-            'physical_cash_amount' => 100000,
             'amount' => 100000,
         ], $this->teller);
 
@@ -205,8 +203,8 @@ class JournalTest extends TellerTestCase
             'journal_at' => now(),
         ]);
 
-        $this->actingAs($this->supervisor, 'web')
-            ->get(route('supervisor.journals.index', ['account_code' => '102']))
+        $this->actingAs($this->admin2, 'web')
+            ->get(route('admin.journals.index', ['account_code' => '102']))
             ->assertOk()
             ->assertSee('JRN-VAULT-01')
             ->assertSee('value="102" selected', false)

@@ -29,6 +29,10 @@ class LoginController extends Controller
         $request->validate([
             'identifier' => ['required', 'string'],
             'secret' => $secretRules,
+        ], [
+            'identifier.required' => 'Username atau nomor siswa wajib diisi.',
+            'secret.required' => 'Password atau PIN wajib diisi.',
+            'secret.digits' => 'PIN harus tepat 6 digit angka.',
         ]);
 
         if (Auth::guard('web')->attempt(['username' => $identifier, 'password' => $secret])) {
@@ -71,11 +75,15 @@ class LoginController extends Controller
                 Auth::guard('nasabah')->logout();
                 AuditLogService::record('login_blocked', 'saver', $nasabah->id, ['student_number' => $nasabah->student_number]);
 
+                $message = $nasabah->isGraduated()
+                    ? 'Rekening ini sudah ditutup karena kelulusan. Hubungi Administrator bila masih ada sisa saldo.'
+                    : 'Akun Anda diblokir.';
+
                 if ($this->wantsJson($request)) {
-                    return response()->json(['success' => false, 'message' => 'Akun Anda diblokir.'], 403);
+                    return response()->json(['success' => false, 'message' => $message], 403);
                 }
 
-                return back()->withErrors(['identifier' => 'Akun Anda diblokir.']);
+                return back()->withErrors(['identifier' => $message]);
             }
 
             $request->session()->regenerate();
@@ -135,7 +143,6 @@ class LoginController extends Controller
         return match ($role) {
             'admin' => redirect()->route('admin.dashboard'),
             'teller' => redirect()->route('teller.dashboard'),
-            'supervisor' => redirect()->route('supervisor.dashboard'),
             default => redirect()->route('login'),
         };
     }

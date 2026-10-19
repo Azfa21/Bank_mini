@@ -10,7 +10,6 @@ use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Support\CashDenomination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -95,13 +94,6 @@ class TransactionService
                 throw new TransactionValidationException('Saldo tidak mencukupi.');
             }
 
-            $maxWithoutOrder = SystemConfig::integer('max_withdrawal_without_order', 0);
-            if ($maxWithoutOrder > 0 && $amount > $maxWithoutOrder) {
-                throw new TransactionValidationException(
-                    'Nominal penarikan melebihi batas tanpa pesanan (Rp '.number_format($maxWithoutOrder).').'
-                );
-            }
-
             $balanceAfter = $balanceBefore - $amount;
             if ($balanceAfter < $minimumBalance) {
                 throw new TransactionValidationException(
@@ -128,6 +120,52 @@ class TransactionService
                 'account_number' => $locked->account_number,
                 'amount' => $amount,
                 'balance_after' => $balanceAfter,
+            ], $teller->id);
+
+            return $transaction;
+        });
+    }
+
+    /**
+     * Mencairkan seluruh saldo untuk penutupan rekening. Batas saldo minimum
+     * dilewati karena rekening berhenti, bukan penarikan biasa.
+     */
+    public function withdrawRemainingBalance(Account $account, User $teller, string $reason): ?Transaction
+    {
+        return DB::transaction(function () use ($account, $teller, $reason) {
+            $locked = Account::query()->lockForUpdate()->findOrFail($account->id);
+            $this->assertAccountActive($locked);
+
+            $balanceBefore = (int) $locked->balance;
+
+            if ($balanceBefore <= 0) {
+                return null;
+            }
+
+            // Tidak ada kas yang keluar untuk rekening bersaldo nol, jadi laporan harian
+            // hanya perlu terbuka bila memang ada pencairan.
+            $this->assertTellerDayOpen($teller);
+
+            $transaction = $this->createTransaction(
+                $locked,
+                $teller,
+                'withdrawal',
+                $balanceBefore,
+                $balanceBefore,
+                0,
+                ['notes' => $reason],
+            );
+
+            $locked->update(['balance' => 0]);
+
+            $this->createJournalEntries($transaction, 'withdrawal', $balanceBefore);
+            $this->assertJournalBalanced($transaction);
+
+            AuditLogService::record('transaction_withdrawal_success', 'transaction', $transaction->id, [
+                'account_number' => $locked->account_number,
+                'amount' => $balanceBefore,
+                'balance_after' => 0,
+                'reason' => 'account_closure',
             ], $teller->id);
 
             return $transaction;
@@ -299,27 +337,10 @@ class TransactionService
             'receipt_number' => $this->generateTransactionNumber(),
             'slip_number' => $this->resolveSlipNumber($data['slip_number'] ?? null),
             'slip_amount' => isset($data['slip_amount']) ? (int) $data['slip_amount'] : null,
-            'physical_cash_amount' => isset($data['physical_cash_amount']) ? (int) $data['physical_cash_amount'] : null,
-            'denomination_breakdown' => $this->normalizeBreakdown($data['denomination_breakdown'] ?? null),
             'notes' => $data['notes'] ?? null,
             'status' => 'success',
             'transaction_at' => now(),
         ]);
-    }
-
-    /**
-     * @param  array<string, int|string|null>|null  $breakdown
-     * @return array<string, int>|null
-     */
-    protected function normalizeBreakdown(?array $breakdown): ?array
-    {
-        if ($breakdown === null) {
-            return null;
-        }
-
-        $normalized = CashDenomination::normalize($breakdown);
-
-        return $normalized === [] ? null : $normalized;
     }
 
     protected function resolveSlipNumber(?string $suppliedSlipNumber): string
@@ -417,8 +438,16 @@ class TransactionService
             throw new TransactionValidationException('Rekening tidak aktif.');
         }
 
+        if ($account->hasPendingClosure()) {
+            throw new TransactionValidationException('Rekening sedang menunggu persetujuan penutupan, transaksi baru ditahan sementara.');
+        }
+
         if ($account->saver && $account->saver->status !== 'active') {
-            throw new TransactionValidationException('Nasabah dalam status diblokir.');
+            throw new TransactionValidationException(
+                $account->saver->isGraduated()
+                    ? 'Rekening sudah ditutup karena siswa telah lulus.'
+                    : 'Nasabah dalam status diblokir.'
+            );
         }
     }
 

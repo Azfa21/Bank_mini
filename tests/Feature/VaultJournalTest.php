@@ -16,7 +16,7 @@ class VaultJournalTest extends TestCase
 
     protected User $teller;
 
-    protected User $supervisor;
+    protected User $admin2;
 
     protected DailyReport $report;
 
@@ -32,11 +32,11 @@ class VaultJournalTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->supervisor = User::create([
-            'username' => 'supervisor1',
+        $this->admin2 = User::create([
+            'username' => 'admin2',
             'password_hash' => Hash::make('password'),
-            'full_name' => 'Supervisor Satu',
-            'role' => 'supervisor',
+            'full_name' => 'Admin Dua',
+            'role' => 'admin',
             'status' => 'active',
         ]);
 
@@ -48,8 +48,6 @@ class VaultJournalTest extends TestCase
             'total_deposit' => 150000,
             'total_withdrawal' => 50000,
             'closing_balance_system' => 100000,
-            'closing_balance_physical' => 100000,
-            'cash_difference' => 0,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
@@ -57,8 +55,8 @@ class VaultJournalTest extends TestCase
 
     public function test_approval_posts_vault_journal_102_debit_101_credit(): void
     {
-        $this->actingAs($this->supervisor, 'web')
-            ->post(route('supervisor.reports.approve', $this->report), [
+        $this->actingAs($this->admin2, 'web')
+            ->post(route('admin.daily-reports.approve', $this->report), [
                 'approval_notes' => 'Kas diterima.',
             ])
             ->assertRedirect();
@@ -86,8 +84,8 @@ class VaultJournalTest extends TestCase
 
     public function test_vault_journal_is_balanced(): void
     {
-        $this->actingAs($this->supervisor, 'web')
-            ->post(route('supervisor.reports.approve', $this->report), [
+        $this->actingAs($this->admin2, 'web')
+            ->post(route('admin.daily-reports.approve', $this->report), [
                 'approval_notes' => 'Kas diterima.',
             ]);
 
@@ -104,11 +102,10 @@ class VaultJournalTest extends TestCase
     {
         $this->report->update([
             'closing_balance_system' => 0,
-            'closing_balance_physical' => 0,
         ]);
 
-        $this->actingAs($this->supervisor, 'web')
-            ->post(route('supervisor.reports.approve', $this->report), [
+        $this->actingAs($this->admin2, 'web')
+            ->post(route('admin.daily-reports.approve', $this->report), [
                 'approval_notes' => 'Tidak ada kas.',
             ]);
 

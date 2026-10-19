@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Cetak Buku Tabungan  EBank Mini')
+@section('title', 'Cetak Buku Tabungan | Bank Mini')
 @section('section', 'Piket Teller')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between no-print">
         <div>
             <h1 class="text-xl font-semibold text-stone-900">Buku Tabungan Fisik</h1>
             <p class="text-sm text-stone-500 mt-1">Pilih baris awal cetak agar tidak menimpa baris sebelumnya di buku tabungan.</p>
@@ -49,8 +49,8 @@
                         <tr>
                             <th class="px-5 py-3">#</th>
                             <th class="px-5 py-3">Tanggal</th>
-                            <th class="px-5 py-3">Tipe</th>
-                            <th class="px-5 py-3">Debet (Masuk)</th>
+                            <th class="px-5 py-3">Jenis</th>
+                            <th class="px-5 py-3">Debit (Masuk)</th>
                             <th class="px-5 py-3">Kredit (Keluar)</th>
                             <th class="px-5 py-3 text-right">Saldo</th>
                         </tr>

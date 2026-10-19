@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\MemberImportRequest;
 use App\Http\Requests\Admin\StoreMemberRequest;
 use App\Http\Requests\Admin\UpdateMemberRequest;
 use App\Models\Member;
+use App\Models\Saver;
 use App\Services\MemberImportService;
 use App\Services\MemberRegistrationService;
 use Illuminate\View\View;
@@ -23,7 +24,12 @@ class MemberController extends Controller
     public function index()
     {
         $members = Member::query()
-            ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
+            // Anggota yang sudah jadi penabung dikelola di halaman Penabung. Penabung yang
+            // pernah dihapus (soft delete) ikut dikecualikan: sistem tetap melarang anggota
+            // itu diaktivasi ulang, jadi menampilkannya di sini hanya menghasilkan baris buntu.
+            ->whereNotIn('nis', Saver::withTrashed()->whereNotNull('member_nis')->select('member_nis'))
+            // Anggota yang sudah lulus diarsipkan di halaman Kelulusan, bukan di daftar kerja harian.
+            ->whereNull('graduated_at')
             ->when(request('search'), function ($query, $search) {
                 $search = trim($search);
 
@@ -31,12 +37,14 @@ class MemberController extends Controller
                     $query->where(function ($sub) use ($search) {
                         $sub->where('full_name', 'like', "%{$search}%")
                             ->orWhere('nis', 'like', "%{$search}%")
+                            ->orWhere('class_name', 'like', "%{$search}%")
                             ->orWhere('graduation_year', 'like', "%{$search}%");
                     });
                 }
             })
             ->orderBy('full_name')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -45,7 +53,12 @@ class MemberController extends Controller
             ]);
         }
 
-        return view('admin.members.index', compact('members'));
+        return view('admin.members.index', [
+            'members' => $members,
+            // Dipakai empty state untuk membedakan "belum ada anggota" dari
+            // "semua anggota sudah jadi penabung".
+            'hasMembers' => $members->isNotEmpty() || Member::query()->exists(),
+        ]);
     }
 
     public function create(): View
@@ -58,12 +71,9 @@ class MemberController extends Controller
         $member = $this->registrations->register([
             'nis' => $request->nis,
             'full_name' => $request->full_name,
+            'class_name' => $request->class_name,
             'graduation_year' => $request->graduation_year,
         ], $request->user()->id);
-
-        if ($request->filled('status')) {
-            $member->update(['status' => $request->status]);
-        }
 
         if ($this->wantsJson($request)) {
             return response()->json([
@@ -83,7 +93,7 @@ class MemberController extends Controller
 
     public function update(UpdateMemberRequest $request, Member $member)
     {
-        $data = $request->only(['nis', 'full_name', 'graduation_year', 'status']);
+        $data = $request->only(['nis', 'full_name', 'class_name', 'graduation_year']);
 
         if (array_key_exists('nis', $data) && $data['nis'] !== $member->nis && $member->saver()->withTrashed()->exists()) {
             return back()->with('error', 'NIS tidak dapat diubah karena anggota sudah memiliki rekening penabung.');
@@ -153,9 +163,15 @@ class MemberController extends Controller
         }
 
         if ($this->wantsJson($request)) {
+            $message = "{$summary['imported']} anggota berhasil diimpor.";
+
+            if ($summary['updated'] > 0) {
+                $message .= " Kelas {$summary['updated']} anggota diperbarui.";
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => "{$summary['imported']} anggota berhasil diimpor.",
+                'message' => $message,
                 'data' => $summary,
             ]);
         }
@@ -171,9 +187,9 @@ class MemberController extends Controller
             $handle = fopen('php://output', 'wb');
 
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, ['nis', 'nama', 'angkatan_keluar']);
-            fputcsv($handle, ['20260001', 'Budi Santoso', '2026']);
-            fputcsv($handle, ['20260002', 'Citra Lestari', '2026']);
+            fputcsv($handle, ['nis', 'nama', 'angkatan_keluar', 'kelas']);
+            fputcsv($handle, ['20260001', 'Budi Santoso', '2029', 'X RPL 1']);
+            fputcsv($handle, ['20260002', 'Citra Lestari', '2029', 'X TKJ 2']);
 
             fclose($handle);
         }, 'template-import-anggota.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

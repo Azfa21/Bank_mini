@@ -39,7 +39,6 @@ class ReceiptEnrichmentTest extends TellerTestCase
         $transaction = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-RCP-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
 
         $journalNumber = $transaction->journalEntries()->first()->journal_number;
@@ -50,7 +49,7 @@ class ReceiptEnrichmentTest extends TellerTestCase
             ->assertSee('Bank Mini Sekolah')
             ->assertSee($journalNumber)
             ->assertSee('Lima Puluh Ribu Rupiah')
-            ->assertSee('success')
+            ->assertSee('Berhasil')
             ->assertSee('Ani Wijaya')
             ->assertSee('2023001');
     }
@@ -81,10 +80,9 @@ class ReceiptEnrichmentTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-RCP-004',
             'slip_amount' => 30000,
-            'physical_cash_amount' => 30000,
         ], $this->teller);
 
-        $reversal = app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Salah input.');
+        $reversal = app(ReversalService::class)->reverse($deposit, $this->admin2, 'Salah input.');
 
         $this->actingAsTeller()
             ->get(route('teller.transactions.receipt', $reversal))
@@ -100,10 +98,9 @@ class ReceiptEnrichmentTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-RCP-005',
             'slip_amount' => 30000,
-            'physical_cash_amount' => 30000,
         ], $this->teller);
 
-        app(ReversalService::class)->reverse($deposit, $this->supervisor, 'Salah input nominal.');
+        app(ReversalService::class)->reverse($deposit, $this->admin2, 'Salah input nominal.');
 
         $this->actingAsTeller()
             ->get(route('teller.transactions.receipt', $deposit->fresh()))
@@ -117,8 +114,7 @@ class ReceiptEnrichmentTest extends TellerTestCase
         $deposit = app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-RCP-006',
             'slip_amount' => 10000,
-            'physical_cash_amount' => 10000,
-        ], $this->supervisor);
+        ], $this->admin2);
 
         $this->actingAsTeller()
             ->get(route('teller.transactions.receipt', $deposit))

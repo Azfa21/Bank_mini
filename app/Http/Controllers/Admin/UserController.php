@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\CashTransfer;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -14,11 +15,10 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    private const ROLES = ['admin', 'supervisor', 'teller'];
+    private const ROLES = ['admin', 'teller'];
 
     private const ROLE_LABELS = [
         'admin' => 'Admin',
-        'supervisor' => 'Supervisor',
         'teller' => 'Teller',
     ];
 
@@ -30,7 +30,8 @@ class UserController extends Controller
             ->when(request('role'), fn ($q, $role) => $q->where('role', $role))
             ->when(request('status'), fn ($q, $status) => $q->where('status', $status))
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         if ($this->wantsJson()) {
             return response()->json([
@@ -100,7 +101,16 @@ class UserController extends Controller
                 $data['password_hash'] = $request->password;
             }
 
+            $resetPassword = $request->filled('password');
             $user->update($data);
+
+            if ($resetPassword) {
+                AuditLogService::record('password_reset._by_admin', 'user', $user->id, [
+                    'actor_id' => $request->user()->id,
+                    'actor_name' => $request->user()->full_name,
+                    'reason' => $request->validated('reset_reason'),
+                ], $request->user()->id);
+            }
 
             if ($this->wantsJson($request)) {
                 return response()->json([
@@ -129,7 +139,7 @@ class UserController extends Controller
             }
 
             if ($this->hasRelatedRecords($user)) {
-                return $this->reject('Akun pengguna tidak dapat dihapus karena masih memiliki data terkait (nasabah/transaksi/laporan).');
+                return $this->reject('Akun pengguna tidak dapat dihapus karena masih memiliki data terkait (anggota/nasabah/transaksi/laporan).');
             }
 
             $user->delete();
@@ -173,13 +183,19 @@ class UserController extends Controller
         }, 3);
     }
 
+    /**
+     * Semua relasi di bawah adalah FK bertipe onDelete(restrict);
+     * satu relasi terlewat membuat tombol Hapus melempar 500, bukan pesan penolakan.
+     */
     private function hasRelatedRecords(User $user): bool
     {
         return $user->savers()->exists()
+            || $user->members()->exists()
             || $user->transactions()->exists()
+            || $user->reversedTransactions()->exists()
             || $user->dailyReports()->exists()
             || $user->approvedReports()->exists()
-            || CashTransfer::where('supervisor_id', $user->id)->exists();
+            || CashTransfer::where('approved_by', $user->id)->exists();
     }
 
     private function minimumRoleViolation(User $user, ?string $newRole, bool $newIsActive): ?string

@@ -17,7 +17,6 @@ class PolicyEnforcementTest extends TellerTestCase
         return app(TransactionService::class)->deposit($this->account, [
             'slip_number' => 'SLIP-POL-001',
             'slip_amount' => 50000,
-            'physical_cash_amount' => 50000,
         ], $this->teller);
     }
 
@@ -66,12 +65,8 @@ class PolicyEnforcementTest extends TellerTestCase
         $this->actingAs($otherTeller, 'web');
         $this->assertFalse(Gate::allows('view', $own));
 
-        $this->actingAs($this->supervisor, 'web');
-        $this->assertTrue(Gate::allows('view', $own));
-        $this->assertFalse(Gate::allows('create', Transaction::class));
-
         $this->actingAs($this->admin, 'web');
-        $this->assertFalse(Gate::allows('view', $own));
+        $this->assertTrue(Gate::allows('view', $own));
         $this->assertFalse(Gate::allows('create', Transaction::class));
     }
 
@@ -88,11 +83,11 @@ class PolicyEnforcementTest extends TellerTestCase
             'status' => 'submitted',
         ]);
 
-        $this->actingAs($this->supervisor, 'web');
+        $this->actingAs($this->admin2, 'web');
         $this->assertTrue(Gate::allows('reject', $report));
         $this->assertTrue(Gate::allows('approve', $report));
 
-        foreach ([$this->admin, $this->teller] as $user) {
+        foreach ([$this->teller] as $user) {
             $this->actingAs($user, 'web');
             $this->assertFalse(Gate::allows('reject', $report));
         }

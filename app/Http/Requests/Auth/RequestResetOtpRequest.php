@@ -13,8 +13,8 @@ class RequestResetOtpRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('email')) {
-            $this->merge(['email' => mb_strtolower(trim((string) $this->input('email')))]);
+        if ($this->has('identifier')) {
+            $this->merge(['identifier' => trim((string) $this->input('identifier'))]);
         }
     }
 
@@ -22,7 +22,7 @@ class RequestResetOtpRequest extends FormRequest
     {
         return [
             'account_type' => ['required', 'in:staff,nasabah'],
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'identifier' => ['required', 'string', 'max:255'],
         ];
     }
 
@@ -31,8 +31,8 @@ class RequestResetOtpRequest extends FormRequest
         return [
             'account_type.required' => 'Jenis akun wajib dipilih.',
             'account_type.in' => 'Jenis akun tidak valid.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
+            'identifier.required' => 'Username atau nomor siswa wajib diisi.',
+            'identifier.max' => 'Username atau nomor siswa terlalu panjang.',
         ];
     }
 }

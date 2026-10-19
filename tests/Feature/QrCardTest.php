@@ -57,7 +57,7 @@ class QrCardTest extends TellerTestCase
         foreach ([
             [$this->admin, 'web'],
             [$this->teller, 'web'],
-            [$this->supervisor, 'web'],
+            [$this->admin2, 'web'],
             [$this->nasabah, 'nasabah'],
         ] as [$user, $guard]) {
             $this->actingAs($user, $guard)

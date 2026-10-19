@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Ubah Penabung — Bank Mini')
+@section('title', 'Ubah Penabung | Bank Mini')
 @section('section', 'Administrator · Ubah Penabung')
 
 @section('content')
@@ -23,7 +23,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <x-input-label for="class_name">Kelas</x-input-label>
-                    <x-input id="class_name" name="class_name" :value="$saver->class_name" />
+                    <x-input id="class_name" name="class_name" :value="$saver->class_name" list="kelas-opsi" placeholder="Contoh: XI RPL 2" />
                 </div>
                 <div>
                     <x-input-label for="phone_number">No. HP</x-input-label>
@@ -32,11 +32,21 @@
             </div>
             <div>
                 <x-input-label for="email">Email</x-input-label>
-                <x-input id="email" name="email" type="email" :value="$saver->email" required placeholder="Untuk verifikasi reset PIN" />
+                <x-input id="email" name="email" type="email" :value="$saver->email" required placeholder="Tempat kode verifikasi dikirim" />
             </div>
             <div>
                 <x-input-label for="pin">PIN Baru <span class="text-stone-500 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
-                <x-input id="pin" name="pin" type="password" pattern="\d{6}" maxlength="6" />
+                <x-input id="pin" name="pin" type="password" pattern="\d{6}" maxlength="6" aria-describedby="pin-help" />
+                <p id="pin-help" class="text-[13px] text-stone-600 mt-1.5">
+                    Mengisi kolom ini langsung mengganti PIN. Alasan di bawah wajib diisi dan tersimpan di log audit.
+                </p>
+            </div>
+            <div>
+                <x-input-label for="reset_reason">Alasan Reset PIN</x-input-label>
+                <textarea id="reset_reason" name="reset_reason" rows="2" maxlength="255"
+                    class="w-full px-4 py-3 text-[15px] text-stone-900 placeholder:text-stone-500 bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-800 focus:border-brand-800"
+                    placeholder="Contoh: siswa lupa PIN, kartu rekening dibawa sendiri">{{ old('reset_reason') }}</textarea>
+                <x-input-error :message="$errors->first('reset_reason')" />
             </div>
             <div>
                 <x-input-label for="status">Status</x-input-label>
@@ -50,5 +60,7 @@
                 <x-secondary-button :href="route('admin.savers.index')">Batal</x-secondary-button>
             </div>
         </form>
+
+        <x-class-datalist />
     </div>
 @endsection

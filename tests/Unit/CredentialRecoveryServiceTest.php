@@ -30,6 +30,7 @@ class CredentialRecoveryServiceTest extends TestCase
 
         $record = PasswordResetOtp::create([
             'account_type' => CredentialRecoveryService::TYPE_STAFF,
+            'account_id' => $user->id,
             'email' => $user->email,
             'otp_hash' => Hash::make('654321'),
             'attempts' => 0,
@@ -39,13 +40,13 @@ class CredentialRecoveryServiceTest extends TestCase
         $service = app(CredentialRecoveryService::class);
         $firstResult = $service->verifyAndReset(
             CredentialRecoveryService::TYPE_STAFF,
-            $user->email,
+            $user->username,
             '654321',
             Hash::make('first-password'),
         );
         $secondResult = $service->verifyAndReset(
             CredentialRecoveryService::TYPE_STAFF,
-            $user->email,
+            $user->username,
             '654321',
             Hash::make('second-password'),
         );
@@ -70,6 +71,7 @@ class CredentialRecoveryServiceTest extends TestCase
 
         $record = PasswordResetOtp::create([
             'account_type' => CredentialRecoveryService::TYPE_STAFF,
+            'account_id' => $user->id,
             'email' => $user->email,
             'otp_hash' => Hash::make('654321'),
             'attempts' => 0,
@@ -94,7 +96,7 @@ class CredentialRecoveryServiceTest extends TestCase
         try {
             $result = app(CredentialRecoveryService::class)->verifyAndReset(
                 CredentialRecoveryService::TYPE_STAFF,
-                $user->email,
+                $user->username,
                 '654321',
                 Hash::make('new-password'),
             );

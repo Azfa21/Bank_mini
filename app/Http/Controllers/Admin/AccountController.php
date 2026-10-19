@@ -39,7 +39,7 @@ class AccountController extends Controller
         return view('cards.print', [
             'account' => $account,
             'sectionLabel' => 'Administrator · Rekening',
-            'backUrl' => route('admin.accounts.show', $account),
+            'backUrl' => route('admin.savers.index'),
         ]);
     }
 }

@@ -47,15 +47,27 @@ class CustomerBlockTest extends TellerTestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_soft_delete_saver_and_keep_history(): void
+    public function test_savers_page_offers_block_instead_of_delete(): void
     {
         $this->actingAs($this->admin, 'web')
-            ->delete(route('admin.savers.destroy', $this->nasabah))
-            ->assertRedirect(route('admin.savers.index'))
-            ->assertSessionHas('success');
+            ->get(route('admin.savers.index'))
+            ->assertOk()
+            ->assertSee('Ani Wijaya')
+            ->assertSee('Blokir')
+            // Form hapus memakai method spoof DELETE; halaman ini tidak boleh punya satu pun.
+            ->assertDontSee('value="DELETE"');
+    }
 
-        $this->assertSoftDeleted('savers', ['id' => $this->nasabah->id]);
-        $this->assertDatabaseHas('accounts', ['id' => $this->account->id, 'status' => 'closed']);
+    public function test_saver_can_no_longer_be_deleted_from_admin(): void
+    {
+        // Penabung tidak dihapus lagi, hanya diblokir. Route DELETE sengaja tidak ada,
+        // jadi permintaan ke URI itu dijawab 405, bukan menghapus datanya.
+        $this->actingAs($this->admin, 'web')
+            ->delete("/admin/savers/{$this->nasabah->id}")
+            ->assertStatus(405);
+
+        $this->assertNotSoftDeleted('savers', ['id' => $this->nasabah->id]);
+        $this->assertDatabaseHas('accounts', ['id' => $this->account->id, 'status' => 'active']);
     }
 
     public function test_deposit_rejected_for_blocked_customer(): void
@@ -67,7 +79,6 @@ class CustomerBlockTest extends TellerTestCase
             ->post(route('teller.deposits.store', $this->account), [
                 'slip_number' => 'SLIP-BLK-001',
                 'slip_amount' => 50000,
-                'physical_cash_amount' => 50000,
             ])
             ->assertRedirect(route('teller.deposits.create', $this->account))
             ->assertSessionHas('error', 'Nasabah dalam status diblokir.');

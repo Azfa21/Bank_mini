@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Mutasi — Bank Mini')
+@section('title', 'Riwayat Mutasi | Bank Mini')
 @section('section', 'Nasabah')
 
 @section('content')
