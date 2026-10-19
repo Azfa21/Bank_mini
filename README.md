@@ -32,7 +32,7 @@ php artisan serve
 
 ### Membersihkan Data Testing (Peluncuran)
 ```bash
-A. Untuk Testing Sehari-hari
+#A. Untuk Testing Sehari-hari
 Jalankan di terminal proyek:
 
 bash
@@ -42,7 +42,8 @@ php artisan bankmini:reset-nasabah
 php artisan bankmini:reset-nasabah --force
 # Atau sertakan nama operator di audit log:
 php artisan bankmini:reset-nasabah --operator="Nama Anda"
-B. Untuk Persiapan Release ke Production
+
+#B. Untuk Persiapan Release ke Production
 Karena perintah ini memiliki Production Guard, lakukan langkah berikut:
 
 Jalankan pembersihan saat APP_ENV masih local atau staging:
