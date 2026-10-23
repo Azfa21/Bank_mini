@@ -135,6 +135,12 @@ class ProfileScreen extends StatelessWidget {
               label: 'Rekening koran',
               onTap: () => context.push(AppRouter.statement),
             ),
+            const SizedBox(height: 10),
+            _ActionTile(
+              icon: Icons.pin_outlined,
+              label: 'Ubah PIN Transaksi',
+              onTap: () => context.push(AppRouter.changePin),
+            ),
             const SizedBox(height: 24),
             OutlinedButton.icon(
               onPressed: () => _confirmLogout(context),

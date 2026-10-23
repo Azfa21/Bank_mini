@@ -22,12 +22,11 @@ use Illuminate\Support\Facades\DB;
 class ResetNasabahData extends Command
 {
     protected $signature = 'bankmini:reset-nasabah
-                            {--force : Lewati prompt konfirmasi (selain production)}
+                            {--force : Lewati prompt konfirmasi}
                             {--dry-run : Tampilkan jumlah baris yang akan dihapus, tanpa menghapus apa pun}
-                            {--allow-production : Izinkan reset di environment production untuk peluncuran}
                             {--operator= : Nama operator yang menjalankan reset, dicatat pada audit log}';
 
-    protected $description = 'Menghapus permanen data nasabah, transaksi, jurnal, laporan, sesi login, dan antrean hasil testing. Akun pengguna & konfigurasi sistem tetap utuh.';
+    protected $description = 'Menghapus permanen data nasabah, transaksi, jurnal, laporan, sesi login, dan antrean hasil testing di environment non-production. Akun pengguna & konfigurasi sistem tetap utuh.';
 
     public function handle(): int
     {
@@ -45,23 +44,18 @@ class ResetNasabahData extends Command
 
         $isProduction = app()->environment('production');
 
-        if ($isProduction && ! $this->option('allow-production')) {
-            $this->error('Perintah ini ditolak pada environment production.');
-            $this->line('Untuk membersihkan data testing sebelum peluncuran, jalankan sekali dengan:');
-            $this->line('  php artisan bankmini:reset-nasabah --allow-production --force --operator="Nama Anda"');
-            $this->line('lalu ketik HAPUS saat diminta konfirmasi.');
+        // Ini bank: begitu server berjalan sebagai production, penghapusan data
+        // nasabah lewat perintah tidak boleh ada lagi, apa pun flag yang dipakai.
+        if ($isProduction) {
+            $this->error('Perintah ini ditolak pada environment production, tanpa flag yang bisa melewatkannya.');
+            $this->line('Bersih-bersih data testing wajib dilakukan sebelum peluncuran, saat APP_ENV masih lokal atau staging.');
+            $this->line('--dry-run tetap boleh dipakai di production untuk melihat jumlah baris tanpa menghapus apa pun.');
 
             return self::FAILURE;
         }
 
-        if ($isProduction && blank($this->option('operator'))) {
-            $this->error('Saat --allow-production dipakai, --operator wajib diisi agar penanggung jawab tercatat pada audit log.');
-
-            return self::FAILURE;
-        }
-
-        if (! $this->confirmWipe($targets, $isProduction)) {
-            return $isProduction ? self::FAILURE : self::SUCCESS;
+        if (! $this->confirmWipe($targets)) {
+            return self::SUCCESS;
         }
 
         $deleted = $this->wipe($targets);
@@ -125,7 +119,7 @@ class ResetNasabahData extends Command
     /**
      * @param  array<string, class-string<Model>|null>  $targets
      */
-    protected function confirmWipe(array $targets, bool $isProduction): bool
+    protected function confirmWipe(array $targets): bool
     {
         $this->warn('Perintah ini akan MENGHAPUS PERMANEN data berikut:');
         $this->renderCounts($targets);
@@ -139,20 +133,6 @@ class ResetNasabahData extends Command
         $this->info('Akun staff (admin/teller), password, dan konfigurasi sistem TIDAK akan diubah.');
         $this->info('Semua sesi login (web dan aplikasi mobile) akan berakhir setelah reset.');
         $this->newLine();
-
-        // Bahkan dengan --force, production wajib mengetik HAPUS agar reset
-        // tidak bisa terpicu oleh satu perintah salah atau skrip yang salah.
-        if ($isProduction) {
-            $typed = $this->ask('Anda di environment production. Ketik HAPUS untuk menghapus permanen data');
-
-            if ($typed !== 'HAPUS') {
-                $this->warn('Konfirmasi tidak cocok. Reset production dibatalkan.');
-
-                return false;
-            }
-
-            return true;
-        }
 
         if ($this->option('force')) {
             return true;

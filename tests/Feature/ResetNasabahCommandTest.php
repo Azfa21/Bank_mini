@@ -205,13 +205,16 @@ class ResetNasabahCommandTest extends TellerTestCase
         $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
     }
 
-    public function test_reset_is_refused_in_production_without_explicit_allowance(): void
+    public function test_reset_is_refused_in_production_regardless_of_flags(): void
     {
         $this->app['env'] = 'production';
 
-        $this->artisan('bankmini:reset-nasabah', ['--force' => true])
+        $this->artisan('bankmini:reset-nasabah', [
+            '--force' => true,
+            '--operator' => 'Operator Rilis',
+        ])
             ->expectsOutputToContain('ditolak pada environment production')
-            ->expectsOutputToContain('--allow-production')
+            ->doesntExpectOutputToContain('allow-production')
             ->assertFailed();
 
         $this->assertGreaterThan(0, Saver::withTrashed()->count());
@@ -220,60 +223,21 @@ class ResetNasabahCommandTest extends TellerTestCase
         $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
     }
 
-    public function test_production_reset_requires_operator_name(): void
+    public function test_dry_run_remains_allowed_in_production(): void
     {
         $this->app['env'] = 'production';
 
-        $this->artisan('bankmini:reset-nasabah', ['--force' => true, '--allow-production' => true])
-            ->expectsOutputToContain('--operator wajib diisi')
-            ->assertFailed();
-
-        $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
-        $this->assertGreaterThan(0, Saver::query()->count());
-    }
-
-    public function test_production_confirmation_cannot_be_skipped_by_force(): void
-    {
-        $this->app['env'] = 'production';
-
-        $this->artisan('bankmini:reset-nasabah', [
-            '--force' => true,
-            '--allow-production' => true,
-            '--operator' => 'Operator Rilis',
-        ])
-            ->expectsQuestion('Anda di environment production. Ketik HAPUS untuk menghapus permanen data', 'ya')
-            ->expectsOutputToContain('Konfirmasi tidak cocok')
-            ->assertFailed();
-
-        $this->assertGreaterThan(0, Saver::query()->count());
-        $this->assertGreaterThan(0, Transaction::query()->count());
-        $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
-    }
-
-    public function test_production_reset_runs_after_typed_confirmation(): void
-    {
-        $this->app['env'] = 'production';
-
-        $this->artisan('bankmini:reset-nasabah', [
-            '--force' => true,
-            '--allow-production' => true,
-            '--operator' => 'Operator Rilis',
-        ])
-            ->expectsQuestion('Anda di environment production. Ketik HAPUS untuk menghapus permanen data', 'HAPUS')
+        $this->artisan('bankmini:reset-nasabah', ['--dry-run' => true])
+            ->expectsOutputToContain('Dry-run: hanya menampilkan jumlah baris, tidak ada yang dihapus.')
             ->assertSuccessful();
 
-        $this->assertSame(0, Saver::query()->count());
-        $this->assertSame(0, Transaction::query()->count());
-        $this->assertSame(0, DB::table('sessions')->count());
-        $this->assertSame(0, DB::table('jobs')->count());
+        $this->assertSame(1, Saver::query()->count());
+        $this->assertSame(1, Account::query()->count());
+        $this->assertSame(1, DB::table('sessions')->count());
+        $this->assertSame(1, DB::table('jobs')->count());
 
-        $this->assertSame(3, User::query()->count());
-
-        $log = AuditLog::query()->firstOrFail();
-        $this->assertSame('reset_nasabah', $log->action);
-        $this->assertSame('production', $log->metadata['environment']);
-        $this->assertSame('Operator Rilis', $log->metadata['operator']);
-        $this->assertGreaterThan(0, $log->metadata['deleted']['savers']);
+        $this->assertExtraTargetsPopulated();
+        $this->assertSame(0, AuditLog::query()->where('action', 'reset_nasabah')->count());
     }
 
     public function test_reset_writes_audit_log_that_survives_the_wipe(): void

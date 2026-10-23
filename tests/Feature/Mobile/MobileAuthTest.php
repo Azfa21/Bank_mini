@@ -10,7 +10,7 @@ class MobileAuthTest extends MobileTestCase
     {
         $response = $this->postJson(route('api.mobile.login'), [
             'student_number' => '2023001',
-            'pin' => '123456',
+            'password' => 'password123',
             'device_name' => 'Pixel Test',
         ]);
 
@@ -26,52 +26,79 @@ class MobileAuthTest extends MobileTestCase
         ]);
     }
 
-    public function test_login_with_wrong_pin_returns_unauthorized(): void
+    public function test_login_with_wrong_password_returns_unauthorized(): void
     {
         $this->postJson(route('api.mobile.login'), [
             'student_number' => '2023001',
-            'pin' => '999999',
+            'password' => 'wrong-password',
         ])->assertStatus(401)
-            ->assertJsonPath('success', false);
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Nomor siswa atau password tidak valid.');
 
-        $this->assertSame(1, $this->nasabah->fresh()->failed_pin_attempts);
+        $this->assertSame(0, $this->nasabah->fresh()->failed_pin_attempts);
+        $this->assertNull($this->nasabah->fresh()->locked_until);
+    }
+
+    public function test_login_rejects_password_shorter_than_eight_characters(): void
+    {
+        $this->postJson(route('api.mobile.login'), [
+            'student_number' => '2023001',
+            'password' => '1605',
+        ])->assertStatus(422);
     }
 
     public function test_login_with_unknown_student_number_returns_validation_error(): void
     {
         $this->postJson(route('api.mobile.login'), [
             'student_number' => '0000000',
-            'pin' => '123456',
+            'password' => 'password123',
         ])->assertStatus(422);
+    }
+
+    /**
+     * Penguncian PIN hanya berlaku untuk verifikasi transaksi di loket.
+     * Percobaan login yang gagal tidak boleh menghitung counter PIN.
+     */
+    public function test_failed_login_does_not_touch_the_transaction_pin_counters(): void
+    {
+        $this->postJson(route('api.mobile.login'), [
+            'student_number' => '2023001',
+            'password' => 'wrong-password',
+        ])->assertStatus(401);
+
+        $fresh = $this->nasabah->fresh();
+
+        $this->assertSame(0, $fresh->failed_pin_attempts);
+        $this->assertNull($fresh->locked_until);
+        $this->assertFalse($fresh->isPinLocked());
     }
 
     public function test_login_rejects_blocked_account(): void
     {
         $this->nasabah->update(['status' => 'blocked']);
 
-        $this->postJson(route('api.mobile.login'), [
+        $response = $this->postJson(route('api.mobile.login'), [
             'student_number' => '2023001',
-            'pin' => '123456',
-        ])->assertStatus(403);
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(403);
     }
 
-    public function test_account_locks_after_three_failed_attempts(): void
+    public function test_pin_lock_does_not_block_login(): void
     {
-        foreach (range(1, 3) as $attempt) {
-            $this->postJson(route('api.mobile.login'), [
-                'student_number' => '2023001',
-                'pin' => '999999',
-            ])->assertStatus($attempt === 3 ? 423 : 401);
-        }
-
-        $fresh = $this->nasabah->fresh();
-        $this->assertSame(3, $fresh->failed_pin_attempts);
-        $this->assertTrue($fresh->isPinLocked());
+        // Rekening terkunci karena salah PIN di loket tetap boleh masuk
+        // aplikasi: dua kredensial itu sengaja dipisah.
+        $this->nasabah->update([
+            'failed_pin_attempts' => 3,
+            'locked_until' => now()->addMinutes(15),
+        ]);
 
         $this->postJson(route('api.mobile.login'), [
             'student_number' => '2023001',
-            'pin' => '123456',
-        ])->assertStatus(423);
+            'password' => 'password123',
+        ])->assertOk()
+            ->assertJsonPath('success', true);
     }
 
     public function test_protected_endpoint_requires_token(): void

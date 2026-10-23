@@ -54,16 +54,11 @@ class ForgotPasswordController extends Controller
 
     public function resetCredential(ResetCredentialRequest $request): JsonResponse|RedirectResponse
     {
-        $accountType = $request->validated('account_type');
-        $newSecret = $accountType === CredentialRecoveryService::TYPE_NASABAH
-            ? $request->validated('pin')
-            : $request->validated('password');
-
         $result = $this->recovery->verifyAndReset(
-            $accountType,
+            $request->validated('account_type'),
             $request->validated('identifier'),
             $request->validated('otp'),
-            $newSecret,
+            $request->validated('password'),
         );
 
         if ($this->wantsJson($request)) {

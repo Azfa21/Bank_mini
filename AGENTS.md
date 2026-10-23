@@ -1,8 +1,10 @@
 # Bank Mini Sekolah
 
-Aplikasi perbankan MINI untuk lingkungan sekolah: loket teller, supervisor, administrator, dan
-rekening tabungan siswa (nasabah). Ada dua runtime: web (Laravel, Tailwind CSS v4, Blade) dan
-aplikasi nasabah (Flutter, direktori `mobile/`).
+Aplikasi perbankan MINI untuk lingkungan sekolah: loket teller, administrator (pemroses
+approval laporan dan koreksi), dan rekening tabungan siswa (nasabah; web plus aplikasi
+Flutter). Ada dua runtime: web (Laravel, Tailwind CSS v4, Blade) dan aplikasi nasabah
+(direktori `mobile/`). Peran aktif di web: `admin`, `teller`, `nasabah`; peran lama
+`supervisor` sudah digabungkan ke `admin` (halaman daftar pengguna tidak lagi menampilkannya).
 
 ## Perintah
 

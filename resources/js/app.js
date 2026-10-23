@@ -303,42 +303,31 @@ function bindActivationPage() {
     refresh();
 }
 
-// Pemilihan baris pada tabel panjang (mis. pindah rombel): kotak "pilih semua" dan
-// penghitung pada tombol supaya jumlah penabung yang ikut terlihat sebelum dikirim.
-function bindRowSelection() {
-    var items = Array.prototype.slice.call(document.querySelectorAll('[data-select-item]'));
-    if (!items.length) return;
+// Kenaikan kelas: pemilihan siswa per orang hanya berlaku saat kelas dinaikkan. Kalau
+// tindakannya "Tinggal kelas semua", seluruh kelas diam, jadi daftar siswanya disembunyikan
+// dan centangannya dimatikan supaya tidak terkirim sebagai pilihan yang diabaikan.
+function bindPromotionPickers() {
+    var selects = Array.prototype.slice.call(document.querySelectorAll('select[data-promotion-action]'));
+    if (!selects.length) return;
 
-    var selectAll = document.querySelector('[data-select-all]');
-    var submit = document.querySelector('[data-select-submit]');
+    selects.forEach(function (select) {
+        var cell = select.closest('td');
+        var picker = cell ? cell.querySelector('[data-promotion-picker]') : null;
+        if (!picker) return;
 
-    function refresh() {
-        var checked = items.filter(function (item) { return item.checked; }).length;
+        var retainValue = select.getAttribute('data-promotion-retain-value') || 'retain';
 
-        // Dicari ulang tiap kali: tombol bisa dipulihkan dari innerHTML setelah dialog
-        // konfirmasi dibatalkan, sehingga elemen penghitung yang lama sudah lepas dari dokumen.
-        var counter = document.querySelector('[data-select-count]');
-
-        if (counter) counter.textContent = checked;
-        if (submit) submit.disabled = checked === 0;
-
-        if (selectAll) {
-            selectAll.checked = checked === items.length;
-            selectAll.indeterminate = checked > 0 && checked < items.length;
+        function sync() {
+            var wholeClass = select.value === retainValue;
+            picker.classList.toggle('hidden', wholeClass);
+            picker.querySelectorAll('input[type="checkbox"]').forEach(function (box) {
+                box.disabled = wholeClass;
+            });
         }
-    }
 
-    if (selectAll) {
-        selectAll.addEventListener('change', function () {
-            items.forEach(function (item) { item.checked = selectAll.checked; });
-            refresh();
-        });
-    }
-
-    if (submit && submit.form) submit.form.addEventListener('confirm-cancelled', refresh);
-
-    items.forEach(function (item) { item.addEventListener('change', refresh); });
-    refresh();
+        select.addEventListener('change', sync);
+        sync();
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -347,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function () {
     bindLoginToggle();
     bindAuthTabs();
     bindPrintButtons();
+    bindPromotionPickers();
     // bindDisableOnSubmit harus lebih dulu dari bindConfirmForms: tombol dinonaktifkan
     // sebelum dialog muncul, lalu bindConfirmForms mengaktifkan lagi saat pengguna batal.
     bindDisableOnSubmit();
@@ -356,5 +346,4 @@ document.addEventListener('DOMContentLoaded', function () {
     bindWithdrawPage();
     bindTransferPage();
     bindActivationPage();
-    bindRowSelection();
 });

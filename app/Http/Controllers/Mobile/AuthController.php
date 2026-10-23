@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Mobile;
 
+use App\Exceptions\TransactionValidationException;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\MobileToken;
 use App\Models\Saver;
 use App\Services\AuditLogService;
 use App\Services\MobileTokenService;
+use App\Services\SaverCredentialService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,18 +19,19 @@ class AuthController extends Controller
 {
     public function __construct(
         protected MobileTokenService $tokens,
+        protected SaverCredentialService $credentials,
     ) {}
 
     public function login(Request $request): JsonResponse
     {
         $data = $request->validate([
             'student_number' => ['required', 'string'],
-            'pin' => ['required', 'string', 'digits:6'],
+            'password' => ['required', 'string', 'min:8'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ], [
             'student_number.required' => 'Nomor siswa (NIS) wajib diisi.',
-            'pin.required' => 'PIN wajib diisi.',
-            'pin.digits' => 'PIN harus tepat 6 digit angka.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
         ]);
 
         $customer = Saver::query()
@@ -42,7 +45,7 @@ class AuthController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'student_number' => 'Nomor siswa atau PIN tidak valid.',
+                'student_number' => 'Nomor siswa atau password tidak valid.',
             ]);
         }
 
@@ -59,27 +62,16 @@ class AuthController extends Controller
             ], 403);
         }
 
-        if ($customer->isPinLocked()) {
-            AuditLogService::record('mobile_login_locked', 'saver', $customer->id, [
+        if (! Hash::check($data['password'], $customer->password_hash ?? '')) {
+            AuditLogService::record('mobile_login_failed', 'saver', $customer->id, [
                 'student_number' => $customer->student_number,
+                'reason' => 'invalid_password',
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'PIN terkunci sementara karena 3x salah. Coba lagi setelah '
-                    .$customer->locked_until->diffForHumans().' atau lakukan reset PIN.',
-            ], 423);
-        }
-
-        if (! Hash::check($data['pin'], $customer->pin_hash)) {
-            return $this->handleFailedPin($customer);
-        }
-
-        if ((int) $customer->failed_pin_attempts > 0 || $customer->locked_until !== null) {
-            $customer->update([
-                'failed_pin_attempts' => 0,
-                'locked_until' => null,
-            ]);
+                'message' => 'Nomor siswa atau password tidak valid.',
+            ], 401);
         }
 
         $issued = $this->tokens->issue($customer, $data['device_name'] ?? 'android');
@@ -135,40 +127,42 @@ class AuthController extends Controller
         ]);
     }
 
-    protected function handleFailedPin(Saver $customer): JsonResponse
+    /**
+     * Ganti PIN transaksi. Sesi token yang sedang dipakai tidak ikut dicabut
+     * karena PIN tidak dipakai untuk masuk aplikasi.
+     */
+    public function changePin(Request $request): JsonResponse
     {
-        $attempts = (int) $customer->failed_pin_attempts + 1;
+        $customer = $this->saver($request);
 
-        if ($attempts >= 3) {
-            $customer->update([
-                'failed_pin_attempts' => $attempts,
-                'locked_until' => now()->addMinutes(15),
-            ]);
-
-            AuditLogService::record('customer_pin_locked', 'saver', $customer->id, [
-                'student_number' => $customer->student_number,
-                'action' => 'mobile_login',
-                'failed_attempts' => $attempts,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'PIN salah 3 kali berturut-turut. Akun dikunci selama 15 menit.',
-            ], 423);
-        }
-
-        $customer->update(['failed_pin_attempts' => $attempts]);
-
-        AuditLogService::record('mobile_login_failed', 'saver', $customer->id, [
-            'student_number' => $customer->student_number,
-            'reason' => 'invalid_pin',
-            'failed_attempts' => $attempts,
+        $data = $request->validate([
+            'current_pin' => ['required', 'string', 'digits:6'],
+            'pin' => ['required', 'string', 'digits:6', 'different:current_pin', 'confirmed'],
+            'pin_confirmation' => ['required', 'string', 'digits:6'],
+        ], [
+            'current_pin.required' => 'PIN saat ini wajib diisi.',
+            'current_pin.digits' => 'PIN saat ini harus tepat 6 digit angka.',
+            'pin.required' => 'PIN baru wajib diisi.',
+            'pin.digits' => 'PIN baru harus tepat 6 digit angka.',
+            'pin.different' => 'PIN baru tidak boleh sama dengan PIN saat ini.',
+            'pin.confirmed' => 'Konfirmasi PIN baru tidak cocok.',
+            'pin_confirmation.required' => 'Konfirmasi PIN baru wajib diisi.',
+            'pin_confirmation.digits' => 'Konfirmasi PIN baru harus tepat 6 digit angka.',
         ]);
 
+        try {
+            $this->credentials->changeTransactionPin($customer, $data['current_pin'], $data['pin']);
+        } catch (TransactionValidationException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'PIN salah. Percobaan ke-'.$attempts.' dari 3.',
-        ], 401);
+            'success' => true,
+            'message' => 'PIN transaksi berhasil diperbarui.',
+        ]);
     }
 
     protected function saver(Request $request): Saver

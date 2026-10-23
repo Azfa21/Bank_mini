@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -24,14 +23,14 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nisController = TextEditingController();
-  final _pinController = TextEditingController();
-  bool _obscurePin = true;
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
   String? _error;
 
   @override
   void dispose() {
     _nisController.dispose();
-    _pinController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -46,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await context.read<AuthProvider>().login(
         studentNumber: _nisController.text.trim(),
-        pin: _pinController.text,
+        password: _passwordController.text,
       );
     } on ApiException catch (error) {
       if (mounted) {
@@ -82,8 +81,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Nomor siswa dan PIN 6 digit, sama seperti yang Anda pakai '
-                    'di loket sekolah.',
+                    'Password aplikasi dibuat saat aktivasi rekening di loket, '
+                    'bukan PIN transaksi.',
                     style: AppText.body.copyWith(color: AppColors.stone600),
                   ),
                   const SizedBox(height: 20),
@@ -121,47 +120,43 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('PIN', style: AppText.fieldLabel),
+                              const Text('Password', style: AppText.fieldLabel),
                               TextButton(
                                 onPressed: submitting
                                     ? null
-                                    : () => context.go(AppRouter.forgotPin),
+                                    : () => context.go(AppRouter.forgotPassword),
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(0, 32),
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                child: const Text('Lupa PIN?'),
+                                child: const Text('Lupa password?'),
                               ),
                             ],
                           ),
                           const SizedBox(height: 2),
                           TextFormField(
-                            controller: _pinController,
-                            keyboardType: TextInputType.number,
-                            obscureText: _obscurePin,
-                            maxLength: 6,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            autofillHints: const [AutofillHints.password],
                             decoration: InputDecoration(
-                              hintText: '6 digit angka',
-                              counterText: '',
+                              hintText: 'Password aplikasi Anda',
                               suffixIcon: TextButton(
-                                onPressed: () =>
-                                    setState(() => _obscurePin = !_obscurePin),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                                 child: Text(
-                                  _obscurePin ? 'Tampilkan' : 'Sembunyikan',
+                                  _obscurePassword ? 'Tampilkan' : 'Sembunyikan',
                                 ),
                               ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'PIN wajib diisi.';
+                                return 'Password wajib diisi.';
                               }
-                              if (value.length != 6) {
-                                return 'PIN harus tepat 6 digit.';
+                              if (value.length < 8) {
+                                return 'Password minimal 8 karakter.';
                               }
                               return null;
                             },

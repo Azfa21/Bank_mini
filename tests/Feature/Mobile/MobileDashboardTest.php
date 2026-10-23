@@ -42,6 +42,7 @@ class MobileDashboardTest extends MobileTestCase
             'class_name' => 'X RPL 2',
             'phone_number' => '081234567998',
             'pin_hash' => bcrypt('123456'),
+            'password_hash' => bcrypt('password123'),
             'qr_code_value' => 'qr-mobile-no-account',
             'created_by' => $this->admin->id,
             'status' => 'active',
@@ -49,7 +50,7 @@ class MobileDashboardTest extends MobileTestCase
 
         $token = (string) $this->postJson(route('api.mobile.login'), [
             'student_number' => '2023998',
-            'pin' => '123456',
+            'password' => 'password123',
         ])->json('data.token');
 
         $this->withMobileToken($token)

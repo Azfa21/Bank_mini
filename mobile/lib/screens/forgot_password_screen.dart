@@ -12,27 +12,29 @@ import '../widgets/alert_card.dart';
 import '../widgets/ledger_card.dart';
 import '../widgets/page_header.dart';
 
-/// Dua langkah: minta kode verifikasi ke email, lalu set PIN baru.
+/// Dua langkah: minta kode verifikasi ke email, lalu set password aplikasi.
 ///
-/// Web menyediakan tab Pegawai/Nasabah di halaman ini. Aplikasi ini hanya
-/// melayani nasabah, jadi tab itu sengaja tidak dibawa: tab ke alur yang tidak
-/// ada akan jadi tautan mati.
+/// Halaman ini bukan pemulihan PIN transaksi: PIN tidak dipakai untuk masuk
+/// aplikasi. Web menyediakan tab Pegawai/Nasabah di halamannya; aplikasi ini
+/// hanya melayani nasabah, jadi tab itu sengaja tidak dibawa agar tidak ada
+/// tab menuju alur yang tidak ada.
 ///
-/// Yang diminta di langkah pertama adalah nomor siswa, bukan email. Nomor siswa
-/// ada di kartu rekening yang dipegang peminjamnya, sedangkan alamat email
-/// bisa saja milik orang lain.
-class ForgotPinScreen extends StatefulWidget {
-  const ForgotPinScreen({super.key});
+/// Yang diminta di langkah pertama adalah nomor siswa, bukan email. Nomor
+/// siswa ada di kartu rekening yang dipegang peminjamnya, sedangkan alamat
+/// email bisa saja milik orang lain. Penabung yang belum pernah membuat
+/// password (mis. data lama) juga bisa memakai alur yang sama.
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPinScreen> createState() => _ForgotPinScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPinScreenState extends State<ForgotPinScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _studentNumberController = TextEditingController();
   final _otpController = TextEditingController();
-  final _pinController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   int _step = 1;
   bool _submitting = false;
@@ -43,13 +45,15 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   void dispose() {
     _studentNumberController.dispose();
     _otpController.dispose();
-    _pinController.dispose();
+    _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
   }
 
   Future<void> _requestOtp() async {
-    if (!_formKey.currentState!.validate()) {
+    // Saat mengirim ulang kode di langkah 2, kolom OTP dan password baru
+    // memang belum tentu terisi; yang perlu sah hanyalah nomor siswa.
+    if (_step == 1 && !_formKey.currentState!.validate()) {
       return;
     }
 
@@ -72,7 +76,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
         _step = 2;
         _notice = email != null && email.isNotEmpty
             ? 'Kode verifikasi dikirim ke $email. '
-                'Cek kotak masuk itu, lalu masukkan kode dan PIN baru.'
+                'Cek kotak masuk itu, lalu masukkan kode dan password baru.'
             : 'Masukkan kode verifikasi yang dikirim ke email terdaftar '
                 'akun ini.';
       });
@@ -91,7 +95,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     }
   }
 
-  Future<void> _resetPin() async {
+  Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -103,10 +107,10 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     });
 
     try {
-      await context.read<AuthProvider>().resetPin(
+      await context.read<AuthProvider>().resetPassword(
         studentNumber: _studentNumberController.text.trim(),
         otp: _otpController.text.trim(),
-        pin: _pinController.text,
+        password: _passwordController.text,
       );
 
       if (!mounted) {
@@ -116,8 +120,8 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('PIN berhasil diubah'),
-          content: const Text('Silakan masuk kembali memakai PIN baru Anda.'),
+          title: const Text('Password berhasil diubah'),
+          content: const Text('Silakan masuk kembali memakai password baru Anda.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -136,7 +140,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Gagal mengubah PIN. Silakan coba lagi.');
+        setState(() => _error = 'Gagal mengubah password. Silakan coba lagi.');
       }
     } finally {
       if (mounted) {
@@ -177,10 +181,10 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                 children: [
                   const PageHeader(
                     eyebrow: 'PEMULIHAN KREDENSIAL',
-                    title: 'Atur ulang PIN',
+                    title: 'Lupa password',
                     subtitle:
                         'Masukkan nomor siswa dari kartu rekening untuk '
-                        'menerima kode verifikasi.',
+                        'menerima kode verifikasi, lalu buat password baru.',
                   ),
                   const SizedBox(height: 20),
                   LedgerCard(
@@ -256,28 +260,29 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
         label: 'Kode verifikasi',
         hint: '6 digit dari email',
         keyboardType: TextInputType.number,
+        autofillHints: const [AutofillHints.oneTimeCode],
         maxLength: 6,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       ),
       const SizedBox(height: 16),
-      _PinField(controller: _pinController, label: 'PIN baru'),
+      _PasswordField(controller: _passwordController, label: 'Password baru'),
       const SizedBox(height: 16),
-      _PinField(
+      _PasswordField(
         controller: _confirmController,
-        label: 'Konfirmasi PIN baru',
+        label: 'Konfirmasi password baru',
         validator: (value) {
-          if (value != _pinController.text) {
-            return 'Konfirmasi PIN tidak cocok.';
+          if (value != _passwordController.text) {
+            return 'Konfirmasi password tidak cocok.';
           }
           return null;
         },
       ),
       const SizedBox(height: 24),
       FilledButton(
-        onPressed: _submitting ? null : _resetPin,
+        onPressed: _submitting ? null : _resetPassword,
         child: _submitting
             ? const _ButtonSpinner()
-            : const Text('Simpan PIN Baru'),
+            : const Text('Verifikasi & Simpan Password'),
       ),
       const SizedBox(height: 4),
       TextButton(
@@ -310,6 +315,7 @@ class _Field extends StatelessWidget {
     required this.label,
     this.hint,
     this.keyboardType,
+    this.autofillHints,
     this.maxLength,
     this.inputFormatters,
     this.readOnly = false,
@@ -320,6 +326,7 @@ class _Field extends StatelessWidget {
   final String label;
   final String? hint;
   final TextInputType? keyboardType;
+  final List<String>? autofillHints;
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
@@ -335,6 +342,7 @@ class _Field extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          autofillHints: autofillHints,
           maxLength: maxLength,
           inputFormatters: inputFormatters,
           readOnly: readOnly,
@@ -350,8 +358,8 @@ class _Field extends StatelessWidget {
   }
 }
 
-class _PinField extends StatefulWidget {
-  const _PinField({
+class _PasswordField extends StatefulWidget {
+  const _PasswordField({
     required this.controller,
     required this.label,
     this.validator,
@@ -362,10 +370,10 @@ class _PinField extends StatefulWidget {
   final String? Function(String?)? validator;
 
   @override
-  State<_PinField> createState() => _PinFieldState();
+  State<_PasswordField> createState() => _PasswordFieldState();
 }
 
-class _PinFieldState extends State<_PinField> {
+class _PasswordFieldState extends State<_PasswordField> {
   bool _obscure = true;
 
   @override
@@ -377,12 +385,10 @@ class _PinFieldState extends State<_PinField> {
         const SizedBox(height: 6),
         TextFormField(
           controller: widget.controller,
-          keyboardType: TextInputType.number,
           obscureText: _obscure,
-          maxLength: 6,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          autofillHints: const [AutofillHints.newPassword],
           decoration: InputDecoration(
-            hintText: '6 digit angka',
+            hintText: 'Minimal 8 karakter',
             counterText: '',
             suffixIcon: TextButton(
               onPressed: () => setState(() => _obscure = !_obscure),
@@ -393,10 +399,10 @@ class _PinFieldState extends State<_PinField> {
               widget.validator ??
               (value) {
                 if (value == null || value.isEmpty) {
-                  return 'PIN wajib diisi.';
+                  return 'Password wajib diisi.';
                 }
-                if (value.length != 6) {
-                  return 'PIN harus tepat 6 digit.';
+                if (value.length < 8) {
+                  return 'Password minimal 8 karakter.';
                 }
                 return null;
               },

@@ -4,7 +4,7 @@ FASE 1 — Autentikasi, RBAC, dan Keamanan Akses
 - [x] Implementasikan password hashing dan verifikasi password tanpa menyimpan password asli.
 - [x] Implementasikan pembuatan, validasi, kedaluwarsa, dan penghapusan session atau token.
 - [x] Buat middleware untuk memeriksa session atau token sebelum mengakses endpoint terlindungi.
-- [x] Implementasikan middleware pembatasan akses berdasarkan role Administrator, Teller, Supervisor, dan Nasabah.
+- [x] Implementasikan middleware pembatasan akses berdasarkan role Administrator, Teller, dan Nasabah.
 - [x] Buat halaman dashboard dan pengalihan otomatis berdasarkan role pengguna.
 - [x] Implementasikan validasi PIN nasabah tepat 6 digit menggunakan nilai hash.
 - [x] Tambahkan penolakan akses untuk URL atau endpoint yang tidak sesuai role dan tampilkan pesan error yang sesuai.
@@ -12,52 +12,50 @@ FASE 1 — Autentikasi, RBAC, dan Keamanan Akses
 - [x] Implementasikan pencatatan audit untuk login, logout, autentikasi gagal, dan akses yang ditolak.
 - [x] Implementasikan Security Headers middleware dan pembatasan cache browser.
 - [x] Tambahkan baris navigasi (menu) per role pada navbar halaman layout.
-- [x] Buat halaman dan alur pemulihan kredensial (Lupa Password untuk pegawai dan Reset PIN untuk nasabah).
-- [x] Buat endpoint verifikasi identitas dan reset password pegawai (username, nama lengkap, password min 8 karakter) serta reset PIN nasabah (nomor siswa, kelas, PIN 6 digit).
+- [x] Buat halaman dan alur pemulihan kredensial (Lupa Password untuk pegawai dan nasabah).
+- [x] Buat endpoint verifikasi identitas dan reset password pegawai (username, nama lengkap, password min 8 karakter) serta nasabah (nomor siswa dan kode verifikasi email, password min 8 karakter).
 - [x] Implementasikan rate limiting dan pencatatan audit log untuk aktivitas pemulihan kredensial.
 FASE 2 — Manajemen Pengguna dan Rekening Nasabah
-- [x] Buat halaman daftar akun Administrator, Teller, dan Supervisor dengan filter status dan role.
-- [x] Buat form tambah dan ubah akun internal dengan field full_name, username, password, role, dan status.
+- [x] Buat halaman daftar akun Administrator dan Teller dengan filter status dan role.
+- [x] Buat form tambah dan ubah akun internal dengan field full_name, username, email, password, role, dan status.
 - [x] Buat endpoint CRUD akun internal yang hanya dapat dipanggil oleh Administrator.
-- [x] Tambahkan validasi username unik, role valid, password wajib, dan status akun.
+- [x] Tambahkan validasi username dan email unik, role valid, password wajib, dan status akun.
 - [x] Implementasikan aksi blokir, aktifkan kembali, dan hapus akun dengan konfirmasi pengguna.
-- [x] Buat halaman daftar dan form profil nasabah dengan field student_number, full_name, class_name, phone_number, qr_code_value, dan status.
+- [x] Buat halaman daftar anggota (belum punya rekening) dan penabung (pemilik rekening) beserta halaman alumni dan kelulusan.
 - [x] Buat endpoint CRUD profil nasabah dengan validasi nomor siswa dan QR Code unik.
 - [x] Implementasikan generator nomor rekening berdasarkan tahun ajaran dan nomor urut siswa.
-- [x] Buat halaman detail rekening yang menampilkan saldo awal, saldo berjalan, saldo minimum, dan status rekening.
-- [x] Buat endpoint konfigurasi saldo minimum dan QR Code yang hanya dapat diakses Administrator.
+- [x] Buat halaman detail rekening yang menampilkan saldo awal, saldo berjalan, saldo mengendap minimum, dan status rekening.
+- [x] Buat endpoint konfigurasi sistem yang hanya dapat diakses Administrator, dengan field bank_name, minimum_balance, min_deposit_to_activate, dan class_majors.
 - [x] Tambahkan validasi rekening aktif sebelum rekening digunakan untuk transaksi.
 - [x] Perbarui daftar, detail, status akun, dan status rekening setelah setiap aksi berhasil atau gagal.
 FASE 3 — Operasional Transaksi Teller
 - [x] Buat halaman pencarian nasabah melalui nomor rekening.
 - [x] Buat komponen pemindaian QR Code melalui kamera atau webcam dan tampilkan hasil pemindaian.
-- [x] Buat endpoint pencarian profil nasabah berdasarkan nomor rekening atau nilai QR Code.
+- [x] Buat endpoint pencarian profil nasabah berdasarkan nomor rekening, QR Code, NIS, atau nama lengkap.
 - [x] Tambahkan validasi agar hanya Teller yang dapat mengakses proses transaksi loket.
-- [x] Buat halaman transaksi setoran dengan field slip_number, slip_amount, dan physical_cash_amount.
-- [x] Implementasikan validasi slip setoran lengkap, nominal positif, rekening aktif, dan kecocokan uang fisik.
+- [x] Buat halaman transaksi setoran dengan field slip_number dan slip_amount.
+- [x] Implementasikan validasi slip setoran lengkap, nominal positif, rekening aktif, dan keunikan nomor slip.
 - [x] Buat endpoint transaksi setoran yang memperbarui saldo, menyimpan transaksi, dan membuat jurnal secara atomik.
-- [x] Buat halaman transaksi penarikan dengan field slip_number, amount, dan input PIN nasabah.
-- [x] Implementasikan validasi saldo mencukupi, saldo setelah penarikan minimal Rp10.000, nominal positif, dan PIN 6 digit.
+- [x] Buat halaman transaksi penarikan dengan field amount dan input PIN nasabah.
+- [x] Implementasikan validasi saldo mencukupi, saldo setelah penarikan tidak di bawah saldo mengendap, nominal positif, dan PIN 6 digit.
 - [x] Buat endpoint transaksi penarikan dengan pengurangan saldo, penyimpanan transaksi, dan pembuatan jurnal secara atomik.
 - [x] Tambahkan rollback ketika penyimpanan transaksi, pembaruan saldo, atau pembuatan jurnal mengalami kegagalan.
 - [x] Buat halaman hasil transaksi dan endpoint pencetakan struk yang menampilkan nomor transaksi, jenis transaksi, nominal, dan saldo akhir.
-- [x] Kunci transaksi berstatus final agar Teller tidak dapat mengubah atau menghapusnya.
+- [x] Kunci transaksi berstatus final agar Teller tidak dapat mengubah atau menghapusnya. Koreksi hanya melalui jurnal pembalik oleh Administrator.
 - [x] Perbarui saldo, status transaksi, pesan validasi, dan riwayat transaksi setelah transaksi berhasil atau ditolak.
-FASE 4 — Penutupan Kas dan Approval Supervisor
+FASE 4 — Penutupan Kas dan Approval Administrator
 - [x] Buat halaman penutupan kas Teller berdasarkan tanggal kerja.
-- [x] Buat endpoint rekap transaksi harian berdasarkan Teller, tanggal, dan status transaksi final.
-- [x] Implementasikan perhitungan total setoran, total penarikan, dan saldo akhir kas.
-- [x] Buat form input uang fisik di laci Teller dengan validasi nominal non-negatif.
-- [x] Implementasikan perhitungan cash_difference antara saldo akhir sistem dan uang fisik.
-- [x] Tampilkan status sesuai atau selisih secara langsung setelah Teller mengirim jumlah uang fisik.
-- [x] Kunci tombol cetak laporan final jika terdapat selisih kas.
-- [x] Buat endpoint pembuatan dan pencetakan draf Laporan Harian Teller jika rekonsiliasi sesuai.
-- [x] Buat halaman Supervisor untuk melihat detail laporan, transaksi, saldo sistem, uang fisik, dan selisih kas.
-- [x] Buat endpoint approval laporan yang hanya dapat dipanggil Supervisor dan bukan Teller pembuat laporan.
-- [x] Implementasikan pencatatan catatan approval, waktu approval, dan identitas Supervisor.
-- [x] Buat endpoint pemindahan tanggung jawab kas dari laci Teller ke brankas utama setelah laporan disetujui.
-- [x] Buat halaman penyelesaian selisih yang menampilkan transaksi terkait dan audit log.
-- [x] Perbarui status laporan, status pemindahan kas, dan tampilan riwayat setelah approval atau penolakan.
+- [x] Buat endpoint rekap transaksi harian berdasarkan Teller, tanggal, dan status transaksi final, termasuk dampak jurnal pembalik.
+- [x] Implementasikan perhitungan total setoran, total penarikan, saldo awal laci dari mutasi kas yang belum tersapu, dan saldo akhir sistem.
+- [x] Buat tampilan cetak Laporan Harian Teller.
+- [x] Terbitkan laporan berstatus menunggu validasi langsung saat dibuat Teller.
+- [x] Buat halaman Administrator untuk melihat detail laporan, transaksi, dan saldo sistem.
+- [x] Buat endpoint approval laporan yang hanya dapat dipanggil Administrator dan bukan pembuat laporan.
+- [x] Implementasikan pencatatan catatan approval, waktu approval, dan identitas Administrator.
+- [x] Buat endpoint penolakan laporan dengan catatan wajib beserta penerbitan ulang dengan nomor laporan yang sama.
+- [x] Tolak approval bila arus kas tanggal tersebut berubah setelah laporan dibuat.
+- [x] Implementasikan penyapuan seluruh kas laci ke brankas utama saat approval, dengan jurnal Debet 102 Kas Brankas dan Kredit 101 Kas Teller.
+- [x] Perbarui status laporan dan tampilan riwayat setelah approval atau penolakan.
 FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
 - [x] Buat halaman dashboard Nasabah yang menampilkan saldo rekening miliknya.
 - [x] Buat endpoint saldo rekening yang membatasi hasil berdasarkan identitas Nasabah yang sedang login.
@@ -67,49 +65,76 @@ FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
 - [x] Buat endpoint dan service pencatatan dua baris jurnal untuk setiap transaksi yang berhasil.
 - [x] Implementasikan aturan akun Kas 101 dan Tabungan 201 untuk transaksi setoran dan penarikan.
 - [x] Tambahkan validasi bahwa total debit dan kredit setiap transaksi harus seimbang.
-- [x] Buat halaman audit jurnal untuk Administrator dan Supervisor dengan filter transaksi dan tanggal.
+- [x] Buat halaman audit jurnal untuk Administrator dengan filter transaksi dan tanggal.
 - [x] Buat endpoint audit jurnal yang menolak akses Teller dan Nasabah.
 - [x] Gabungkan penyimpanan transaksi, pembaruan saldo, dan pembuatan jurnal dalam satu database transaction (tergantung: endpoint transaksi FASE 3).
 - [x] Implementasikan rollback dan pesan error ketika transaksi akuntansi gagal.
 - [x] Perbarui saldo, riwayat mutasi, dan status jurnal setelah proses transaksi berhasil.
 FASE 6 — Transaksi Lanjutan dan Layanan Nasabah
-- [x] Buat migration untuk mendukung transaksi transfer dan proteksi limit PIN nasabah.
-- [x] Implementasikan service method transaksi transfer antar rekening dengan double-entry journal (201 Pengirim -> 201 Penerima).
+- [x] Buat migration untuk transaksi transfer dan proteksi limit PIN nasabah.
+- [x] Implementasikan service method transaksi transfer antar rekening dengan double-entry journal (Debet 201 Pengirim, Kredit 201 Penerima).
 - [x] Buat route, controller, form UI, dan struk bukti transfer di modul Teller.
 - [x] Buat fitur cetak buku tabungan fisik (Passbook printing) dengan opsi baris awal per halaman.
-- [x] Buat fitur cetak/ekspor Rekening Koran resmi (e-Statement) untuk Nasabah dan Staff.
-- [x] Buat tampilan Kartu Nasabah Virtual ber-QR Code di dasbor nasabah dan profil admin.
+- [x] Buat fitur cetak/ekspor Rekening Koran resmi (e-Statement) untuk Nasabah dan Administrator.
+- [x] Buat tampilan Kartu Nasabah Virtual ber-QR Code di dasbor nasabah dan profil Administrator.
 FASE 7 — Modul Laporan Keuangan dan Akuntansi Lengkap
-- [x] Implementasikan auto-posting jurnal akuntansi saat approval pemindahan kas brankas (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
-- [x] Buat modul Buku Besar (General Ledger) dengan filter per kode akun dan rentang tanggal.
-- [x] Buat modul Neraca Saldo (Trial Balance) dan indikator rasio likuiditas kas.
+- [x] Implementasikan auto-posting jurnal akuntansi saat approval pemindahan kas (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+- [x] Buat modul Buku Besar (General Ledger) dengan filter per kode akun (101, 102, 201) dan rentang tanggal.
+- [x] Buat modul Neraca Saldo (Trial Balance) beserta indikator likuiditas kas.
 - [x] Buat endpoint ekspor laporan akuntansi (Jurnal, Buku Besar, Neraca Saldo) ke format CSV.
 FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna
-- [x] Implementasikan proteksi brute-force PIN (kunci akun setelah 3 kali gagal + catat audit log).
-- [x] Refactor generator nomor transaksi dan laporan ke sequence yang anti-collision.
-- [x] Tambahkan kartu metrik analitik dan grafik keuangan pada dashboard Admin dan Supervisor.
+- [x] Implementasikan proteksi brute-force PIN (kunci akun sementara, catat audit log) beserta pencegahan race condition percobaan PIN.
+- [x] Buat generator nomor transaksi dan nomor laporan ke sequence anti-collision (tabel document_sequences).
+- [x] Tambahkan kartu metrik analitik dan grafik keuangan pada dashboard Administrator.
 FASE 9 — Penyempurnaan Berbasis Riset Pengguna (Revisi Besar)
-- [x] Buat helper rincian pecahan uang kertas & logam (CashDenomination) dan helper terbilang Rupiah (Terbilang).
-- [x] Tambahkan kolom denomination_breakdown, serta kolom reversal pada tabel transactions (migration).
-- [x] Tambahkan kolom closing_breakdown pada tabel daily_reports (migration).
-- [x] Implementasikan validasi batas maksimal penarikan tanpa pesanan di sisi server.
-- [x] Buat form input rincian uang kertas & logam pada transaksi setoran, penarikan, dan penutupan kas.
-- [x] Hitung total uang fisik otomatis dari rincian pecahan dan simpan sebagai bukti audit.
-- [x] Tampilkan rincian pecahan uang pada Laporan Harian Teller dan halaman cetak laporan.
-- [x] Perkaya struk transaksi: nama bank, no. referensi jurnal, terbilang, dan status.
+- [x] Buat helper terbilang Rupiah (Terbilang) dan ubah tampilan kata uang pada struk tanpa sisipan "Nol" berlebih.
+- [x] Perkaya struk transaksi: nama bank, nomor referensi jurnal, terbilang, saldo sebelum/sesudah, dan status.
 - [x] Buat ReversalService: jurnal pembalik, pemulihan saldo, dan penandaan transaksi asal sebagai reversed.
-- [x] Buat endpoint dan otorisasi koreksi transaksi yang hanya dapat dipanggil Supervisor.
-- [x] Tambahkan tombol koreksi dan tampilan riwayat transaksi (pembalik/dikoreksi) pada halaman Supervisor.
+- [x] Buat migration yang menambahkan kolom reversal_of_transaction_id, reversed_at, reversed_by, reversal_reason pada tabel transactions.
+- [x] Buat endpoint dan otorisasi koreksi transaksi yang hanya dapat dipanggil Administrator.
+- [x] Tambahkan tombol koreksi dan tampilan riwayat pembalik pada halaman transaksi dan mutasi.
 - [x] Tolak koreksi transaksi bila laporan harian tanggal tersebut sudah disetujui (kas sudah dipindah ke brankas).
 - [x] Uji integritas koreksi: transfer, saldo tidak mencukupi, dampak rekap kas, dan tampilan mutasi/buku tabungan.
-- [x] Perluas pencarian nasabah berdasarkan nomor rekening, NIS, dan nama lengkap beserta halaman hasil pencarian.
-- [x] Buat modul registrasi nasabah didampingi Teller beserta service registrasi bersama.
-- [x] Buat laporan Buku Besar dan Neraca Saldo untuk Administrator dan Supervisor.
-- [x] Buat laporan Neraca (Balance Sheet) beserta indikator keseimbangan untuk Administrator dan Supervisor.
-- [x] Perluas konfigurasi sistem: nama bank, jam operasional, dan batas penarikan tanpa pesanan.
+- [x] Perbaiki down() migrasi daily_reports dan savers agar rollback berjalan (drop unique index sebelum kolom).
+- [x] Perluas pencarian nasabah berdasarkan nomor rekening, NIS, dan nama lengkap beserta halaman hasil pencarian ganda.
+- [x] Buat modul registrasi nasabah didampingi Teller beserta MemberRegistrationService.
+- [x] Sediakan pembuatan password aplikasi dan PIN transaksi oleh penabung sendiri pada setoran aktivasi (SaverCredentialService, password_hash dan pin_hash disimpan hashed).
+- [x] Buat laporan Buku Besar dan Neraca Saldo (aset dan kewajiban saja, tanpa pendapatan/beban karena tidak mencari keuntungan) beserta indikator keseimbangan (is_balanced) untuk Administrator.
+- [x] Perluas konfigurasi sistem: nama bank, saldo mengendap, dan setoran minimal aktivasi anggota.
 - [x] Perbarui menu navigasi, dashboard Teller, dan halaman konfigurasi Administrator.
-FASE 9 — Verifikasi & Perbaikan Bug (Pengujian Skenario)
-- [x] Perbaiki kata terbilang Rupiah agar tidak menyisakan "Nol" berlebih (mis. "Lima Puluh Ribu Rupiah").
-- [x] Perbaiki down() migrasi daily_reports dan customers agar rollback berjalan (drop unique index sebelum kolom).
-- [x] Tambahkan pengujian integritas koreksi & kas, struk, pecahan uang, pencarian, registrasi, laporan keuangan, JSON, dan matriks otorisasi.
+- [x] Tambahkan pengujian integritas koreksi & Kas (brankas), struk, pencarian, registrasi, laporan keuangan, JSON, dan matriks otorisasi.
 - [x] Verifikasi migrate:fresh, migrate:reset (semua down), dan migrate (semua up) pada database uji.
+FASE 10 — Aplikasi Nasabah Mobile (Laravel API + aplikasi Flutter)
+- [x] Buat tabel mobile_tokens dengan MobileTokenService: token disimpan sebagai hash, punya kedaluwarsa, dan mencatat last_used_at.
+- [x] Buat API grup mobile/: login, logout, me, dashboard, card, mutasi, dan statement di belakang middleware mobile.auth.
+- [x] Buat endpoint ganti PIN lewat aplikasi dengan verifikasi PIN lama.
+- [x] Rutekan lupa password nasabah ke alur OTP email yang sama dengan web.
+- [x] Bangun aplikasi Flutter mobile/: splash, login, dasbor (saldo), mutasi (detail per transaksi), kartu QR virtual, ganti PIN, profil, statement PDF (paket pdf dan printing), dan lupa password.
+- [x] Salin token desain web ke mobile/lib/core/theme/app_colors.dart dan app_text.dart, dan muat font Instrument Sans.
+- [x] Buat Konfigurasi alamat API lewat dart-define (mobile/lib/core/config/app_config.dart).
+- [x] Buat test MobileAuth, MobileDashboard, MobileMutasi, dan MobilePinChange.
+- [x] Tambahkan penghapusan token aplikasi mobile pada perintah bankmini:reset-nasabah.
+FASE 11 — Anggota, Penabung, Kelulusan, dan Kenaikan Kelas
+- [x] Buat tabel members (anggota, dengan NIS sebagai primary key) dan ubah tabel customers menjadi savers (penabung) dengan soft delete dan tautan member.
+- [x] Pisahkan daftar Anggota dan halaman Penabung di modul Administrator, dengan memfilter per status.
+- [x] Buat MemberController, SaverController, pemblokiran penabung (rekening ditahan dan login ditutup, tetapi data tidak dihapus), dan penghapusan anggota yang belum menabung.
+- [x] Buat MemberImportService untuk impor anggota massal lewat CSV dengan pemetaan kolom.
+- [x] Buat ClassPromotionService: kenaikan kelas per tahun ajaran, siswa tinggal kelas, dan pengamanan angkatan yang tidak naik tahun ini.
+- [x] Buat AccountClosureService dan tabel account_closures: permintaan penutupan rekening, pencairan saldo di atas saldo mengendap di loket, dan keputusan Administrator (approve atau reject).
+- [x] Buat GraduationController: graduate member, not-graduate (membatalkan pencairan dan mengaktifkan ulang rekening), approveClosure, rejectClosure, dan arsip satu angkatan dengan saldo bersih.
+- [x] Buat perintah GraduateBatch (php artisan bankmini:graduate --year=Tahun [--dry-run] [--operator=...]).
+- [x] Kunci login alumni di web dan aplikasi mobile.
+- [x] Buat MonthlyReportController (laporan bulanan Administrator) beserta MonthlyReportTest.
+- [x] Buat QrCodeController (kartu nasabah) beserta CardPrintTest.
+FASE 12 — Restrukturisasi Peran dan Model Kas
+- [x] Buat migration merge_supervisor_role_into_admin: peran Supervisor digabungkan ke role Administrator.
+- [x] Ubah otorisasi approval laporan, penolakan laporan, dan koreksi transaksi dari Supervisor ke Administrator (middleware role:admin); larang Administrator menyetujui laporan miliknya sendiri.
+- [x] Ganti kolom supervisor_id menjadi approved_by pada tabel cash_transfers.
+- [x] Tambahkan password_hash pada tabel savers dan SaverCredentialService agar penabung membuat sendiri password aplikasi saat registrasi dan setoran aktivasi.
+- [x] Buat migration key_password_reset_otps_by_account dengan kolom account_type (staff/nasabah).
+- [x] Hapus kolom admin fee dari tabel terkait.
+- [x] Hapus kolom closing_balance_physical, closing_breakdown, dan cash_difference dari daily_reports; hapus physical_cash_amount dan denomination_breakdown dari transactions.
+- [x] Hapus konfigurasi jam operasional dan batas penarikan dari system_configs; konfigurasi tinggal bank_name, minimum_balance (saldo mengendap), dan min_deposit_to_activate (setoran minimal aktivasi).
+- [x] Atur endpoint DailyReportController (Admin): approve dan reject laporan; approval menyapu seluruh kas laci ke Brankas Utama (Debet 102 Kas Brankas, Kredit 101 Kas Teller) dan menolak bila arus kas tanggalnya berubah setelah laporan dibuat.
+- [x] Perbarui halaman penutupan kas Teller: tanpa input uang fisik dan rincian pecahan, hanya rekap sistem dan pembuatan laporan berstatus menunggu validasi.
+- [x] Perbarui navigasi, dashboard, dan matriks otorisasi untuk struktur role baru (admin, teller, nasabah).

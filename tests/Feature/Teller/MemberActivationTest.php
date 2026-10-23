@@ -26,6 +26,8 @@ class MemberActivationTest extends TellerTestCase
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
                 'pin' => '654321',
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-awal-123',
                 'class_name' => 'VII A',
                 'email' => 'budi.santoso@example.test',
             ])
@@ -37,6 +39,8 @@ class MemberActivationTest extends TellerTestCase
         $this->assertNotNull($saver->account);
         $this->assertSame(50000, $saver->account->balance);
         $this->assertSame(Member::STATUS_ACCOUNT_ACTIVE, $member->fresh()->status);
+        $this->assertTrue(password_verify('password-awal-123', $saver->password_hash));
+        $this->assertTrue(password_verify('654321', $saver->pin_hash));
 
         $this->assertDatabaseHas('transactions', [
             'account_id' => $saver->account->id,
@@ -68,6 +72,8 @@ class MemberActivationTest extends TellerTestCase
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
                 'pin' => '654321',
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-awal-123',
                 'class_name' => 'X RPL 2',
                 'email' => 'budi.santoso@example.test',
             ])
@@ -85,7 +91,8 @@ class MemberActivationTest extends TellerTestCase
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 5000,
                 'pin' => '654321',
-
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-awal-123',
                 'email' => 'wali.test@smp.test',
             ])
             ->assertSessionHasErrors('amount');
@@ -104,7 +111,8 @@ class MemberActivationTest extends TellerTestCase
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
                 'pin' => '654321',
-
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-awal-123',
                 'email' => 'wali.test@smp.test',
             ])
             ->assertSessionHas('error');
@@ -120,11 +128,93 @@ class MemberActivationTest extends TellerTestCase
             ->post(route('teller.members.activate.store', $member), [
                 'amount' => 50000,
                 'pin' => '654321',
-
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-awal-123',
                 'email' => 'wali.test@smp.test',
             ])
             ->assertRedirect(route('login'));
 
         $this->assertSame(0, Saver::where('member_nis', '20260001')->count());
+    }
+
+    public function test_activation_form_asks_the_saver_to_create_a_login_password(): void
+    {
+        $member = $this->makeMember();
+
+        $this->actingAsTeller()
+            ->get(route('teller.members.activate', $member))
+            ->assertOk()
+            ->assertSee('name="password"', false)
+            ->assertSee('name="password_confirmation"', false)
+            ->assertSee('Password aplikasi penabung wajib');
+    }
+
+    public function test_activation_rejects_a_password_shorter_than_eight_characters(): void
+    {
+        $member = $this->makeMember();
+
+        $this->actingAsTeller()
+            ->from(route('teller.members.activate', $member))
+            ->post(route('teller.members.activate.store', $member), [
+                'amount' => 50000,
+                'pin' => '654321',
+                'password' => 'pendek',
+                'password_confirmation' => 'pendek',
+                'email' => 'wali.test@smp.test',
+            ])
+            ->assertSessionHasErrors('password');
+
+        $this->assertSame(0, Saver::where('member_nis', '20260001')->count());
+    }
+
+    public function test_activation_rejects_mismatched_password_confirmation(): void
+    {
+        $member = $this->makeMember();
+
+        $this->actingAsTeller()
+            ->from(route('teller.members.activate', $member))
+            ->post(route('teller.members.activate.store', $member), [
+                'amount' => 50000,
+                'pin' => '654321',
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-lain-456',
+                'email' => 'wali.test@smp.test',
+            ])
+            ->assertSessionHasErrors('password');
+
+        $this->assertSame(0, Saver::where('member_nis', '20260001')->count());
+    }
+
+    /**
+     * Setelah aktivasi, penabung masuk dengan password buatannya sendiri.
+     * PIN transaksi sengaja ditolak di gerbang login.
+     */
+    public function test_saver_can_log_in_with_the_password_but_not_the_transaction_pin(): void
+    {
+        $member = $this->makeMember();
+
+        $this->actingAsTeller()
+            ->post(route('teller.members.activate.store', $member), [
+                'amount' => 50000,
+                'pin' => '654321',
+                'password' => 'password-awal-123',
+                'password_confirmation' => 'password-awal-123',
+                'email' => 'budi.santoso@example.test',
+            ])
+            ->assertRedirect();
+
+        $this->post('/login', [
+            'identifier' => '20260001',
+            'secret' => '654321',
+        ])->assertSessionHasErrors('identifier');
+
+        $this->assertGuest('nasabah');
+
+        $this->post('/login', [
+            'identifier' => '20260001',
+            'secret' => 'password-awal-123',
+        ])->assertRedirect(route('nasabah.dashboard'));
+
+        $this->assertAuthenticated('nasabah');
     }
 }

@@ -13,8 +13,11 @@ use RuntimeException;
 
 class SaverSeeder extends Seeder
 {
-    /** PIN awal untuk semua penabung contoh. */
+    /** PIN transaksi awal untuk semua penabung contoh. */
     private const PIN = '123456';
+
+    /** Password login awal untuk semua penabung contoh. */
+    private const PASSWORD = 'password123';
 
     public function run(): void
     {
@@ -50,6 +53,7 @@ class SaverSeeder extends Seeder
                     'class_name' => $className,
                     'phone_number' => $phoneNumber,
                     'pin_hash' => Hash::make(self::PIN),
+                    'password_hash' => Hash::make(self::PASSWORD),
                     'qr_code_value' => 'SEED-'.$studentNumber,
                     'created_by' => $admin->id,
                     'status' => 'active',
@@ -60,7 +64,7 @@ class SaverSeeder extends Seeder
                 $saver->restore();
             }
 
-            $this->command->info("Penabung [{$studentNumber}] {$fullName} -> PIN: ".self::PIN);
+            $this->command->info("Penabung [{$studentNumber}] {$fullName} -> PIN transaksi: ".self::PIN.', password: '.self::PASSWORD);
 
             // Rekening yang sudah ada tidak dibuat ulang, sehingga seeder aman dijalankan berkali-kali.
             if ($saver->account()->exists()) {

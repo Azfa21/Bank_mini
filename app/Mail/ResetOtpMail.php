@@ -14,16 +14,13 @@ class ResetOtpMail extends Mailable
 
     public function __construct(
         public string $code,
-        public string $purpose,
         public string $recipientName,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->purpose === 'pin'
-                ? 'Kode Verifikasi Reset PIN Bank Mini'
-                : 'Kode Verifikasi Reset Password Bank Mini',
+            subject: 'Kode Verifikasi Reset Password Bank Mini',
         );
     }
 

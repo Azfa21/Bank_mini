@@ -7,7 +7,7 @@
     <div>
         <p class="text-xs font-semibold text-brand-900">PENGATURAN GLOBAL</p>
         <h1 class="text-2xl font-bold text-stone-900 mt-1">Konfigurasi sistem</h1>
-        <p class="text-sm text-stone-600 mt-1 mb-5">Perubahan langsung dipakai loket, struk, dan validasi penarikan.</p>
+        <p class="text-sm text-stone-600 mt-1 mb-5">Perubahan langsung dipakai loket, struk, validasi penarikan, dan saran isian kelas.</p>
 
         <form method="POST" action="{{ route('admin.config.update') }}" class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6 space-y-5" id="config-form">
             @csrf @method('PUT')
@@ -40,7 +40,7 @@
                 <x-input-label for="class_majors">Jurusan <span class="text-stone-500 font-normal">(pisahkan dengan koma)</span></x-input-label>
                 <x-input id="class_majors" name="class_majors" :value="$configs->get('class_majors')->config_value ?? implode(', ', \App\Support\ClassRoom::DEFAULT_MAJORS)"
                     aria-describedby="majors-help" />
-                <p id="majors-help" class="text-[13px] text-stone-600 mt-1.5">Pilihan jurusan saat mengisi kelas penabung dan memproses kenaikan kelas. Contoh: RPL, TKJ, DKV.</p>
+                <p id="majors-help" class="text-[13px] text-stone-600 mt-1.5">Daftar jurusan untuk saran isian kolom kelas anggota dan penabung. Kelas tetap bisa diketik bebas. Contoh: RPL, TKJ, DKV.</p>
                 <x-input-error :message="$errors->first('class_majors')" />
             </div>
 

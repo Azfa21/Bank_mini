@@ -120,7 +120,6 @@ class CredentialRecoveryService
 
         Mail::to($email)->send(new ResetOtpMail(
             code: $code,
-            purpose: $accountType === self::TYPE_NASABAH ? 'pin' : 'password',
             recipientName: $account->full_name,
         ));
 
@@ -216,8 +215,11 @@ class CredentialRecoveryService
                 }
 
                 if ($accountType === self::TYPE_NASABAH) {
+                    // Pemulihan lewat OTP membuat password login baru, termasuk
+                    // untuk penabung lama yang belum pernah punya password. PIN
+                    // transaksi tidak disentuh: kredensial itu hanya di loket.
                     $account->update([
-                        'pin_hash' => $newSecret,
+                        'password_hash' => $newSecret,
                         'failed_pin_attempts' => 0,
                         'locked_until' => null,
                     ]);
@@ -228,7 +230,7 @@ class CredentialRecoveryService
                     ]);
                 }
 
-                return $this->result(true, 200, 'otp', 'Password atau PIN berhasil diperbarui. Silakan masuk memakai yang baru.', $email);
+                return $this->result(true, 200, 'otp', 'Password berhasil diperbarui. Silakan masuk memakai yang baru.', $email);
             }, $attempts);
         } catch (QueryException|DeadlockException $exception) {
             if (! app(ConcurrencyErrorDetector::class)->causedByConcurrencyError($exception)) {
@@ -251,9 +253,7 @@ class CredentialRecoveryService
             'identifier' => $identifier,
         ]);
 
-        $label = $accountType === self::TYPE_NASABAH ? 'PIN' : 'Password';
-
-        return $this->result(true, 200, 'otp', $label.' berhasil diperbarui. Silakan masuk menggunakan '.$label.' baru Anda.', $email);
+        return $this->result(true, 200, 'otp', 'Password berhasil diperbarui. Silakan masuk menggunakan password baru Anda.', $email);
     }
 
     /**
@@ -337,16 +337,11 @@ class CredentialRecoveryService
     protected function record(string $accountType, string $suffix, ?int $entityId, array $metadata): void
     {
         AuditLogService::record(
-            $this->actionPrefix($accountType).$suffix,
+            'password_reset'.$suffix,
             $this->entityName($accountType),
             $entityId,
             $metadata,
         );
-    }
-
-    protected function actionPrefix(string $accountType): string
-    {
-        return $accountType === self::TYPE_NASABAH ? 'pin_reset' : 'password_reset';
     }
 
     protected function entityName(string $accountType): string

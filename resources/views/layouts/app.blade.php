@@ -141,7 +141,7 @@
 
         @if ($currentUser && count($menuItems))
             <nav aria-label="Navigasi utama" class="border-t border-stone-100">
-                {{-- Alasan: 12 tujuan admin dikelompokkan jadi 4 entri (Dashboard, Data, Laporan, Konfigurasi)
+                {{-- Alasan: 11 tujuan admin dikelompokkan jadi 4 entri (Dashboard, Data, Laporan, Konfigurasi)
                      supaya bilah tab tetap satu baris di semua lebar layar dan semua tujuan, termasuk
                      Konfigurasi dan Audit Jurnal, terlihat tanpa menggeser halaman ke kanan. flex-wrap
                      tetap dipasang sebagai jaring pengaman kalau label bertambah panjang. --}}

@@ -24,7 +24,7 @@
             </div>
 
             <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Masuk untuk melayani transaksi</h1>
-            <p class="text-sm text-stone-600 mt-1.5">Pegawai memakai username dan password. Nasabah memakai nomor siswa dan PIN 6 digit.</p>
+            <p class="text-sm text-stone-600 mt-1.5">Pegawai memakai username dan password. Penabung memakai nomor siswa dan password yang dibuat saat aktivasi rekening di loket.</p>
         </div>
 
         <div class="bg-white rounded-2xl border border-stone-200 ledger-rule shadow-sm p-6 sm:p-7">
@@ -55,20 +55,20 @@
 
                 <div>
                     <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-1.5">
-                        <x-input-label for="secret" flush>Password atau PIN</x-input-label>
+                        <x-input-label for="secret" flush>Password</x-input-label>
                         <a href="{{ route('password.request') }}" class="tap-target inline-flex items-center text-[13px] font-semibold text-brand-900 hover:underline">
-                            Lupa password atau PIN?
+                            Lupa password?
                         </a>
                     </div>
                     <div class="relative">
                         <x-input id="secret" name="secret" type="password" required autocomplete="current-password"
                             aria-describedby="secret-help" class="pr-24"
-                            placeholder="Password pegawai atau PIN 6 digit" />
+                            placeholder="Password pegawai atau penabung" />
                         <button type="button" id="toggle-secret" aria-pressed="false" aria-controls="secret" class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-20 min-h-[44px] text-[13px] font-semibold text-stone-700 rounded-lg hover:bg-stone-100">
                             Tampil
                         </button>
                     </div>
-                    <p id="secret-help" class="text-[13px] text-stone-600 mt-1.5">PIN nasabah tepat 6 angka. Jangan bagikan ke siapa pun.</p>
+                    <p id="secret-help" class="text-[13px] text-stone-600 mt-1.5">PIN transaksi tidak dipakai untuk masuk. Jangan bagikan password ke siapa pun.</p>
                 </div>
 
                 <x-primary-button id="login-submit" data-loading-text="Memeriksa akun..." class="w-full">

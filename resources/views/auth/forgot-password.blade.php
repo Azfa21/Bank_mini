@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Password &amp; Reset PIN &middot; Bank Mini Sekolah</title>
+    <title>Lupa Password &middot; Bank Mini Sekolah</title>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
@@ -31,8 +31,8 @@
                 </div>
             </div>
 
-            <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Lupa password atau PIN</h1>
-            <p class="text-sm text-stone-600 mt-1.5">Masukkan username atau nomor siswa Anda. Kode dikirim ke email terdaftar atas nama akun itu, berlaku {{ config('recovery.otp_expire_minutes', 10) }} menit, dan hanya bisa dipakai sekali.</p>
+            <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Lupa password</h1>
+            <p class="text-sm text-stone-600 mt-1.5">Masukkan username atau nomor siswa Anda. Kode dikirim ke email terdaftar atas nama akun itu, berlaku {{ config('recovery.otp_expire_minutes', 10) }} menit, dan hanya bisa dipakai sekali. Penabung yang lupa password memakai alur yang sama untuk membuat password baru.</p>
         </div>
 
         <!-- Main Card -->
@@ -160,7 +160,7 @@
                             @if ($email)
                                 Kode verifikasi dikirim ke <span class="font-semibold text-stone-800">{{ $email }}</span>.
                                 Cek kotak masuk akun nomor siswa <span class="font-semibold text-stone-800">{{ old('identifier') }}</span>,
-                                lalu masukkan kode dan PIN baru di bawah ini.
+                                lalu masukkan kode dan password baru di bawah ini.
                             @else
                                 Masukkan kode verifikasi yang dikirim ke email terdaftar akun ini.
                             @endif
@@ -177,19 +177,19 @@
                             </div>
 
                             <div>
-                                <x-input-label for="nasabah_pin">PIN Baru (6 Digit)</x-input-label>
-                                <x-input id="nasabah_pin" name="pin" type="password" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
-                                    placeholder="6 digit angka (contoh: 123456)" />
+                                <x-input-label for="nasabah_password">Password Baru</x-input-label>
+                                <x-input id="nasabah_password" name="password" type="password" required minlength="8"
+                                    placeholder="Minimal 8 karakter" />
                             </div>
 
                             <div>
-                                <x-input-label for="nasabah_pin_confirmation">Konfirmasi PIN Baru</x-input-label>
-                                <x-input id="nasabah_pin_confirmation" name="pin_confirmation" type="password" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
-                                    placeholder="Ulangi 6 digit PIN baru" />
+                                <x-input-label for="nasabah_password_confirmation">Konfirmasi Password Baru</x-input-label>
+                                <x-input id="nasabah_password_confirmation" name="password_confirmation" type="password" required minlength="8"
+                                    placeholder="Ulangi password baru" />
                             </div>
 
                             <x-primary-button class="w-full py-2.5 rounded-xl shadow-sm focus:ring-2 focus:ring-brand-600 focus:ring-offset-2">
-                                Verifikasi & Simpan PIN
+                                Verifikasi &amp; Simpan Password
                             </x-primary-button>
                         </form>
 

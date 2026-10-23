@@ -93,7 +93,7 @@ class PinRateLimitTest extends TellerTestCase
         $this->assertSame(0, $customer->failed_pin_attempts);
     }
 
-    public function test_pin_reset_via_forgot_password_unlocks_account(): void
+    public function test_password_reset_via_forgot_flow_unlocks_the_pin_lock(): void
     {
         $this->nasabah->update([
             'failed_pin_attempts' => 3,
@@ -120,8 +120,8 @@ class PinRateLimitTest extends TellerTestCase
             'account_type' => 'nasabah',
             'identifier' => $this->nasabah->student_number,
             'otp' => $code,
-            'pin' => '999999',
-            'pin_confirmation' => '999999',
+            'password' => 'password-baru-123',
+            'password_confirmation' => 'password-baru-123',
         ])->assertRedirect(route('login'));
 
         $customer = $this->nasabah->refresh();
@@ -131,7 +131,7 @@ class PinRateLimitTest extends TellerTestCase
         $this->assertFalse($customer->isPinLocked());
 
         $this->assertDatabaseHas('audit_logs', [
-            'action' => 'pin_reset_success',
+            'action' => 'password_reset_success',
             'entity_id' => $customer->id,
         ]);
     }

@@ -9,7 +9,7 @@ return [
     |
     | Konfigurasi masa berlaku kode OTP, jumlah percobaan verifikasi, jeda
     | pengiriman ulang, serta batas pengiriman kode per jam untuk mencegah
-    | penyalahgunaan alur lupa password / reset PIN.
+    | penyalahgunaan alur lupa password.
     |
     */
 

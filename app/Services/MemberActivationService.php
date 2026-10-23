@@ -22,7 +22,7 @@ class MemberActivationService
      * Promote an inactive member into a saver by opening an account and posting
      * the qualifying first deposit, all inside one database transaction.
      *
-     * @param  array{amount: int, slip_number?: string|null, pin: string, email?: string|null, class_name?: string|null, phone_number?: string|null}  $data
+     * @param  array{amount: int, slip_number?: string|null, pin: string, password: string, email?: string|null, class_name?: string|null, phone_number?: string|null}  $data
      * @return array{saver: Saver, account: Account, transaction: Transaction}
      */
     public function activate(Member $member, array $data, User $teller): array
@@ -46,6 +46,7 @@ class MemberActivationService
                 'phone_number' => $data['phone_number'] ?? null,
                 'email' => $data['email'] ?? null,
                 'pin_hash' => $data['pin'],
+                'password_hash' => $data['password'],
                 'qr_code_value' => Str::uuid()->toString(),
                 'created_by' => $teller->id,
                 'status' => 'active',

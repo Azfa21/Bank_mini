@@ -27,7 +27,7 @@ class ClassRoom
     private const SUGGESTED_ROMBELS = 12;
 
     /**
-     * Daftar jurusan resmi dari Konfigurasi, dipakai dropdown tingkat pencarian kelas.
+     * Daftar jurusan resmi dari Konfigurasi, dasar saran isian kolom kelas.
      *
      * @return list<string>
      */
@@ -53,7 +53,7 @@ class ClassRoom
     }
 
     /**
-     * Pilihan jurusan untuk dropdown: daftar resmi ditambah jurusan yang benar-benar
+     * Pilihan jurusan untuk saran isian: daftar resmi ditambah jurusan yang benar-benar
      * ada di data, supaya kelas lama (misalnya jurusan yang sudah ditutup) tetap bisa dipetakan.
      *
      * @return list<string>

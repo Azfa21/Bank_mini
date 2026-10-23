@@ -43,6 +43,7 @@ class AuditLogTest extends TestCase
             'student_number' => '2023001',
             'full_name' => 'Ani',
             'pin_hash' => Hash::make('123456'),
+            'password_hash' => Hash::make('password123'),
             'qr_code_value' => 'qr-test-1',
             'created_by' => $this->admin->id,
             'status' => 'active',
@@ -63,7 +64,7 @@ class AuditLogTest extends TestCase
 
     public function test_nasabah_login_success_creates_audit_log(): void
     {
-        $this->post('/login', ['identifier' => '2023001', 'secret' => '123456']);
+        $this->post('/login', ['identifier' => '2023001', 'secret' => 'password123']);
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'login_success',

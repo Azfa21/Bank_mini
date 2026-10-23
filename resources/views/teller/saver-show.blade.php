@@ -56,7 +56,7 @@
                 </div>
             @elseif ($pendingClosure)
                 <p role="alert" class="text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    Permintaan penutupan rekening diajukan {{ $pendingClosure->created_at?->format('d/m/Y H:i') }} dan menunggu persetujuan Administrator. Transaksi baru ditahan sampai permintaan ini diputuskan.
+                    Permintaan penutupan rekening diajukan {{ $pendingClosure->created_at?->format('d/m/Y H:i') }} dan menunggu keputusan Administrator di halaman Kelulusan. Transaksi baru ditahan sampai permintaan ini diputuskan.
                 </p>
                 <div class="mt-3">
                     <a href="{{ route('teller.passbook.show', $account) }}"
@@ -88,7 +88,7 @@
                         Tutup rekening (lulus)
                     </a>
                 </div>
-                <p class="text-[13px] text-stone-600 mt-3">Pakai penutupan rekening hanya untuk siswa yang sudah lulus. Saldo dicairkan penuh lalu disetujui Administrator.</p>
+                <p class="text-[13px] text-stone-600 mt-3">Pakai penutupan rekening hanya untuk siswa yang sudah lulus. Saldo di atas saldo mengendap dicairkan, sisanya tetap mengendap sampai diputuskan Administrator di halaman Kelulusan.</p>
             @else
                 <p role="alert" class="text-sm font-medium text-red-800 bg-red-50 border border-red-200 rounded-xl p-4">Rekening tidak aktif. Transaksi tidak dapat diproses. Hubungi Administrator untuk aktivasi.</p>
             @endif

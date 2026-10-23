@@ -68,16 +68,35 @@
                             aria-describedby="email-help"
                             placeholder="ani.wijaya@sekolah.sch.id" />
                         <p id="email-help" class="text-[13px] text-stone-600 mt-1.5">
-                            Wajib. Dipakai untuk mengirim kode saat penabung lupa PIN. Sebaiknya alamat
-                            orang tua atau wali, bukan email sekolah yang dipakai bersama.
+                            Wajib. Dipakai untuk mengirim kode saat penabung memulihkan password
+                            aplikasinya. Sebaiknya alamat orang tua atau wali, bukan email sekolah
+                            yang dipakai bersama.
                         </p>
                         <x-input-error :message="$errors->first('email')" />
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-stone-100 pt-5">
+                        <div>
+                            <x-input-label for="password">Password aplikasi penabung wajib</x-input-label>
+                            <x-input id="password" name="password" type="password" minlength="8" autocomplete="new-password"
+                                aria-describedby="password-help" placeholder="Minimal 8 karakter" required />
+                            <p id="password-help" class="text-[13px] text-stone-600 mt-1.5">
+                                Minta anggota mengetik sendiri password ini di layar loket. Password dipakai
+                                untuk masuk aplikasi nasabah dan bisa dipulihkan lewat kode verifikasi email.
+                            </p>
+                            <x-input-error :message="$errors->first('password')" />
+                        </div>
+                        <div>
+                            <x-input-label for="password_confirmation">Ulangi password aplikasi</x-input-label>
+                            <x-input id="password_confirmation" name="password_confirmation" type="password" minlength="8" autocomplete="new-password" required />
+                            <x-input-error :message="$errors->first('password_confirmation')" />
+                        </div>
+                    </div>
+
                     <div>
-                        <x-input-label for="pin">PIN penabung 6 digit wajib</x-input-label>
+                        <x-input-label for="pin">PIN transaksi penabung 6 digit wajib</x-input-label>
                         <x-input id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" class="tracking-[0.3em] text-center" placeholder="••••••" required />
-                        <p class="text-[13px] text-stone-600 mt-1.5">Minta anggota membuat sendiri dan menyimpannya.</p>
+                        <p class="text-[13px] text-stone-600 mt-1.5">Minta anggota membuat sendiri dan menyimpannya. PIN ini hanya dipakai untuk transaksi di loket dan tidak bisa dipakai masuk aplikasi.</p>
                         <x-input-error :message="$errors->first('pin')" />
                     </div>
 

@@ -83,8 +83,10 @@
                         @if ($saver->account)
                             <a href="{{ route('admin.accounts.card-print', $saver->account) }}" class="text-brand-700 hover:text-brand-800 text-xs">Kartu</a>
                         @endif
-                        <a href="{{ route('admin.savers.edit', $saver) }}" class="text-brand-900 hover:text-brand-800 text-xs">Ubah</a>
-                        @if ($saver->status !== 'graduated')
+                        @if ($saver->isGraduated())
+                            <span class="text-xs text-stone-500" title="Data penabung alumni tidak dapat diubah.">Terkunci</span>
+                        @else
+                            <a href="{{ route('admin.savers.edit', $saver) }}" class="text-brand-900 hover:text-brand-800 text-xs">Ubah</a>
                             <form method="POST" action="{{ route('admin.savers.toggle-status', $saver) }}" class="inline" data-confirm="{{ $saver->status === 'active' ? 'Blokir penabung ini? Penabung yang diblokir tidak dapat bertransaksi.' : 'Aktifkan kembali penabung ini?' }}">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="text-xs {{ $saver->status === 'active' ? 'text-amber-700 hover:text-amber-900' : 'text-brand-800 hover:text-olive-800' }}">

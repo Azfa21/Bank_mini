@@ -30,14 +30,14 @@ class AuthService {
 
   Future<LoginResult> login({
     required String studentNumber,
-    required String pin,
+    required String password,
     String? deviceName,
   }) async {
     final response = await _api.postJson(
       '/mobile/login',
       data: {
         'student_number': studentNumber,
-        'pin': pin,
+        'password': password,
         if (deviceName != null && deviceName.isNotEmpty)
           'device_name': deviceName,
       },
@@ -78,7 +78,7 @@ class AuthService {
   /// penabung ditolak server lewat [ApiException], bukan lewat nilai null.
   Future<String?> requestResetOtp({required String studentNumber}) async {
     final response = await _api.postJson(
-      '/mobile/forgot-pin/request-otp',
+      '/mobile/forgot-password/request-otp',
       data: {'account_type': 'nasabah', 'identifier': studentNumber},
     );
 
@@ -89,19 +89,33 @@ class AuthService {
     return null;
   }
 
-  Future<void> resetPin({
+  Future<void> resetPassword({
     required String studentNumber,
     required String otp,
-    required String pin,
+    required String password,
   }) async {
     await _api.postJson(
-      '/mobile/forgot-pin/reset',
+      '/mobile/forgot-password/reset',
       data: {
         'account_type': 'nasabah',
         'identifier': studentNumber,
         'otp': otp,
-        'pin': pin,
-        'pin_confirmation': pin,
+        'password': password,
+        'password_confirmation': password,
+      },
+    );
+  }
+
+  Future<void> changePin({
+    required String currentPin,
+    required String newPin,
+  }) async {
+    await _api.postJson(
+      '/mobile/pin/change',
+      data: {
+        'current_pin': currentPin,
+        'pin': newPin,
+        'pin_confirmation': newPin,
       },
     );
   }

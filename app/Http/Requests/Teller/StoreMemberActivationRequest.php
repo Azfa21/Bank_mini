@@ -26,9 +26,12 @@ class StoreMemberActivationRequest extends FormRequest
             'amount' => ['required', 'integer', 'min:1'],
             'slip_number' => ['nullable', 'string', 'max:30'],
             'pin' => ['required', 'digits:6'],
-            // Tanpa email terdaftar, penabung tidak punya jalur pemulihan PIN
+            // Tanpa email terdaftar, penabung tidak punya jalur pemulihan password
             // sama sekali: nomor siswa bisa saja ikut hilang bersama kartu.
             'email' => ['required', 'string', 'email', 'max:255', 'unique:savers,email'],
+            // Password login dibuat penabung sendiri pada momen aktivasi.
+            // PIN di atas tetap kredensial terpisah untuk transaksi loket.
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'class_name' => ['nullable', 'string', 'max:30'],
             'phone_number' => ['nullable', 'string', 'max:20'],
         ];
@@ -53,7 +56,10 @@ class StoreMemberActivationRequest extends FormRequest
             'amount.required' => 'Nominal setoran wajib diisi.',
             'pin.required' => 'PIN wajib diisi.',
             'pin.digits' => 'PIN harus tepat 6 digit angka.',
-            'email.required' => 'Email wajib diisi. Ini yang dipakai untuk mengirim kode pemulihan PIN.',
+            'password.required' => 'Password aplikasi penabung wajib diisi.',
+            'password.min' => 'Password aplikasi minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password aplikasi tidak cocok.',
+            'email.required' => 'Email wajib diisi. Ini yang dipakai untuk mengirim kode pemulihan password aplikasi.',
             'email.unique' => 'Email sudah digunakan penabung lain.',
         ];
     }

@@ -36,13 +36,7 @@
                 <td class="px-5 py-3 text-stone-500">{{ $member->class_name ?? '-' }}</td>
                 <td class="px-5 py-3 text-stone-500">{{ $member->graduation_year ?? '-' }}</td>
                 <td class="px-5 py-3 text-right">
-                    <div class="flex items-center justify-end gap-2">
-                        <a href="{{ route('admin.members.edit', $member) }}" class="text-brand-900 hover:text-brand-800 text-xs">Ubah</a>
-                        <form method="POST" action="{{ route('admin.members.destroy', $member) }}" class="inline" data-confirm="Hapus anggota ini?">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-xs text-red-700 hover:text-red-900">Hapus</button>
-                        </form>
-                    </div>
+                    <a href="{{ route('admin.members.edit', $member) }}" class="text-brand-900 hover:text-brand-800 text-xs">Ubah</a>
                 </td>
             </tr>
         @empty

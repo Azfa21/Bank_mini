@@ -28,7 +28,7 @@ class AccountClosureController extends Controller
 
         if ($account->hasPendingClosure()) {
             return redirect()->route('teller.members.show', $account)
-                ->with('error', 'Rekening ini sudah punya permintaan penutupan yang menunggu persetujuan Administrator.');
+                ->with('error', 'Rekening ini sudah punya permintaan penutupan yang menunggu keputusan Administrator di halaman Kelulusan.');
         }
 
         if ($this->wantsJson()) {
@@ -68,8 +68,8 @@ class AccountClosureController extends Controller
         }
 
         $message = $closure->payout_amount > 0
-            ? 'Saldo Rp '.number_format($closure->payout_amount, 0, ',', '.').' sudah dicairkan. Permintaan penutupan menunggu persetujuan Administrator.'
-            : 'Permintaan penutupan rekening dibuat. Menunggu persetujuan Administrator.';
+            ? 'Saldo Rp '.number_format($closure->payout_amount, 0, ',', '.').' sudah dicairkan. Permintaan penutupan menunggu keputusan Administrator di halaman Kelulusan.'
+            : 'Permintaan penutupan rekening dibuat. Menunggu keputusan Administrator di halaman Kelulusan.';
 
         if ($this->wantsJson($request)) {
             return response()->json([

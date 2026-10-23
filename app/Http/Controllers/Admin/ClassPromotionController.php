@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\MoveClassMembersRequest;
 use App\Http\Requests\Admin\StoreClassPromotionRequest;
-use App\Models\Saver;
 use App\Services\AccountService;
 use App\Services\ClassPromotionService;
-use App\Support\ClassRoom;
 use Illuminate\Http\Request;
 
 class ClassPromotionController extends Controller
@@ -23,35 +20,19 @@ class ClassPromotionController extends Controller
         $withoutClass = $this->promotions->withoutClass();
         $academicYear = AccountService::academicYear();
         $lastRun = $this->promotions->lastRun();
-
-        $savers = Saver::query()
-            ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
-            ->when($request->input('class') !== null && $request->input('class') !== '', fn ($query) => $query->where('class_name', $request->input('class')))
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = trim((string) $request->input('search'));
-
-                $query->where(function ($sub) use ($search) {
-                    $sub->where('full_name', 'like', "%{$search}%")
-                        ->orWhere('student_number', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('full_name')
-            ->paginate(50)
-            ->withQueryString();
+        $ready = collect($groups)->where('kind', 'ready');
 
         $data = [
             'groups' => collect($groups),
+            'ready' => $ready,
+            'students' => $this->promotions->studentsByClass($groups),
             'withoutClass' => $withoutClass,
             'academicYear' => $academicYear,
             'lastRun' => $lastRun,
             'alreadyRun' => $lastRun === $academicYear,
-            'finalYearTotal' => $this->promotions->finalYearTotal($groups),
-            'levels' => ClassRoom::LEVELS,
-            'majors' => ClassRoom::optionMajors(),
-            'classes' => collect($groups)->pluck('class')->reject(static fn (string $class): bool => $class === '')->values(),
-            'savers' => $savers,
-            // Sasaran yang paling mungkin: tingkat dan jurusan kelas yang sedang difilter.
-            'moveDefaults' => ClassRoom::parse((string) $request->input('class')),
+            'finalYear' => $this->promotions->finalYearCounts($groups),
+            'readyMembers' => (int) $ready->sum('members'),
+            'readySavers' => (int) $ready->sum('savers'),
         ];
 
         if ($this->wantsJson($request)) {
@@ -83,13 +64,7 @@ class ClassPromotionController extends Controller
             $request->user(),
         );
 
-        $message = $result['savers'] === 0
-            ? 'Belum ada penabung yang dipindahkan. Isi dulu kelas tujuan pada baris yang ingin diproses.'
-            : "Kenaikan kelas selesai: {$result['savers']} penabung di {$result['classes']} kelas.";
-
-        if ($result['skipped'] > 0) {
-            $message .= ' '.$result['skipped'].' baris kelas dilewati karena kelas tujuannya belum lengkap atau sama dengan kelas asal.';
-        }
+        $message = $this->resultMessage($result);
 
         if ($this->wantsJson($request)) {
             return response()->json(['success' => true, 'message' => $message, 'data' => $result]);
@@ -98,31 +73,41 @@ class ClassPromotionController extends Controller
         return redirect()->route('admin.class-promotions.index')->with('success', $message);
     }
 
-    public function move(MoveClassMembersRequest $request)
+    /**
+     * @param  array{classes: int, members: int, savers: int, retained: int, retained_students: int, skipped: int, mapping: array<string, string>}  $result
+     */
+    private function resultMessage(array $result): string
     {
-        $target = ClassRoom::compose(
-            (string) $request->validated('level'),
-            (string) $request->validated('major'),
-            $request->validated('rombel'),
-        );
+        $moved = [];
 
-        $result = $this->promotions->move(
-            $request->validated('saver_ids'),
-            $target,
-            $request->user(),
-        );
-
-        $message = $result['moved'] === 0
-            ? 'Tidak ada yang perlu dipindahkan: penabung terpilih sudah berada di '.$target.'.'
-            : $result['moved'].' penabung dipindahkan ke '.$target.'.';
-
-        if ($this->wantsJson($request)) {
-            return response()->json(['success' => true, 'message' => $message, 'data' => $result]);
+        if ($result['members'] > 0) {
+            $moved[] = $result['members'].' anggota';
         }
 
-        // Daftar langsung difilter ke kelas tujuan supaya hasil pemindahan terlihat.
-        return redirect()
-            ->route('admin.class-promotions.index', ['class' => $target])
-            ->with('success', $message);
+        if ($result['savers'] > 0) {
+            $moved[] = $result['savers'].' penabung';
+        }
+
+        $message = $moved === []
+            ? 'Belum ada yang dinaikkan.'
+            : 'Kenaikan kelas selesai: '.implode(' dan ', $moved).' di '.$result['classes'].' kelas.';
+
+        if ($moved === [] && $result['retained_students'] === 0) {
+            $message .= ' Pilih Naik ke tingkat berikutnya pada minimal satu kelas.';
+        }
+
+        if ($result['retained'] > 0) {
+            $message .= ' '.$result['retained'].' kelas ditandai tinggal kelas.';
+        }
+
+        if ($result['retained_students'] > 0) {
+            $message .= ' '.$result['retained_students'].' siswa ditandai tinggal kelas.';
+        }
+
+        if ($result['skipped'] > 0) {
+            $message .= ' '.$result['skipped'].' baris kelas dilewati karena tingkatnya tidak dikenali atau datanya sudah tidak ada.';
+        }
+
+        return $message;
     }
 }

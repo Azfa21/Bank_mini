@@ -86,8 +86,7 @@ class TransactionService
                 throw new TransactionValidationException('Nominal harus lebih besar dari nol.');
             }
 
-            $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
-            $minimumBalance = max((int) $locked->minimum_balance, $globalMinimumBalance);
+            $minimumBalance = $this->minimumBalanceFor($locked);
 
             $balanceBefore = (int) $locked->balance;
             if ($amount > $balanceBefore) {
@@ -127,44 +126,59 @@ class TransactionService
     }
 
     /**
-     * Mencairkan seluruh saldo untuk penutupan rekening. Batas saldo minimum
-     * dilewati karena rekening berhenti, bukan penarikan biasa.
+     * Batas saldo mengendap rekening: yang lebih ketat antara batas milik
+     * rekening sendiri dan konfigurasi global /admin/config.
      */
-    public function withdrawRemainingBalance(Account $account, User $teller, string $reason): ?Transaction
+    public function minimumBalanceFor(Account $account): int
+    {
+        $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
+
+        return max((int) $account->minimum_balance, $globalMinimumBalance);
+    }
+
+    /**
+     * Mencairkan saldo penutupan rekening: hanya bagian di atas saldo mengendap.
+     * Saldo mengendap tidak bisa dicairkan dan tetap tersimpan setelah rekening
+     * ditutup, jadi pencairan ini mengikuti aturan penarikan biasa.
+     *
+     * @return null saat tidak ada saldo yang boleh dicairkan lagi.
+     */
+    public function withdrawClosurePayout(Account $account, User $teller, string $reason): ?Transaction
     {
         return DB::transaction(function () use ($account, $teller, $reason) {
             $locked = Account::query()->lockForUpdate()->findOrFail($account->id);
             $this->assertAccountActive($locked);
 
+            $minimumBalance = $this->minimumBalanceFor($locked);
             $balanceBefore = (int) $locked->balance;
+            $amount = $balanceBefore - $minimumBalance;
 
-            if ($balanceBefore <= 0) {
+            if ($amount <= 0) {
                 return null;
             }
 
-            // Tidak ada kas yang keluar untuk rekening bersaldo nol, jadi laporan harian
-            // hanya perlu terbuka bila memang ada pencairan.
+            // Pencairan mengeluarkan kas, jadi laporan harian teller harus masih terbuka.
             $this->assertTellerDayOpen($teller);
 
             $transaction = $this->createTransaction(
                 $locked,
                 $teller,
                 'withdrawal',
+                $amount,
                 $balanceBefore,
-                $balanceBefore,
-                0,
+                $minimumBalance,
                 ['notes' => $reason],
             );
 
-            $locked->update(['balance' => 0]);
+            $locked->update(['balance' => $minimumBalance]);
 
-            $this->createJournalEntries($transaction, 'withdrawal', $balanceBefore);
+            $this->createJournalEntries($transaction, 'withdrawal', $amount);
             $this->assertJournalBalanced($transaction);
 
             AuditLogService::record('transaction_withdrawal_success', 'transaction', $transaction->id, [
                 'account_number' => $locked->account_number,
-                'amount' => $balanceBefore,
-                'balance_after' => 0,
+                'amount' => $amount,
+                'balance_after' => $minimumBalance,
                 'reason' => 'account_closure',
             ], $teller->id);
 
@@ -205,8 +219,7 @@ class TransactionService
                 throw new TransactionValidationException('Nominal transfer harus lebih besar dari nol.');
             }
 
-            $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
-            $minimumBalance = max((int) $lockedSource->minimum_balance, $globalMinimumBalance);
+            $minimumBalance = $this->minimumBalanceFor($lockedSource);
 
             $sourceBalanceBefore = (int) $lockedSource->balance;
             if ($amount > $sourceBalanceBefore) {

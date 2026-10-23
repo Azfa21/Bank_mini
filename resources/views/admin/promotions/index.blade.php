@@ -7,7 +7,7 @@
     <div class="mb-5">
         <p class="text-xs font-semibold text-brand-900">AKHIR TAHUN AJARAN</p>
         <h1 class="text-2xl font-bold text-stone-900 mt-1">Kenaikan kelas</h1>
-        <p class="text-sm text-stone-600 mt-1">Naikkan tingkat penabung sekali setahun: X menjadi XI, XI menjadi XII. Jurusan dan nomor rombel mengikuti kelas asal dan bisa disesuaikan sebelum diproses.</p>
+        <p class="text-sm text-stone-600 mt-1">Naikkan tingkat anggota dan penabung sekali setahun: X menjadi XI, XI menjadi XII. Jurusan dan nomor rombel mengikuti kelas asal, jadi tidak ada siswa pindah jurusan lewat halaman ini. Kalau hanya sebagian siswa yang tinggal kelas, buka daftar siswa pada baris kelasnya lalu centang satu per satu.</p>
     </div>
 
     <x-form-errors />
@@ -15,231 +15,175 @@
     @if ($alreadyRun)
         <div role="status" class="mb-4 p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl">
             <p class="font-semibold">Kenaikan kelas tahun ajaran {{ $lastRun }} sudah pernah dijalankan.</p>
-            <p class="mt-1">Jalankan lagi hanya kalau proses sebelumnya salah kelas. Penabung yang sudah naik akan naik sekali lagi, jadi periksa dulu daftar kelas di bawah.</p>
+            <p class="mt-1">Jalankan lagi hanya kalau proses sebelumnya salah kelas. Anggota dan penabung yang sudah naik akan naik sekali lagi, jadi periksa dulu daftar kelas di bawah.</p>
         </div>
     @endif
 
-    @if ($finalYearTotal > 0)
+    @php
+        $finalYearParts = array_filter([
+            $finalYear['members'] > 0 ? $finalYear['members'].' anggota' : null,
+            $finalYear['savers'] > 0 ? $finalYear['savers'].' penabung' : null,
+        ]);
+    @endphp
+
+    @if ($finalYearParts !== [])
         <div class="mb-4 p-4 bg-white border border-stone-200 rounded-2xl text-sm text-stone-700 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 sm:justify-between">
             <p>
-                <span class="tnum font-semibold text-stone-900">{{ $finalYearTotal }}</span> penabung kelas XII tidak ikut dinaikkan.
+                {{ implode(' dan ', $finalYearParts) }} kelas XII tidak ikut dinaikkan.
                 Kelas XII diselesaikan lewat halaman Kelulusan.
             </p>
             <a href="{{ route('admin.graduations.index') }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline shrink-0">Buka Kelulusan</a>
         </div>
     @endif
 
-    @php
-        $workable = $groups->whereIn('kind', ['ready', 'unknown']);
-        $promotableCount = (int) $workable->sum('total');
-    @endphp
-
-    @if ($workable->isEmpty())
+    @if ($groups->isEmpty())
         <div class="bg-white rounded-2xl border border-stone-200 p-6 text-sm text-stone-600">
-            Belum ada kelas yang bisa dinaikkan tingkatnya. Pastikan kelas penabung sudah diisi dengan format tingkat, misalnya "X RPL 1", lewat halaman Kelola Penabung atau aktivasi di loket.
+            Belum ada data anggota atau penabung.
+            Tambahkan siswa dulu lewat <a href="{{ route('admin.members.index') }}" class="font-medium text-brand-900 hover:underline">Kelola Anggota</a>,
+            lalu isi kelasnya sebelum kenaikan kelas dijalankan.
         </div>
     @else
-        <form method="POST" action="{{ route('admin.class-promotions.store') }}" data-confirm="Proses kenaikan kelas sekarang? Pastikan kelas tujuan tiap kelas sudah benar.">
-            @csrf
-            <input type="hidden" name="academic_year" value="{{ $academicYear }}">
+        @if ($ready->isNotEmpty())
+            <form method="POST" action="{{ route('admin.class-promotions.store') }}" data-confirm="Proses kenaikan kelas sekarang? Periksa dulu tindakan tiap kelas.">
+                @csrf
+                <input type="hidden" name="academic_year" value="{{ $academicYear }}">
+        @endif
 
-            <x-data-table caption="Kelas penabung dan kelas tujuan setelah naik tingkat" :headers="[
-                ['label' => 'Kelas sekarang'],
-                ['label' => 'Penabung', 'align' => 'right'],
-                ['label' => 'Diblokir', 'align' => 'right'],
-                ['label' => 'Tingkat tujuan'],
-                ['label' => 'Jurusan tujuan'],
-                ['label' => 'Rombel tujuan'],
-            ]">
-                @foreach ($groups as $group)
-                    @continue ($group['kind'] === 'empty')
+        <x-data-table caption="Kelas anggota dan penabung beserta tindakannya pada kenaikan kelas" :headers="[
+            ['label' => 'Kelas sekarang'],
+            ['label' => 'Anggota', 'align' => 'right'],
+            ['label' => 'Penabung', 'align' => 'right'],
+            ['label' => 'Diblokir', 'align' => 'right'],
+            ['label' => 'Tindakan'],
+        ]">
+            @foreach ($groups as $group)
+                <tr class="hover:bg-stone-50">
+                    <td class="px-5 py-3">
+                        <div class="font-medium text-stone-900">{{ $group['class'] }}</div>
+                        @if ($group['kind'] === 'unknown')
+                            <div class="text-xs text-stone-600">Tingkat tidak dikenali.</div>
+                        @endif
+                    </td>
+                    <td class="px-5 py-3 text-right tnum">{{ $group['members'] > 0 ? $group['members'] : '-' }}</td>
+                    <td class="px-5 py-3 text-right tnum">{{ $group['savers'] > 0 ? $group['savers'] : '-' }}</td>
+                    <td class="px-5 py-3 text-right tnum">{{ $group['blocked'] > 0 ? $group['blocked'] : '-' }}</td>
 
-                    <tr class="hover:bg-stone-50">
+                    @if ($group['kind'] === 'final')
+                        <td class="px-5 py-3 text-xs text-stone-600">
+                            Tidak dinaikkan. Arsipkan angkatan ini di halaman Kelulusan.
+                        </td>
+                    @elseif ($group['kind'] === 'ready')
+                        @php
+                            $rowIndex = $loop->index;
+                            $classStudents = $students[$group['class']] ?? [];
+                            $retainedOld = old('rows.'.$rowIndex.'.retain', []);
+                        @endphp
                         <td class="px-5 py-3">
-                            <div class="font-medium text-stone-900">{{ $group['class'] }}</div>
-                            @if ($group['kind'] === 'unknown')
-                                <div class="text-xs text-stone-600">Tingkat tidak dikenali, pilih kelas tujuan dulu.</div>
+                            <input type="hidden" name="rows[{{ $rowIndex }}][class]" value="{{ $group['class'] }}">
+                            <div class="w-full sm:w-64">
+                                <x-select name="rows[{{ $rowIndex }}][action]" aria-label="Tindakan untuk kelas {{ $group['class'] }}" data-promotion-action="1" data-promotion-retain-value="{{ \App\Services\ClassPromotionService::ACTION_RETAIN }}">
+                                    <option value="{{ \App\Services\ClassPromotionService::ACTION_PROMOTE }}" @selected(old('rows.'.$rowIndex.'.action', \App\Services\ClassPromotionService::ACTION_PROMOTE) === \App\Services\ClassPromotionService::ACTION_PROMOTE)>Naik ke {{ $group['target'] }}</option>
+                                    <option value="{{ \App\Services\ClassPromotionService::ACTION_RETAIN }}" @selected(old('rows.'.$rowIndex.'.action') === \App\Services\ClassPromotionService::ACTION_RETAIN)>Tinggal kelas semua</option>
+                                </x-select>
+                            </div>
+
+                            @if ($classStudents !== [])
+                                <div class="w-full sm:w-64 mt-2" data-promotion-picker="1">
+                                    <details class="border border-stone-200 rounded-xl bg-white overflow-hidden">
+                                        {{-- Alasan: display summary jangan diubah, penanda buka-tutup bawaan
+                                             browser hanya muncul pada summary list-item. --}}
+                                        <summary class="min-h-[44px] px-3 py-3 text-[13px] text-brand-900 cursor-pointer select-none">
+                                            <span class="font-semibold">Pilih siswa tinggal kelas</span>
+                                            <span class="tnum text-stone-600 font-normal">({{ count($classStudents) }} siswa)</span>
+                                        </summary>
+                                        <p class="px-3 pb-2 text-xs text-stone-600">Centang siswa yang tetap di {{ $group['class'] }}. Tanpa centang, seluruh {{ count($classStudents) }} siswa naik ke {{ $group['target'] }}.</p>
+                                        <ul class="max-h-64 overflow-y-auto border-t border-stone-200 divide-y divide-stone-100 px-3">
+                                            @foreach ($classStudents as $student)
+                                                <li>
+                                                    <label for="retain-{{ $rowIndex }}-{{ $loop->index }}" class="flex items-start gap-3 py-2 min-h-[44px] cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="retain-{{ $rowIndex }}-{{ $loop->index }}"
+                                                            name="rows[{{ $rowIndex }}][retain][]"
+                                                            value="{{ $student['key'] }}"
+                                                            @checked(in_array($student['key'], $retainedOld, true))
+                                                            class="mt-1 w-4 h-4 shrink-0 rounded border-stone-400 text-brand-800 focus:ring-brand-800"
+                                                        >
+                                                        <span class="min-w-0 flex-1">
+                                                            <span class="block text-sm text-stone-900">{{ $student['name'] }}</span>
+                                                            <span class="block text-xs text-stone-600"><span class="font-mono">{{ $student['number'] }}</span> · {{ $student['type'] }}</span>
+                                                        </span>
+                                                        @if ($student['blocked'])
+                                                            <span class="mt-0.5 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 shrink-0">Diblokir</span>
+                                                        @endif
+                                                    </label>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </details>
+                                </div>
                             @endif
                         </td>
-                        <td class="px-5 py-3 text-right tnum">{{ $group['total'] }}</td>
-                        <td class="px-5 py-3 text-right tnum">{{ $group['blocked'] > 0 ? $group['blocked'] : '-' }}</td>
+                    @else
+                        <td class="px-5 py-3 text-xs text-stone-600">
+                            Tidak bisa diproses otomatis. Perbaiki nama kelasnya lewat
+                            <a href="{{ route('admin.members.index') }}" class="font-medium text-brand-900 hover:underline">Kelola Anggota</a>
+                            atau
+                            <a href="{{ route('admin.savers.index') }}" class="font-medium text-brand-900 hover:underline">Kelola Penabung</a>.
+                        </td>
+                    @endif
+                </tr>
+            @endforeach
+        </x-data-table>
 
-                        @if ($group['kind'] === 'final')
-                            <td colspan="3" class="px-5 py-3 text-xs text-stone-600">
-                                Tidak dinaikkan. Arsipkan angkatan ini di halaman Kelulusan.
-                            </td>
-                        @else
-                            <td class="px-5 py-3">
-                                <div class="w-28">
-                                    <x-select name="rows[{{ $loop->index }}][level]" aria-label="Tingkat tujuan untuk kelas {{ $group['class'] }}">
-                                        <option value="">Pilih</option>
-                                        @foreach ($levels as $level)
-                                            <option value="{{ $level }}" @selected(old('rows.'.$loop->index.'.level', $group['next_level']) === $level)>{{ $level }}</option>
-                                        @endforeach
-                                    </x-select>
-                                </div>
-                            </td>
-                            <td class="px-5 py-3">
-                                <div class="w-36">
-                                    <x-select name="rows[{{ $loop->index }}][major]" aria-label="Jurusan tujuan untuk kelas {{ $group['class'] }}">
-                                        <option value="">Pilih</option>
-                                        @foreach ($majors as $major)
-                                            <option value="{{ $major }}" @selected(old('rows.'.$loop->index.'.major', $group['major']) === $major)>{{ $major }}</option>
-                                        @endforeach
-                                    </x-select>
-                                </div>
-                                <input type="hidden" name="rows[{{ $loop->index }}][class]" value="{{ $group['class'] }}">
-                            </td>
-                            <td class="px-5 py-3">
-                                <div class="w-24">
-                                    <x-input name="rows[{{ $loop->index }}][rombel]" :value="old('rows.'.$loop->index.'.rombel', $group['rombel'])" inputmode="numeric" maxlength="2" placeholder="1" aria-label="Nomor rombel tujuan untuk kelas {{ $group['class'] }}" />
-                                </div>
-                            </td>
-                        @endif
-                    </tr>
-                @endforeach
-            </x-data-table>
-
-            <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-                <p class="text-[13px] text-stone-600">
-                    Penabung diblokir ikut naik kelas, blokirnya tetap berlaku. Baris yang tingkat atau jurusannya kosong tidak diproses. Siswa yang tinggal kelas cukup dibiarkan: baris dengan kelas tujuan sama dengan kelas asal otomatis dilewati.
+        @if ($ready->isNotEmpty())
+            <div class="mt-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
+                @php
+                    $readyParts = array_filter([
+                        $readyMembers > 0 ? $readyMembers.' anggota' : null,
+                        $readySavers > 0 ? $readySavers.' penabung' : null,
+                    ]);
+                @endphp
+                <p class="text-[13px] text-stone-600 sm:flex-1">
+                    {{ implode(' dan ', $readyParts) }} siap diproses.
+                    Penabung yang diblokir ikut naik kelas dan tetap diblokir.
+                    Pilih Tinggal kelas semua untuk satu kelas utuh; untuk siswa tertentu buka Pilih siswa tinggal kelas pada baris kelasnya.
                 </p>
-                <x-primary-button data-loading-text="Memproses kenaikan...">Naikkan {{ $promotableCount }} penabung</x-primary-button>
+                <x-primary-button class="shrink-0" data-loading-text="Memproses kenaikan...">Proses kenaikan kelas</x-primary-button>
             </div>
 
             @if ($alreadyRun)
                 <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-900">
                     <label class="flex items-start gap-2.5 min-h-[44px] cursor-pointer">
                         <input type="checkbox" name="confirm_repeat" value="1" @checked(old('confirm_repeat')) class="mt-0.5 w-4 h-4 rounded border-stone-400 text-brand-800 focus:ring-brand-800">
-                        <span>Ya, jalankan lagi untuk tahun ajaran {{ $academicYear }}. Saya sudah memeriksa kelas tujuan tiap kelas.</span>
+                        <span>Ya, jalankan lagi untuk tahun ajaran {{ $academicYear }}. Saya sudah memeriksa tindakan tiap kelas.</span>
                     </label>
                 </div>
             @endif
         </form>
+        @endif
     @endif
 
-    @if ($withoutClass->isNotEmpty())
+    @if ($withoutClass['members']->isNotEmpty() || $withoutClass['savers']->isNotEmpty())
         <div class="mt-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5">
-            <h2 class="text-sm font-semibold text-stone-900">Penabung yang kelasnya belum diisi</h2>
-            <p class="text-[13px] text-stone-600 mt-1">Kelas kosong tidak bisa dinaikkan. Lengkapi lewat halaman Kelola Penabung.</p>
+            <h2 class="text-sm font-semibold text-stone-900">Anggota dan penabung yang kelasnya belum diisi</h2>
+            <p class="text-[13px] text-stone-600 mt-1">Kelas kosong tidak bisa dinaikkan. Perbaiki lewat halaman masing-masing.</p>
             <ul class="mt-3 space-y-1 text-sm text-stone-700">
-                @foreach ($withoutClass as $saver)
+                @foreach ($withoutClass['members'] as $member)
+                    <li class="flex flex-wrap items-baseline gap-x-2">
+                        <a href="{{ route('admin.members.edit', $member) }}" class="font-medium text-brand-900 hover:underline">{{ $member->full_name }}</a>
+                        <span class="font-mono text-xs text-stone-600">{{ $member->nis }}</span>
+                        <span class="text-xs text-stone-500">Anggota</span>
+                    </li>
+                @endforeach
+                @foreach ($withoutClass['savers'] as $saver)
                     <li class="flex flex-wrap items-baseline gap-x-2">
                         <a href="{{ route('admin.savers.edit', $saver) }}" class="font-medium text-brand-900 hover:underline">{{ $saver->full_name }}</a>
                         <span class="font-mono text-xs text-stone-600">{{ $saver->student_number }}</span>
+                        <span class="text-xs text-stone-500">Penabung</span>
                     </li>
                 @endforeach
             </ul>
         </div>
     @endif
-
-    <section class="mt-8" aria-labelledby="sesuaikan-rombel">
-        <div class="mb-4">
-            <h2 id="sesuaikan-rombel" class="text-lg font-bold text-stone-900">Sesuaikan rombel</h2>
-            <p class="text-sm text-stone-600 mt-1">Pakai bagian ini kalau jumlah rombel berubah (misalnya dua kelas dibagi menjadi tiga) atau ada penabung pindah rombel. Bisa dipakai kapan saja, tidak menunggu akhir tahun.</p>
-        </div>
-
-        <form method="GET" action="{{ route('admin.class-promotions.index') }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end sm:flex-wrap">
-            <div class="sm:w-52">
-                <x-input-label for="class">Kelas sekarang</x-input-label>
-                <x-select id="class" name="class">
-                    <option value="">Semua kelas</option>
-                    @foreach ($classes as $option)
-                        <option value="{{ $option }}" @selected(request('class') === $option)>{{ $option }}</option>
-                    @endforeach
-                </x-select>
-            </div>
-            <div class="sm:w-64">
-                <x-input-label for="search">Cari penabung</x-input-label>
-                <x-input id="search" name="search" type="search" :value="request('search')" placeholder="Nama atau nomor siswa" />
-            </div>
-            <x-primary-button>Tampilkan</x-primary-button>
-            @if (request('class') || request('search'))
-                <a href="{{ route('admin.class-promotions.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-4 text-sm font-medium text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors">Reset</a>
-            @endif
-        </form>
-
-        @if ($savers->isEmpty())
-            <div class="bg-white rounded-2xl border border-stone-200 p-6 text-sm text-stone-600">
-                @if (request('class') || request('search'))
-                    Tidak ada penabung yang cocok dengan filter ini.
-                @else
-                    Belum ada penabung aktif atau diblokir yang bisa dipindahkan.
-                @endif
-            </div>
-        @else
-            <form method="POST" action="{{ route('admin.class-promotions.move') }}" data-confirm="Pindahkan penabung terpilih ke kelas tujuan?">
-                @csrf
-
-                <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 mb-4">
-                    <label class="flex items-center gap-2 min-h-[44px] text-sm text-stone-700 cursor-pointer">
-                        <input type="checkbox" data-select-all class="w-4 h-4 rounded border-stone-400 text-brand-800 focus:ring-brand-800">
-                        Pilih semua di halaman ini
-                    </label>
-
-                    <div class="mt-2 pt-4 border-t border-stone-100 flex flex-col sm:flex-row gap-3 sm:items-end sm:flex-wrap">
-                        <div class="sm:w-28">
-                            <x-input-label for="move-level">Tingkat tujuan</x-input-label>
-                            <x-select id="move-level" name="level">
-                                <option value="">Pilih</option>
-                                @foreach ($levels as $level)
-                                    <option value="{{ $level }}" @selected(old('level', $moveDefaults['level']) === $level)>{{ $level }}</option>
-                                @endforeach
-                            </x-select>
-                        </div>
-                        <div class="sm:w-32">
-                            <x-input-label for="move-major">Jurusan tujuan</x-input-label>
-                            <x-select id="move-major" name="major">
-                                <option value="">Pilih</option>
-                                @foreach ($majors as $major)
-                                    <option value="{{ $major }}" @selected(old('major', $moveDefaults['major']) === $major)>{{ $major }}</option>
-                                @endforeach
-                            </x-select>
-                        </div>
-                        <div class="sm:w-24">
-                            <x-input-label for="move-rombel">Rombel</x-input-label>
-                            <x-input id="move-rombel" name="rombel" :value="old('rombel', $moveDefaults['rombel'])" inputmode="numeric" maxlength="2" placeholder="1" />
-                        </div>
-                        <x-primary-button data-select-submit data-loading-text="Memindahkan...">Pindahkan <span data-select-count class="tnum">0</span> penabung</x-primary-button>
-                    </div>
-                </div>
-
-                <x-data-table caption="Daftar penabung yang bisa dipindah ke rombel lain" :headers="[
-                    ['label' => 'Pilih'],
-                    ['label' => 'No. siswa'],
-                    ['label' => 'Nama'],
-                    ['label' => 'Kelas sekarang'],
-                    ['label' => 'Status'],
-                ]">
-                    @foreach ($savers as $saver)
-                        @php
-                            $statusStyles = [
-                                'active' => 'bg-olive-100 text-olive-700',
-                                'blocked' => 'bg-red-100 text-red-700',
-                            ];
-                        @endphp
-                        <tr class="hover:bg-stone-50">
-                            <td class="px-5 py-3">
-                                <label class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] cursor-pointer">
-                                    <input type="checkbox" name="saver_ids[]" value="{{ $saver->id }}" data-select-item
-                                        class="w-4 h-4 rounded border-stone-400 text-brand-800 focus:ring-brand-800"
-                                        aria-label="Pilih {{ $saver->full_name }}">
-                                </label>
-                            </td>
-                            <td class="px-5 py-3 font-mono text-xs">{{ $saver->student_number }}</td>
-                            <td class="px-5 py-3">{{ $saver->full_name }}</td>
-                            <td class="px-5 py-3 {{ $saver->class_name ? 'text-stone-700' : 'text-stone-500' }}">{{ $saver->class_name ?: 'Belum diisi' }}</td>
-                            <td class="px-5 py-3">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusStyles[$saver->status] ?? 'bg-stone-100 text-stone-700' }}">
-                                    {{ $saver->statusLabel() }}
-                                </span>
-                            </td>
-                        </tr>
-                    @endforeach
-                </x-data-table>
-            </form>
-
-            <div class="mt-4">{{ $savers->links() }}</div>
-        @endif
-    </section>
 @endsection

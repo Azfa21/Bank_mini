@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Support\ClassRoom;
+use App\Services\ClassPromotionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,9 +20,10 @@ class StoreClassPromotionRequest extends FormRequest
             'confirm_repeat' => ['nullable', 'boolean'],
             'rows' => ['required', 'array'],
             'rows.*.class' => ['required', 'string', 'max:30'],
-            'rows.*.level' => ['nullable', 'string', Rule::in(ClassRoom::LEVELS)],
-            'rows.*.major' => ['nullable', 'string', 'max:10', 'regex:/^[A-Za-z]+$/'],
-            'rows.*.rombel' => ['nullable', 'string', 'max:2', 'regex:/^\d{1,2}$/'],
+            'rows.*.action' => ['required', 'string', Rule::in([ClassPromotionService::ACTION_PROMOTE, ClassPromotionService::ACTION_RETAIN])],
+            // Kunci "member:<nis>" atau "saver:<nomor siswa>" untuk siswa yang tinggal kelas.
+            'rows.*.retain' => ['nullable', 'array'],
+            'rows.*.retain.*' => ['required', 'string', 'max:40'],
         ];
     }
 
@@ -31,9 +32,11 @@ class StoreClassPromotionRequest extends FormRequest
         return [
             'rows.required' => 'Tidak ada kelas yang bisa diproses pada halaman ini.',
             'rows.*.class.required' => 'Nama kelas asal tidak terbaca. Muat ulang halaman ini.',
-            'rows.*.level.in' => 'Tingkat tujuan hanya boleh X, XI, atau XII.',
-            'rows.*.major.regex' => 'Jurusan tujuan hanya boleh huruf, misalnya RPL atau TKJ.',
-            'rows.*.rombel.regex' => 'Nomor rombel hanya boleh angka, maksimal dua digit.',
+            'rows.*.action.required' => 'Pilih tindakan tiap kelas: naik kelas atau tinggal kelas.',
+            'rows.*.action.in' => 'Tindakan tiap kelas hanya boleh naik kelas atau tinggal kelas.',
+            'rows.*.retain.array' => 'Daftar siswa yang tinggal kelas tidak terbaca. Muat ulang halaman ini.',
+            'rows.*.retain.*.required' => 'Pilihan siswa yang tinggal kelas tidak terbaca. Muat ulang halaman ini.',
+            'rows.*.retain.*.max' => 'Pilihan siswa yang tinggal kelas tidak terbaca. Muat ulang halaman ini.',
         ];
     }
 }

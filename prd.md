@@ -1,26 +1,26 @@
 PRD — Sistem Informasi E-Teller Bank Mini Sekolah
 1. Overview
 Tujuan Aplikasi
-Membangun aplikasi Sistem Informasi E-Teller Bank Mini Sekolah berbasis client-server untuk mengelola rekening nasabah, transaksi setoran dan penarikan tunai, rekonsiliasi kas, persetujuan Supervisor, serta pencatatan jurnal akuntansi secara aman dan terintegrasi.
+Membangun aplikasi Sistem Informasi E-Teller Bank Mini Sekolah berbasis client-server untuk mengelola rekening nasabah, transaksi setoran dan penarikan tunai, rekonsiliasi kas, persetujuan laporan oleh Administrator, serta pencatatan jurnal akuntansi secara aman dan terintegrasi.
 Masalah yang Diselesaikan
 - Pencatatan transaksi loket yang masih manual dan rawan kesalahan.
 - Ketidaksesuaian antara uang fisik dan saldo digital.
 - Risiko penarikan melebihi saldo atau melanggar saldo mengendap minimum.
-- Tidak adanya pemisahan tanggung jawab antara Administrator, Teller, Supervisor, dan Nasabah.
+- Tidak adanya pemisahan tanggung jawab antara Administrator, Teller, dan Nasabah.
 - Tidak tersedianya audit trail dan jurnal akuntansi yang konsisten.
 - Kesulitan pencarian profil nasabah secara cepat di loket.
 Target Pengguna
 1. Administrator
 - Mengelola akun internal, rekening nasabah, konfigurasi sistem, dan audit jurnal.
+- Memeriksa laporan harian, menyetujui atau menolaknya, dan mengotorisasi koreksi transaksi; tidak boleh menyetujui laporan miliknya sendiri.
 - Tidak dapat melakukan transaksi setoran maupun penarikan.
 2. Piket Teller
 - Melayani pencarian nasabah, setoran tunai, penarikan tunai, dan pembuatan laporan harian.
 - Tidak dapat mengubah atau menghapus transaksi yang telah tersimpan.
 3. Supervisor / Kepala Bank Mini
-- Memvalidasi laporan, menyelesaikan selisih kas, menyetujui laporan, dan mengotorisasi pemindahan kas.
-- Tidak dapat melakukan transaksi loket secara mandiri.
+- Peran ini digabungkan ke Administrator (migration merge_supervisor_role_into_admin).
 4. Nasabah / Siswa
-- Melihat saldo dan riwayat mutasi rekening sendiri.
+- Melihat saldo dan riwayat mutasi rekening sendiri lewat web atau aplikasi mobile.
 - Memasukkan PIN 6-digit untuk otorisasi penarikan.
 2. Requirements
 2.1 Persyaratan Platform
@@ -32,11 +32,11 @@ Target Pengguna
 - Sistem dapat dijalankan pada lingkungan Windows atau Linux Desktop.
 - Sistem dapat digunakan melalui jaringan lokal sekolah atau jaringan yang dikonfigurasi administrator.
 2.2 Jenis dan Jumlah Pengguna
-- Sistem memiliki empat role:
+- Sistem memiliki tiga role aktif:
 - Administrator
 - Teller
-- Supervisor
 - Nasabah
+- Catatan: peran Supervisor digabungkan ke Administrator; kewenangan approval laporan dan koreksi transaksi kini milik Administrator.
 - Satu akun internal hanya memiliki satu role aktif pada satu waktu.
 - Nasabah hanya dapat mengakses data rekening miliknya sendiri.
 - Administrator dapat membuat, memperbarui, memblokir, dan menghapus akun internal sesuai aturan keamanan.
@@ -51,7 +51,7 @@ Target Pengguna
 - PIN tidak boleh ditampilkan atau disimpan dalam bentuk teks biasa.
 - Administrator tidak boleh mengakses fungsi transaksi loket.
 - Teller tidak dapat menyetujui laporan hariannya sendiri.
-- Supervisor tidak dapat melakukan transaksi setoran atau penarikan.
+- Administrator tidak dapat menyetujui laporan hariannya sendiri.
 - Jejak aktivitas penting wajib dicatat dalam audit log.
 - Sistem menerapkan Security Headers (CSP, no-store cache) untuk mencegah clickjacking dan browser caching halaman terautentikasi.
 - Sistem membatasi penggunaan akses kamera hanya pada origin sendiri (Permissions-Policy: camera=(self)).
@@ -61,9 +61,9 @@ Target Pengguna
 - Saldo mencukupi.
 - Saldo setelah penarikan tidak kurang dari Rp10.000.
 - PIN nasabah valid.
-- Transaksi setoran hanya dapat disimpan jika nominal slip sama dengan uang fisik.
+- Nomor slip transaksi bersifat unik per rekening untuk mencegah pengiriman ganda.
 - Rekening harus ditemukan dan berstatus aktif sebelum transaksi diproses.
-- Laporan harian tidak dapat dicetak sebagai laporan final jika terjadi selisih kas.
+- Laporan harian tidak disetujui bila arus kas tanggal tersebut berubah setelah laporan dibuat; Administrator menolak laporan dan mewajibkan Teller menghitung ulang.
 - Foreign key wajib menjaga histori transaksi dan jurnal.
 - Penghapusan data master yang masih direferensikan transaksi harus ditolak.
 2.5 Persyaratan Akuntansi
@@ -72,22 +72,23 @@ Target Pengguna
 - Setoran dan penarikan harus memperbarui saldo rekening dan jurnal dalam satu transaksi database.
 - Jika salah satu proses gagal, seluruh perubahan harus dibatalkan melalui rollback.
 - Kode akun yang digunakan:
-- Kas: 101
+- Kas Teller: 101
+- Kas Brankas: 102
 - Tabungan: 201
 3. Core Features
 FASE 1 — Autentikasi, RBAC, dan Keamanan Akses
 Status
-Direncanakan
+Selesai
 Sub-Fitur
 - Login terpusat pengguna internal dan nasabah
 - Manajemen sesi atau token pengguna
 - Pembatasan akses berdasarkan role
 - Keamanan kredensial dan PIN nasabah
-- Pemulihan kredensial mandiri (Lupa Password & Reset PIN)
+- Pemulihan kredensial mandiri (Lupa Password)
 - Pencatatan aktivitas akses
 Requirements Fitur
 1. Login terpusat
-- Pengguna memasukkan username atau identitas rekening dan password/PIN sesuai jenis akunnya.
+- Pengguna memasukkan username atau nomor siswa dan password untuk masuk aplikasi; PIN transaksi tidak berperan di halaman login.
 - Sistem memeriksa status akun.
 - Sistem mengarahkan pengguna ke halaman sesuai role.
 2. Manajemen sesi atau token pengguna
@@ -97,7 +98,7 @@ Requirements Fitur
 3. Pembatasan akses berdasarkan role
 - Administrator dapat mengakses manajemen sistem.
 - Teller dapat mengakses transaksi loket.
-- Supervisor dapat mengakses validasi dan approval.
+- Administrator dapat mengakses manajemen sistem, validasi laporan, dan approval.
 - Nasabah hanya dapat mengakses data rekening sendiri.
 4. Keamanan kredensial dan PIN nasabah
 - Password dan PIN disimpan dalam bentuk hash.
@@ -105,9 +106,10 @@ Requirements Fitur
 - PIN harus diverifikasi sebelum penarikan diproses.
 5. Pencatatan aktivitas akses
 - Sistem mencatat login, logout, penolakan akses, dan aktivitas penting.
-6. Pemulihan kredensial mandiri (Lupa Password & Reset PIN)
+6. Pemulihan kredensial mandiri (Lupa Password)
 - Pengguna internal (Staff) dapat memulihkan password dengan verifikasi username dan nama lengkap terdaftar, dengan password baru minimal 8 karakter.
-- Nasabah (Siswa) dapat memulihkan PIN dengan verifikasi nomor siswa (NIS) dan kelas terdaftar, dengan PIN baru tepat 6 digit angka.
+- Nasabah (Siswa) dapat membuat atau memulihkan password aplikasi dengan verifikasi nomor siswa dan kode verifikasi email terdaftar, dengan password baru minimal 8 karakter.
+- PIN transaksi tidak dipulihkan lewat alur mandiri ini; pengaturan ulang PIN tetap melalui Administrator.
 - Sistem menolak pemulihan untuk akun yang berstatus diblokir (blocked).
 - Seluruh aktivitas pemulihan (berhasil, gagal, diblokir) dicatat dalam audit log dan dilindungi rate limiting (5 req/menit).
 Field Wajib
@@ -121,9 +123,9 @@ Field Wajib
 - login_timestamp
 FASE 2 — Manajemen Pengguna dan Rekening Nasabah
 Status
-Direncanakan
+Selesai
 Sub-Fitur
-- Pengelolaan akun Administrator, Teller, dan Supervisor
+- Pengelolaan akun Administrator dan Teller
 - Pengelolaan profil nasabah atau siswa
 - Pembuatan nomor rekening otomatis
 - Pengaturan saldo mengendap minimum
@@ -131,7 +133,7 @@ Sub-Fitur
 Requirements Fitur
 1. Pengelolaan akun internal
 - Administrator dapat menambah, melihat, memperbarui, memblokir, dan menghapus akun.
-- Role yang tersedia adalah Administrator, Teller, dan Supervisor.
+- Role yang tersedia adalah Administrator dan Teller.
 - Akun yang diblokir tidak dapat login.
 2. Pengelolaan profil nasabah
 - Administrator dapat membuat dan mengelola data nasabah atau siswa.
@@ -141,9 +143,10 @@ Requirements Fitur
 - Penabung tidak dihapus dari daftar. Untuk menghentikan aktivitasnya sementara, Administrator memblokir penabung: rekeningnya tidak dapat ditransaksikan dan penabung tidak dapat login.
 - Profil nasabah dapat dihubungkan dengan satu rekening aktif.
 - Data penabung, rekening, dan riwayat transaksi disimpan permanen, termasuk setelah siswa lulus. Tidak ada penghapusan baris; yang berubah hanya status dan kolom `graduated_at`.
-- Saat siswa lulus, Teller mencairkan seluruh saldo di loket (termasuk saldo mengendap) lewat penutupan rekening, lalu Administrator menyetujui. Persetujuan menutup rekening (`closed`) dan menandai penabung sebagai alumni (`graduated`).
+- Saat siswa lulus, Teller mencairkan saldo di atas saldo mengendap di loket lewat penutupan rekening (saldo mengendap tidak bisa dicairkan dan tetap tersimpan di rekening), lalu Administrator memutuskan dari halaman Kelulusan. Persetujuan menutup rekening (`closed`) dan menandai penabung sebagai alumni (`graduated`).
 - Penolakan penutupan mengembalikan saldo dan mengaktifkan kembali rekening. Alumni tidak dapat login, baik di web maupun aplikasi nasabah.
 - Administrator dapat mengarsipkan satu angkatan sekaligus dari halaman Kelulusan. Anggota tanpa rekening dan penabung bersaldo nol langsung diarsipkan; penabung yang masih bersaldo menunggu penyelesaian di loket.
+- Siswa yang tidak lulus ditandai dari halaman Kelulusan. Pencairan yang sudah dilakukan dibatalkan, rekening tetap aktif, dan angkatan siswa digeser ke tahun berikutnya agar tidak ikut diproses pada angkatan ini.
 - Perintah `php artisan bankmini:graduate --year=Tahun [--dry-run]` menyiapkan arsip angkatan yang sama dari CLI.
 3. Pembuatan nomor rekening otomatis
 - Nomor rekening dibuat berdasarkan tahun ajaran dan nomor urut siswa.
@@ -151,8 +154,8 @@ Requirements Fitur
 4. Pengaturan saldo mengendap minimum
 - Nilai default saldo mengendap minimum adalah Rp10.000.
 - Administrator dapat mengatur nilai tersebut melalui konfigurasi sistem.
-5. Konfigurasi pemindai QR Code
-- Administrator dapat mengatur status penggunaan kamera/webcam.
+5. Penggunaan pemindai QR Code
+- Scanner QR di browser Teller di-bundle secara lokal (mematuhi kebijakan CSP).
 - Teller dapat mencari nasabah menggunakan QR Code atau nomor rekening.
 Field Wajib
 Akun internal:
@@ -170,24 +173,25 @@ Profil nasabah:
 - status
 Rekening:
 - account_number
-- customer_id
+- saver_id
 - academic_year
 - opening_balance
-- current_balance
+- balance
 - minimum_balance
 - status
 Konfigurasi:
 - minimum_balance
-- qr_scanner_enabled
-- qr_device_identifier
+- bank_name
+- min_deposit_to_activate
+- class_majors (daftar jurusan untuk saran isian kelas)
 FASE 3 — Operasional Transaksi Teller
 Status
-Direncanakan
+Selesai
 Sub-Fitur
 - Autentikasi profil nasabah melalui QR Code atau nomor rekening
 - Transaksi setoran tunai
 - Transaksi penarikan tunai
-- Validasi saldo dan nominal uang fisik
+- Validasi saldo dan nominal transaksi
 - Pencetakan struk transaksi
 Requirements Fitur
 1. Autentikasi profil nasabah
@@ -196,8 +200,8 @@ Requirements Fitur
 - Sistem tidak menampilkan data nasabah lain di luar hasil pencarian yang sah.
 2. Transaksi setoran tunai
 - Teller memeriksa kelengkapan slip setoran.
-- Teller memasukkan nominal pada slip dan nominal uang fisik.
-- Sistem menolak transaksi jika kedua nominal berbeda.
+- Teller memasukkan nominal pada slip; nomor slip opsional.
+- Sistem menolak transaksi jika nominal tidak valid atau nomor slip yang diisi sudah terpakai.
 - Sistem menambah saldo setelah transaksi berhasil.
 - Transaksi yang tersimpan dikunci dari perubahan.
 3. Transaksi penarikan tunai
@@ -206,73 +210,68 @@ Requirements Fitur
 - Sistem memeriksa saldo mengendap minimum.
 - Nasabah memasukkan PIN 6-digit.
 - Sistem mengurangi saldo setelah seluruh validasi berhasil.
-4. Validasi saldo dan nominal fisik
+4. Validasi saldo dan nominal
 - Semua validasi dilakukan di sisi server.
 - Nominal tidak boleh bernilai nol atau negatif.
 - Rekening harus aktif.
-- Penarikan tidak boleh menghasilkan saldo di bawah saldo minimum.
+- Penarikan tidak boleh menghasilkan saldo di bawah saldo mengendap.
 5. Pencetakan struk
 - Struk berisi nomor transaksi, tanggal, jenis transaksi, rekening, nominal, dan saldo akhir.
 - Struk dapat dicetak setelah transaksi berhasil.
 Field Wajib
-- transaction_number
+- receipt_number
 - account_id
 - teller_id
-- transaction_type
+- type
 - slip_number
-- slip_amount
-- physical_cash_amount
 - amount
 - balance_before
 - balance_after
-- customer_pin_verification
-- transaction_status
-- transaction_timestamp
-FASE 4 — Penutupan Kas dan Approval Supervisor
+- status
+- transaction_at
+FASE 4 — Penutupan Kas dan Approval Administrator
 Status
 Selesai
 Sub-Fitur
-- Rekonsiliasi kas harian Teller
+- Rekap kas harian Teller
 - Pembuatan laporan harian Teller
-- Validasi dan persetujuan Supervisor
+- Validasi dan persetujuan Administrator
 - Pemindahan tanggung jawab kas ke brankas utama
-- Penyelesaian selisih dan audit transaksi
+- Penolakan laporan dan audit transaksi
 Requirements Fitur
 1. Rekap transaksi harian
-- Sistem mengelompokkan transaksi berdasarkan Teller dan tanggal kerja.
+- Sistem mengelompokkan transaksi berdasarkan Teller dan tanggal kerja, termasuk dampak jurnal pembalik.
 - Sistem menghitung total setoran dan total penarikan.
-2. Rekonsiliasi kas
+2. Rekap saldo laci
 - Rumus saldo akhir:
-Saldo Awal + Total Setoran - Total Penarikan
-- Teller memasukkan jumlah uang fisik di laci.
-- Sistem membandingkan saldo akhir digital dengan uang fisik.
+Saldo Awal (kas yang belum tersapu) + Total Setoran - Total Penarikan
+- Saldo akhir sistem menjadi isi laporan; loket tidak lagi menghitung uang fisik.
 3. Pembuatan laporan
-- Teller dapat membuat dan mencetak draf Laporan Harian Teller jika rekonsiliasi sesuai.
-- Laporan berstatus menunggu validasi Supervisor.
-4. Approval Supervisor
-- Supervisor memeriksa transaksi, total kas, laporan, dan bukti fisik.
-- Supervisor dapat menyetujui laporan yang sesuai.
-- Teller tidak dapat menyetujui laporan miliknya sendiri.
+- Teller dapat membuat dan mencetak Laporan Harian Teller.
+- Laporan berstatus menunggu validasi Administrator.
+4. Approval Administrator
+- Administrator memeriksa transaksi, total kas, dan laporan.
+- Bila arus kas tanggal tersebut berubah setelah laporan dibuat, sistem menolak approval dan mewajibkan Teller menghitung ulang.
+- Laporan berstatus menunggu validasi dapat disetujui atau ditolak dengan catatan wajib.
+- Pembuat laporan tidak dapat menyetujui laporan miliknya sendiri.
 5. Pemindahan kas ke brankas
-- Approval Supervisor memindahkan status tanggung jawab kas dari laci Teller ke brankas utama.
-- Sistem mencatat waktu, pengguna, dan nominal pemindahan.
-6. Penyelesaian selisih
-- Jika terjadi selisih, laporan tidak dapat diselesaikan.
-- Supervisor dapat melihat detail transaksi dan audit log untuk investigasi.
-- Selisih wajib memiliki status penyelesaian atau catatan pemeriksaan.
+- Approval memindahkan seluruh kas laci Teller ke brankas utama.
+- Sistem membukukan Debet 102 Kas Brankas dan Kredit 101 Kas Teller, dan mencatat waktu, pengguna, dan nominal pemindahan.
+6. Penolakan laporan
+- Laporan yang ditolak dapat dibuat ulang oleh Teller dengan nomor laporan yang sama.
+- Administrator dapat melihat detail transaksi dan audit log untuk investigasi.
 Field Wajib
 - report_number
-- business_date
+- report_date
 - teller_id
-- opening_cash_balance
+- opening_balance
 - total_deposit
 - total_withdrawal
-- system_ending_cash
-- physical_cash
-- cash_difference
+- closing_balance_system
 - report_status
-- supervisor_id
-- approval_timestamp
+- approved_by
+- submitted_at
+- approved_at
 - approval_notes
 FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
 Status
@@ -291,7 +290,7 @@ Requirements Fitur
 - Nasabah dapat melihat seluruh setoran dan penarikan rekening sendiri.
 - Riwayat menampilkan tanggal, jenis transaksi, nominal, dan saldo akhir.
 3. Jurnal akuntansi transaksi
-- Administrator dan Supervisor dapat melihat jurnal.
+- Administrator dapat melihat jurnal.
 - Nasabah dan Teller tidak dapat mengakses jurnal back-end.
 4. Mekanisme double-entry
 - Satu transaksi operasional menghasilkan dua baris jurnal.
@@ -311,58 +310,101 @@ Field Wajib
 - journal_timestamp
 - journal_status
 - rollback_reason
+FASE 6 — Transaksi Lanjutan dan Layanan Nasabah
+Status
+Selesai
+Sub-Fitur
+- Transfer antar rekening nasabah (Overbooking/P2P)
+- Cetak buku tabungan fisik (Passbook printing)
+- Ekspor rekening koran digital (e-Statement PDF)
+- Kartu nasabah virtual & generator QR Code
+Requirements Fitur
+1. Transfer antar rekening
+- Teller memasukkan rekening tujuan dan nominal di loket.
+- Jurnal double-entry: Debet 201 rekening pengirim, Kredit 201 rekening penerima.
+- Validasi saldo mengendap tetap berlaku pada rekening pengirim.
+2. Buku tabungan fisik
+- Cetak berdasarkan indeks baris buku dengan opsi baris awal per halaman.
+3. Rekening koran
+- PDF resmi dengan watermark dan halaman verifikasi.
+4. Kartu nasabah virtual
+- Tampilan kartu ber-QR Code di dasbor nasabah dan profil Administrator.
+FASE 7 — Modul Laporan Keuangan dan Akuntansi Lengkap
+Status
+Selesai
+Sub-Fitur
+- Buku Besar (General Ledger)
+- Neraca Saldo (Trial Balance) dan indikator likuiditas kas
+- Jurnal pemindahan kas brankas (Akun 102 Kas Brankas)
+Requirements Fitur
+1. Buku Besar
+- Filter per kode akun (101, 102, 201) dan rentang tanggal.
+2. Neraca Saldo
+- Perbandingan debit-kredit per akun dan ekspor CSV laporan akuntansi.
+3. Jurnal pemindahan kas
+- Terbit otomatis saat approval laporan harian (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna
+Status
+Selesai
+Sub-Fitur
+- Perlindungan brute-force PIN nasabah (Failed PIN attempts lock)
+- Anti-collision sequence generator transaksi dan laporan
+- Dashboard analitik
+Requirements Fitur
+1. Proteksi PIN
+- Akun penabung terkunci setelah beberapa kali salah PIN berulang dan setiap percobaan dicatat audit log.
+2. Sequence anti-collision
+- Nomor transaksi (Teller) dan nomor laporan dibuat lewat tabel document_sequences.
+3. Dashboard analitik
+- Kartu metrik dan grafik keuangan pada dashboard Administrator.
 FASE 9 — Penyempurnaan Berbasis Riset Pengguna (Revisi Besar)
 Status
 Selesai
 Latar Belakang
-Hasil kuesioner pengguna (Teller, Nasabah, Supervisor, Administrator) menunjukkan kebutuhan
-yang belum tercakup: rincian uang kertas & logam, kelengkapan struk,
-jurnal koreksi/pembalik, pencarian nasabah yang lebih cepat, Neraca Saldo,
-konfigurasi produk Bank Mini, dan registrasi nasabah yang didampingi Teller.
+Hasil kuesioner pengguna (Teller, Nasabah, Administrator) menunjukkan kebutuhan
+yang belum tercakup: kelengkapan struk, jurnal koreksi/pembalik, pencarian nasabah
+yang lebih cepat, Neraca Saldo, konfigurasi produk Bank Mini, dan registrasi nasabah
+yang didampingi Teller.
 Sub-Fitur
-- Rincian uang kertas & logam pada transaksi dan penutupan kas
 - Struk transaksi lengkap (nomor referensi jurnal, terbilang, status)
-- Jurnal koreksi/pembalik oleh Supervisor
+- Jurnal koreksi/pembalik oleh Administrator
 - Pencarian nasabah berdasarkan nama/NIS/nomor rekening
 - Registrasi nasabah didampingi Teller
 - Neraca Saldo dan Buku Besar
 - Konfigurasi produk (nama bank, saldo mengendap, setoran minimal aktivasi)
 Requirements Fitur
-1. Rincian uang kertas & logam
-- Teller dapat mencatat jumlah lembar/keping per pecahan pada setoran, penarikan, dan penutupan kas.
-- Total uang fisik dihitung otomatis dari rincian pecahan.
-- Rincian pecahan disimpan sebagai bukti audit pada transaksi dan Laporan Harian Teller.
-2. Struk transaksi
+1. Struk transaksi
 - Struk memuat nama bank, nomor struk, nomor referensi jurnal, tanggal & waktu, jenis transaksi,
   nomor rekening, nama nasabah, NIS, nomor slip, nama Teller, nominal, terbilang,
   saldo sebelum, saldo sesudah, dan status transaksi.
-3. Jurnal koreksi/pembalik
-- Supervisor dapat mengoreksi transaksi berstatus sukses dengan alasan wajib.
+2. Jurnal koreksi/pembalik
+- Administrator dapat mengoreksi transaksi berstatus sukses dengan alasan wajib.
 - Sistem membuat jurnal pembalik, memulihkan saldo, dan menandai transaksi asal sebagai "reversed".
 - Transaksi yang sudah dikoreksi tidak dapat dikoreksi ulang.
 - Koreksi ditolak jika laporan harian tanggal transaksi telah disetujui dan kas telah dipindahkan ke brankas.
-4. Pencarian nasabah
+3. Pencarian nasabah
 - Teller dapat mencari berdasarkan nomor rekening, NIS, nama lengkap, atau QR Code.
 - Pencarian yang menghasilkan lebih dari satu nasabah menampilkan daftar hasil.
-5. Registrasi nasabah
+4. Registrasi nasabah
 - Teller dapat mendaftarkan nasabah baru didampingi pada loket.
 - Nomor siswa dan nomor rekening dibuat otomatis oleh sistem.
-6. Neraca Saldo
-- Administrator dan Supervisor dapat melihat Buku Besar dan Neraca Saldo (aset, kewajiban) dengan status keseimbangan.
+- Pada setoran aktivasi, penabung membuat sendiri password aplikasi dan PIN transaksi. Password dipakai untuk masuk aplikasi dan bisa dipulihkan lewat kode verifikasi email; PIN hanya dipakai saat transaksi di loket.
+5. Neraca Saldo
+- Administrator dapat melihat Buku Besar dan Neraca Saldo (aset, kewajiban) dengan status keseimbangan.
 - Bank Mini tidak mencatat pendapatan maupun beban karena tidak mencari keuntungan; dana murni untuk menabung.
-7. Konfigurasi produk
+6. Konfigurasi produk
 - Administrator mengatur nama bank, saldo mengendap, dan setoran minimal aktivasi anggota.
 Field Wajib
-- transactions.denomination_breakdown
 - transactions.reversal_of_transaction_id
 - transactions.reversed_at, transactions.reversed_by, transactions.reversal_reason
-- daily_reports.closing_breakdown
 - system_configs (bank_name, minimum_balance, min_deposit_to_activate)
+Catatan
+- Rincian uang kertas & logam untuk penutupan kas yang ditelusuri dari hasil riset sudah tidak dipakai: perbandingan uang fisik, selisih kas, dan rincian pecahan dihapus (kolom denomination_breakdown, closing_breakdown, cash_difference, dan physical_cash_amount sudah dibuang dari database), dan konfigurasi jam operasional serta batas penarikan tanpa pesanan tidak lagi dipakai.
 4. User Flow
 4.1 Flow Login Pengguna
 1. Pengguna membuka halaman login.
 2. Pengguna memasukkan kredensial.
-3. Sistem memeriksa akun, password/PIN, status, dan role.
+3. Sistem memeriksa akun, password, status, dan role.
 4. Jika gagal, sistem menampilkan pesan kesalahan dan mencatat percobaan.
 5. Jika berhasil, sistem membuat sesi.
 6. Sistem mengarahkan pengguna ke dashboard sesuai role.
@@ -373,20 +415,19 @@ Field Wajib
  3. Teller memindai QR Code nasabah atau memasukkan nomor rekening.
  4. Sistem menampilkan profil dan saldo nasabah.
  5. Teller memeriksa kelengkapan slip setoran.
- 6. Teller memasukkan nominal slip.
- 7. Teller menghitung dan memasukkan nominal uang fisik.
- 8. Sistem membandingkan nominal slip dengan uang fisik.
- 9. Jika berbeda, sistem menolak penyimpanan dan Teller meminta konfirmasi nasabah.
-10. Jika sesuai, Teller mengonfirmasi transaksi.
-11. Sistem memulai database transaction.
-12. Sistem menyimpan transaksi setoran.
-13. Sistem menambah saldo rekening.
-14. Sistem membuat dua baris jurnal akuntansi.
-15. Sistem memvalidasi keseimbangan jurnal.
-16. Jika berhasil, sistem melakukan commit.
-17. Sistem mengunci transaksi.
-18. Sistem menampilkan dan mencetak struk setoran.
-19. Teller menyerahkan buku tabungan dan struk kepada nasabah.
+ 6. Teller memasukkan nominal setoran sesuai uang fisik yang diterima, dengan nomor slip opsional.
+ 7. Sistem memvalidasi nominal positif dan rekening aktif; nomor slip bila diisi harus unik.
+ 8. Jika validasi gagal, sistem menolak penyimpanan dan menampilkan penyebabnya.
+ 9. Jika sesuai, Teller mengonfirmasi transaksi.
+10. Sistem memulai database transaction.
+11. Sistem menyimpan transaksi setoran.
+12. Sistem menambah saldo rekening.
+13. Sistem membuat dua baris jurnal akuntansi.
+14. Sistem memvalidasi keseimbangan jurnal.
+15. Jika berhasil, sistem melakukan commit.
+16. Sistem mengunci transaksi.
+17. Sistem menampilkan dan mencetak struk setoran.
+18. Teller menyerahkan buku tabungan dan struk kepada nasabah.
 4.3 Flow Penarikan Tunai
  1. Teller login.
  2. Teller membuka modul transaksi penarikan.
@@ -395,7 +436,7 @@ Field Wajib
  5. Teller memasukkan nominal penarikan.
  6. Sistem memeriksa status rekening dan saldo.
  7. Sistem menghitung saldo setelah penarikan.
- 8. Jika saldo tidak mencukupi atau kurang dari Rp10.000, sistem menolak transaksi.
+ 8. Jika saldo tidak mencukupi atau jatuh di bawah saldo mengendap, sistem menolak transaksi.
  9. Jika saldo mencukupi, nasabah memasukkan PIN 6-digit.
 10. Sistem memverifikasi PIN.
 11. Jika PIN salah, sistem menolak transaksi.
@@ -405,23 +446,20 @@ Field Wajib
 15. Sistem melakukan commit jika semua validasi berhasil.
 16. Sistem mencetak struk penarikan.
 17. Teller menyerahkan uang tunai, buku tabungan, dan struk kepada nasabah.
-4.4 Flow Penutupan Kas
+4.4 Flow Penutupan Kas dan Approval
  1. Teller login dan membuka modul penutupan kas.
  2. Teller memilih tanggal kerja.
- 3. Sistem mengambil seluruh transaksi Teller pada tanggal tersebut.
+ 3. Sistem mengambil seluruh transaksi Teller pada tanggal tersebut, termasuk dampak jurnal pembalik (koreksi).
  4. Sistem menghitung total setoran dan total penarikan.
- 5. Sistem menghitung saldo akhir berdasarkan rumus rekonsiliasi.
- 6. Teller memasukkan jumlah uang fisik di laci.
- 7. Sistem membandingkan saldo sistem dengan uang fisik.
- 8. Jika terjadi selisih, sistem mengunci pencetakan laporan final.
- 9. Teller melakukan pemeriksaan ulang.
-10. Jika sesuai, sistem membuat Laporan Harian Teller.
-11. Teller mencetak dan menyerahkan laporan kepada Supervisor.
-12. Supervisor memeriksa transaksi, laporan, dan kas fisik.
-13. Supervisor menyetujui laporan jika valid.
-14. Sistem mengubah status laporan menjadi disetujui.
-15. Sistem mencatat pemindahan tanggung jawab kas ke brankas utama.
-16. Sistem mengarsipkan laporan dan mencatat approval.
+ 5. Sistem menghitung saldo awal laci dari mutasi kas yang belum tersapu, lalu saldo akhir sistem.
+ 6. Teller membuat Laporan Harian Teller berstatus menunggu validasi.
+ 7. Teller mencetak dan menyerahkan laporan kepada Administrator.
+ 8. Administrator memeriksa transaksi dan laporan.
+ 9. Bila arus kas tanggal tersebut berubah setelah laporan dibuat, Administrator menolak laporan dan Teller menghitung ulang.
+10. Jika valid, Administrator menyetujui laporan.
+11. Sistem mengubah status laporan menjadi disetujui.
+12. Sistem menyapu seluruh kas laci ke Brankas Utama dan membukukan Debet 102 Kas Brankas, Kredit 101 Kas Teller.
+13. Sistem mengarsipkan laporan dan mencatat approval.
 4.5 Flow Nasabah Melihat Saldo dan Mutasi
 1. Nasabah login.
 2. Sistem memvalidasi identitas nasabah.
@@ -456,16 +494,16 @@ sequenceDiagram
     DB-->>API: Data rekening
     API-->>Client: Tampilkan profil dan saldo
 
-    Teller->>Client: Masukkan nominal slip dan uang fisik
+    Teller->>Client: Masukkan nominal setoran (nomor slip opsional)
     Client->>API: Kirim data setoran
     API->>Auth: Validasi session dan role
     Auth-->>API: Akses diizinkan
-    API->>API: Validasi nominal dan kecocokan uang fisik
+    API->>API: Validasi nominal, rekening aktif, dan nomor slip unik
 
-    alt Nominal tidak sesuai
-        API-->>Client: Tolak transaksi dan tampilkan selisih
-        Client-->>Teller: Minta konfirmasi nasabah
-    else Nominal sesuai
+    alt Validasi gagal
+        API-->>Client: Tolak transaksi dan tampilkan penyebabnya
+        Client-->>Teller: Tampilkan pesan kesalahan
+    else Validasi berhasil
         API->>DB: BEGIN TRANSACTION
         API->>DB: Simpan transaksi setoran
         API->>DB: Tambah saldo rekening
@@ -491,7 +529,8 @@ erDiagram
         BIGINT id PK
         VARCHAR full_name
         VARCHAR username UK
-        VARCHAR password_hash
+        VARCHAR email UK
+        VARCHAR password
         ENUM role
         ENUM status
         DATETIME last_login_at
@@ -499,16 +538,35 @@ erDiagram
         DATETIME updated_at
     }
 
-    CUSTOMERS {
+    MEMBERS {
+        VARCHAR nis PK
+        VARCHAR full_name
+        VARCHAR class_name
+        VARCHAR graduation_year
+        ENUM status
+        DATETIME graduated_at
+        BIGINT created_by FK
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    SAVERS {
         BIGINT id PK
         VARCHAR student_number UK
+        BIGINT member_id FK
         VARCHAR full_name
         VARCHAR class_name
         VARCHAR phone_number
+        VARCHAR email
+        VARCHAR pin_hash
+        VARCHAR password_hash
         VARCHAR qr_code_value UK
         ENUM status
+        DATETIME graduated_at
+        INT failed_pin_attempts
+        DATETIME locked_until
+        DATETIME deleted_at
         DATETIME created_at
-        DATETIME updated_at
     }
 
     ACCOUNTS {
@@ -517,45 +575,47 @@ erDiagram
         VARCHAR account_number UK
         VARCHAR academic_year
         BIGINT opening_balance
-        BIGINT current_balance
+        BIGINT balance
         BIGINT minimum_balance
         ENUM status
-        DATETIME opened_at
-        DATETIME closed_at
+        TIMESTAMP opened_at
         DATETIME created_at
         DATETIME updated_at
     }
 
-    SYSTEM_SETTINGS {
+    SYSTEM_CONFIGS {
         BIGINT id PK
-        VARCHAR setting_key UK
-        VARCHAR setting_value
-        VARCHAR setting_type
-        BIGINT updated_by FK
+        VARCHAR key UK
+        VARCHAR value
+        VARCHAR updated_by FK
+        DATETIME created_at
         DATETIME updated_at
     }
 
     TRANSACTIONS {
         BIGINT id PK
-        VARCHAR transaction_number UK
+        VARCHAR receipt_number UK
+        VARCHAR slip_number UK
         BIGINT account_id FK
         BIGINT teller_id FK
-        ENUM transaction_type
-        VARCHAR slip_number
-        BIGINT slip_amount
-        BIGINT physical_cash_amount
+        ENUM type
         BIGINT amount
         BIGINT balance_before
         BIGINT balance_after
         ENUM status
+        BIGINT reversal_of_transaction_id FK
+        DATETIME reversed_at
+        BIGINT reversed_by FK
+        VARCHAR reversal_reason
         DATETIME transaction_at
         DATETIME created_at
     }
 
-    ACCOUNTING_JOURNALS {
+    JURNAL_AKUNTANSI {
         BIGINT id PK
-        VARCHAR journal_number
+        VARCHAR journal_number UK
         BIGINT transaction_id FK
+        BIGINT cash_transfer_id FK
         VARCHAR account_code
         ENUM entry_type
         BIGINT debit_amount
@@ -566,30 +626,27 @@ erDiagram
         DATETIME created_at
     }
 
-    DAILY_CASH_REPORTS {
+    DAILY_REPORTS {
         BIGINT id PK
         VARCHAR report_number UK
-        DATE business_date
+        DATE report_date
         BIGINT teller_id FK
-        BIGINT opening_cash_balance
+        BIGINT opening_balance
         BIGINT total_deposit
         BIGINT total_withdrawal
-        BIGINT system_ending_cash
-        BIGINT physical_cash
-        BIGINT cash_difference
+        BIGINT closing_balance_system
         ENUM status
-        BIGINT supervisor_id FK
+        BIGINT approved_by FK
         DATETIME submitted_at
         DATETIME approved_at
-        VARCHAR approval_notes
+        TEXT approval_notes
         DATETIME created_at
-        DATETIME updated_at
     }
 
     CASH_TRANSFERS {
         BIGINT id PK
         BIGINT report_id FK
-        BIGINT supervisor_id FK
+        BIGINT approved_by FK
         BIGINT amount
         VARCHAR source_location
         VARCHAR destination_location
@@ -599,48 +656,105 @@ erDiagram
         DATETIME created_at
     }
 
+    ACCOUNT_CLOSURES {
+        BIGINT id PK
+        BIGINT account_id FK
+        BIGINT saver_id FK
+        BIGINT requested_by FK
+        BIGINT payout_transaction_id FK
+        BIGINT payout_amount
+        VARCHAR status
+        BIGINT decided_by FK
+        DATETIME decided_at
+        TEXT notes
+        TEXT decision_notes
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    DOCUMENT_SEQUENCES {
+        BIGINT id PK
+        VARCHAR key UK
+        BIGINT last_number
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    MOBILE_TOKENS {
+        BIGINT id PK
+        BIGINT customer_id FK
+        VARCHAR name
+        VARCHAR token_hash UK
+        TIMESTAMP last_used_at
+        TIMESTAMP expires_at
+        TIMESTAMP created_at
+    }
+
+    PASSWORD_RESET_OTPS {
+        BIGINT id PK
+        ENUM account_type
+        BIGINT account_id
+        VARCHAR otp_hash
+        TINYINT attempts
+        TIMESTAMP expires_at
+        TIMESTAMP consumed_at
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
     AUDIT_LOGS {
         BIGINT id PK
         BIGINT user_id FK
-        VARCHAR action
-        VARCHAR entity_name
-        BIGINT entity_id
-        VARCHAR ip_address
+        VARCHAR event
+        VARCHAR audit_type
+        BIGINT auditable_id
+        VARCHAR auditable_type
         TEXT metadata
+        VARCHAR ip_address
         DATETIME created_at
     }
 
-    USERS ||--o{ ACCOUNTS : updates_settings
-    USERS ||--o{ SYSTEM_SETTINGS : updates
-    CUSTOMERS ||--o| ACCOUNTS : owns
+    USERS ||--o{ DAILY_REPORTS : submits
+    USERS ||--o{ DAILY_REPORTS : approves
+    MEMBERS ||--o{ SAVERS : becomes
+    SAVERS ||--o| ACCOUNTS : owns
     ACCOUNTS ||--o{ TRANSACTIONS : has
     USERS ||--o{ TRANSACTIONS : processes
-    TRANSACTIONS ||--|{ ACCOUNTING_JOURNALS : generates
-    USERS ||--o{ DAILY_CASH_REPORTS : submits
-    USERS ||--o{ DAILY_CASH_REPORTS : approves
-    DAILY_CASH_REPORTS ||--o| CASH_TRANSFERS : authorizes
-    USERS ||--o{ CASH_TRANSFERS : authorizes
+    TRANSACTIONS ||--o| TRANSACTIONS : reverses
+    TRANSACTIONS ||--o| JURNAL_AKUNTANSI : generates
+    ACCOUNTS ||--o{ ACCOUNT_CLOSURES : requests
+    SAVERS ||--o{ ACCOUNT_CLOSURES : requests
+    ACCOUNT_CLOSURES ||--o| TRANSACTIONS : payout
+    DAILY_REPORTS ||--o| CASH_TRANSFERS : authorizes
+    CASH_TRANSFERS ||--|{ JURNAL_AKUNTANSI : generates
+    SAVERS ||--o{ MOBILE_TOKENS : owns
+    SAVERS ||--o{ PASSWORD_RESET_OTPS : requests
+    USERS ||--o{ PASSWORD_RESET_OTPS : requests
     USERS ||--o{ AUDIT_LOGS : creates
 6.2 Penjelasan Entitas
 Entitas	Penjelasan
-USERS	Menyimpan akun internal Administrator, Teller, dan Supervisor beserta role dan statusnya.
-CUSTOMERS	Menyimpan profil nasabah atau siswa yang menggunakan rekening Bank Mini.
-ACCOUNTS	Menyimpan nomor rekening, saldo awal, saldo berjalan, saldo minimum, dan status rekening nasabah.
-SYSTEM_SETTINGS	Menyimpan konfigurasi global, seperti saldo mengendap minimum dan konfigurasi QR Code.
-TRANSACTIONS	Menyimpan transaksi setoran dan penarikan yang diproses Teller.
-ACCOUNTING_JOURNALS	Menyimpan jurnal double-entry yang dihasilkan dari transaksi operasional.
-DAILY_CASH_REPORTS	Menyimpan laporan penutupan kas harian Teller dan hasil rekonsiliasinya.
-CASH_TRANSFERS	Menyimpan otorisasi pemindahan kas dari laci Teller ke brankas utama.
+USERS	Menyimpan akun internal Administrator dan Teller beserta role, email, dan statusnya.
+MEMBERS	Menyimpan daftar siswa (anggota) yang belum memiliki rekening penabung, termasuk kelas dan tahun kelulusannya.
+SAVERS	Menyimpan profil penabung (bekas customers): NIS, kelas, kontak, password aplikasi, PIN transaksi (hashed), QR Code, status, penanda kelulusan, data brute-force PIN, dan soft delete.
+ACCOUNTS	Menyimpan nomor rekening, tahun ajaran, saldo awal, saldo berjalan, saldo mengendap minimum, dan status rekening penabung.
+SYSTEM_CONFIGS	Menyimpan konfigurasi global: bank_name, minimum_balance (saldo mengendap), dan min_deposit_to_activate.
+DOCUMENT_SEQUENCES	Menyimpan konter nomor dokumen anti-collision untuk nomor transaksi dan nomor laporan.
+TRANSACTIONS	Menyimpan transaksi setoran, penarikan, transfer, dan jurnal pembalik (reversal) yang diproses di loket, lengkap dengan saldo sebelum/sesudah dan status.
+JURNAL_AKUNTANSI	Menyimpan baris double-entry dari transaksi operasional maupun pemindahan kas brankas.
+DAILY_REPORTS	Menyimpan laporan penutupan kas harian Teller (status draft, submitted, approved, rejected) beserta persetujuan Administrator.
+CASH_TRANSFERS	Menyimpan pemindahan kas dari laci Teller ke brankas utama yang terbit saat laporan disetujui.
+ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, pencairan saldo oleh Teller, dan keputusan Administrator (approve/reject).
+MOBILE_TOKENS	Menyimpan token perangkat aplikasi nasabah (disimpan sebagai hash) beserta kedaluwarsa.
+PASSWORD_RESET_OTPS	Menyimpan OTP pemulihan password untuk akun staff dan nasabah, terkunci per akun.
 AUDIT_LOGS	Menyimpan jejak aktivitas dan perubahan penting untuk kebutuhan audit.
-ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, pencairan saldo oleh Teller, dan keputusan Administrator.
 6.3 Aturan Integritas Database
 - Seluruh tabel operasional menggunakan engine transaksional.
-- Seluruh nominal rupiah menggunakan BIGINT atau tipe integer presisi, bukan floating point.
+- Seluruh nominal rupiah menggunakan BIGINT atau tipe integer presisi, bukan floating point; nominal yang bisa minus (selisih laporan, admin fee historis) menggunakan BIGINT bertanda.
 - Kolom nominal wajib memiliki check constraint > 0 jika berlaku.
-- current_balance, cash_difference, dan hasil perhitungan laporan tidak boleh menghasilkan nilai tidak valid.
+- Saldo rekening dan hasil perhitungan laporan tidak boleh menghasilkan nilai tidak valid.
 - Foreign key pada data transaksi, jurnal, laporan, dan audit menggunakan ON DELETE RESTRICT.
 - Data transaksi dan jurnal tidak boleh dihapus melalui fungsi operasional Teller.
-- TRANSACTIONS.transaction_number, USERS.username, CUSTOMERS.student_number, CUSTOMERS.qr_code_value, dan ACCOUNTS.account_number harus unik.
+- TRANSACTIONS.receipt_number, TRANSACTIONS.slip_number, USERS.username, USERS.email, SAVERS.student_number, SAVERS.qr_code_value, SAVERS.email, ACCOUNTS.account_number, dan MOBILE_TOKENS.token_hash harus unik.
 - Setiap transaksi wajib memiliki tepat dua baris jurnal.
 - Total debit dan kredit untuk satu transaksi harus sama.
 - Perubahan saldo, transaksi, dan jurnal harus diproses dalam satu database transaction.
@@ -652,7 +766,7 @@ ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, penca
 - Validasi penting tidak boleh hanya dilakukan di frontend.
 - Validasi nominal, saldo minimum, role, PIN, dan status rekening wajib dilakukan di server.
 - Waktu transaksi dan waktu approval harus menggunakan sumber waktu server.
-- Sistem harus mencegah saldo rekening menjadi negatif atau lebih kecil dari saldo minimum. Pengecualian hanya pada penutupan rekening yang disetujui, di mana seluruh saldo termasuk saldo mengendap dicairkan.
+- Sistem harus mencegah saldo rekening menjadi negatif atau lebih kecil dari saldo minimum, juga pada penutupan rekening: pencairan penutupan hanya boleh menghabiskan saldo di atas saldo mengendap, dan sisanya tetap tersimpan di rekening yang ditutup.
 - Penutupan rekening wajib disetujui Administrator sebelum rekening ditutup dan penabung menjadi alumni. Rekening dengan permintaan penutupan yang masih menunggu tidak dapat ditransaksikan.
 - Sistem harus menjaga konsistensi antara saldo rekening, transaksi, dan jurnal.
 - Sistem harus menyediakan rollback jika proses transaksi gagal.
@@ -660,7 +774,7 @@ ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, penca
 - Pencarian nomor rekening dan QR Code harus memberikan hasil dengan cepat pada kondisi operasional loket.
 - Sistem harus mampu mencatat audit log tanpa menyimpan password atau PIN asli.
 - Penghapusan data master tidak boleh menghapus histori transaksi dan jurnal.
-- Pengecualian: perintah `bankmini:reset-nasabah` boleh menghapus permanen seluruh histori untuk membersihkan data testing sebelum peluncuran. Akun pengguna (`users`) dan konfigurasi sistem (`system_configs`) tetap utuh; data yang direset mencakup member, penabung, rekening, transaksi, jurnal, laporan kas, permintaan penutupan, OTP lupa PIN, token aplikasi mobile, audit log, sesi login, cache, dan antrean. Perintah ini menulis satu entri audit log setiap kali dijalankan, menolak dijalankan di `APP_ENV=production` tanpa `--allow-production` dengan `--operator`, dan di production wajib mengetik "HAPUS" sebagai konfirmasi (tidak bisa dilewati `--force`).
+- Pengecualian: perintah `bankmini:reset-nasabah` boleh menghapus permanen seluruh histori untuk membersihkan data testing sebelum peluncuran. Akun pengguna (`users`) dan konfigurasi sistem (`system_configs`) tetap utuh; data yang direset mencakup member, penabung, rekening, transaksi, jurnal, laporan kas, permintaan penutupan, OTP pemulihan password, token aplikasi mobile, audit log, sesi login, cache, dan antrean. Perintah ini menulis satu entri audit log setiap kali dijalankan, dan ditolak sepenuhnya pada `APP_ENV=production` tanpa ada flag yang dapat melewatkannya: pembersihan data testing wajib dilakukan saat environment masih lokal atau staging sebelum peluncuran, dan di production perintah ini hanya bisa membaca jumlah baris melalui `--dry-run`.
 - Penggunaan browser cache harus dimatikan pada seluruh respons (Cache-Control: no-store) untuk mencegah akses back-button setelah logout.
 - Library pihak ketiga untuk fitur front-end (seperti QR Scanner) wajib di-bundle secara lokal untuk mematuhi kebijakan CSP.
 7.2 Panduan Desain Antarmuka
@@ -668,10 +782,10 @@ ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, penca
 - Halaman Teller harus memprioritaskan pencarian nasabah, nominal transaksi, validasi, dan pencetakan struk.
 - Nominal uang harus ditampilkan dalam format Rupiah.
 - Field nominal hanya menerima angka positif.
-- Sistem harus memberikan pesan kesalahan yang jelas untuk slip tidak lengkap, nominal berbeda, saldo tidak cukup, PIN salah, atau akses ditolak.
+- Sistem harus memberikan pesan kesalahan yang jelas untuk slip tidak lengkap, nominal tidak valid, saldo tidak cukup, PIN salah, atau akses ditolak.
 - Tombol simpan transaksi harus mencegah pengiriman ganda.
-- Status transaksi harus terlihat jelas, seperti Draft, Success, Rejected, atau Locked.
-- Halaman Supervisor harus menampilkan perbandingan saldo sistem, uang fisik, dan selisih kas.
+- Status transaksi harus terlihat jelas, seperti Menunggu, Sukses, Ditolak, atau Dibalik (koreksi).
+- Halaman Administrator menampilkan detail laporan harian beserta catatan approval atau penolakan.
 - Halaman Nasabah hanya boleh menampilkan data milik nasabah yang sedang login.
 - Aksi berisiko seperti approval dan pemindahan kas harus meminta konfirmasi.
 - Informasi sensitif harus disamarkan dan tidak ditampilkan dalam log frontend.
@@ -679,10 +793,10 @@ ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, penca
 - Administrator tidak boleh memproses setoran dan penarikan.
 - Teller tidak boleh mengedit atau menghapus transaksi final.
 - Teller tidak boleh menyetujui laporan hariannya sendiri.
-- Supervisor tidak boleh melakukan transaksi loket.
+- Administrator tidak boleh melakukan transaksi loket.
 - Nasabah tidak boleh mengakses modul transaksi, jurnal, akun internal, atau data nasabah lain.
-- Laporan final tidak dapat dicetak jika terdapat selisih kas.
-- Pemindahan kas hanya dapat dilakukan setelah approval Supervisor.
+- Laporan yang sudah disetujui tidak dapat berubah; bila arus kas tanggalnya berubah, approval ditolak.
+- Pemindahan kas hanya terbit saat approval laporan oleh Administrator.
 - Transaksi penarikan wajib menggunakan PIN 6-digit nasabah.
 - Setiap transaksi harus menghasilkan jurnal akuntansi yang seimbang.
 7.4 Asumsi

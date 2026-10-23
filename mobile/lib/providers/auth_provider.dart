@@ -49,7 +49,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> login({
     required String studentNumber,
-    required String pin,
+    required String password,
   }) async {
     _submitting = true;
     notifyListeners();
@@ -57,7 +57,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       final result = await _authService.login(
         studentNumber: studentNumber,
-        pin: pin,
+        password: password,
         deviceName: 'android',
       );
 
@@ -85,16 +85,33 @@ class AuthProvider extends ChangeNotifier {
     return _authService.requestResetOtp(studentNumber: studentNumber);
   }
 
-  Future<void> resetPin({
+  Future<void> resetPassword({
     required String studentNumber,
     required String otp,
-    required String pin,
+    required String password,
   }) async {
-    await _authService.resetPin(
+    await _authService.resetPassword(
       studentNumber: studentNumber,
       otp: otp,
-      pin: pin,
+      password: password,
     );
+  }
+
+  /// Mengganti PIN transaksi lewat server. Sesi aplikasi tidak terpengaruh
+  /// karena PIN bukan kredensial login.
+  Future<void> changePin({
+    required String currentPin,
+    required String newPin,
+  }) async {
+    _submitting = true;
+    notifyListeners();
+
+    try {
+      await _authService.changePin(currentPin: currentPin, newPin: newPin);
+    } finally {
+      _submitting = false;
+      notifyListeners();
+    }
   }
 
   Future<void> handleUnauthorized() async {

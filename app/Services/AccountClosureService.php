@@ -20,8 +20,9 @@ class AccountClosureService
     ) {}
 
     /**
-     * Teller mencairkan seluruh saldo di loket lalu membuka permintaan penutupan.
-     * Persetujuan Administrator yang menjadikan penabung sebagai alumni.
+     * Teller mencairkan saldo di atas saldo mengendap di loket, sisa saldo
+     * mengendap tetap tersimpan. Persetujuan Administrator yang menjadikan
+     * penabung sebagai alumni.
      */
     public function request(Account $account, User $teller, string $pin, ?string $notes): AccountClosure
     {
@@ -44,13 +45,13 @@ class AccountClosureService
                 throw new TransactionValidationException('Sudah ada permintaan penutupan yang menunggu persetujuan.');
             }
 
-            $payoutAmount = (int) $locked->balance;
-
-            $payout = $this->transactions->withdrawRemainingBalance(
+            $payout = $this->transactions->withdrawClosurePayout(
                 $locked,
                 $teller,
                 'Pencairan saldo penutupan rekening karena kelulusan',
             );
+
+            $payoutAmount = $payout->amount ?? 0;
 
             $closure = AccountClosure::create([
                 'account_id' => $locked->id,
@@ -87,8 +88,10 @@ class AccountClosureService
                 throw new TransactionValidationException('Rekening sudah tidak aktif.');
             }
 
-            if ((int) $account->balance !== 0) {
-                throw new TransactionValidationException('Saldo rekening belum nol. Minta Teller mencairkan sisa saldo terlebih dahulu.');
+            // Lapisan pengaman: sisa saldo tidak boleh masih di atas saldo
+            // mengendap saat permintaan penutupan disetujui.
+            if ((int) $account->balance > $this->transactions->minimumBalanceFor($account)) {
+                throw new TransactionValidationException('Saldo rekening masih di atas saldo mengendap. Minta Teller mencairkan sisa saldo terlebih dahulu.');
             }
 
             $saver = Saver::query()->withTrashed()->lockForUpdate()->findOrFail($locked->saver_id);

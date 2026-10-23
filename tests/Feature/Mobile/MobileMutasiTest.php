@@ -96,6 +96,7 @@ class MobileMutasiTest extends MobileTestCase
             'class_name' => 'X RPL 3',
             'phone_number' => '081234567997',
             'pin_hash' => bcrypt('123456'),
+            'password_hash' => bcrypt('password123'),
             'qr_code_value' => 'qr-mobile-no-account-2',
             'created_by' => $this->admin->id,
             'status' => 'active',
@@ -103,7 +104,7 @@ class MobileMutasiTest extends MobileTestCase
 
         $token = (string) $this->postJson(route('api.mobile.login'), [
             'student_number' => $customer->student_number,
-            'pin' => '123456',
+            'password' => 'password123',
         ])->json('data.token');
 
         $this->withMobileToken($token)

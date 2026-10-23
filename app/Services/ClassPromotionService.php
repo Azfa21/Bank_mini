@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Member;
 use App\Models\Saver;
 use App\Models\SystemConfig;
 use App\Models\User;
@@ -13,70 +14,159 @@ class ClassPromotionService
 {
     public const LAST_RUN_KEY = 'class_promotion_last_run';
 
+    public const ACTION_PROMOTE = 'promote';
+
+    public const ACTION_RETAIN = 'retain';
+
     /**
-     * Penabung yang masih terdaftar, dikelompokkan per kelas. Alumni tidak ikut: kelas
-     * mereka tidak lagi dipakai dan tidak boleh berubah. Urutan baris disusun di PHP karena
-     * "kind" ditentukan dari isi nama kelas, bukan dari kolom basis data.
+     * Anggota yang belum punya rekening dan penabung yang masih aktif, dikelompokkan per kelas.
+     * Anggota dengan penabung tidak dihitung karena kelasnya terbaca dari sisi penabung. Alumni
+     * dikeluarkan: kelas mereka tidak lagi dipakai dan tidak boleh berubah.
      *
-     * @return list<array{class: string, total: int, blocked: int, level: string|null, major: string|null, rombel: string|null, next_level: string|null, kind: string}>
+     * @return list<array{class: string, members: int, savers: int, blocked: int, level: string|null, target: string|null, kind: string}>
      */
     public function classGroups(): array
     {
-        $statuses = [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED];
-
-        $totals = Saver::query()
-            ->whereIn('status', $statuses)
+        $memberTotals = $this->totals(Member::query()
+            ->whereNull('graduated_at')
+            ->whereNotIn('nis', Saver::withTrashed()->whereNotNull('member_nis')->select('member_nis'))
             ->groupBy('class_name')
             ->selectRaw('class_name, count(*) as total')
-            ->pluck('total', 'class_name');
+            ->pluck('total', 'class_name'));
 
-        $blocked = Saver::query()
+        $saverTotals = $this->totals(Saver::query()
+            ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
+            ->groupBy('class_name')
+            ->selectRaw('class_name, count(*) as total')
+            ->pluck('total', 'class_name'));
+
+        $blocked = $this->totals(Saver::query()
             ->where('status', Saver::STATUS_BLOCKED)
             ->groupBy('class_name')
             ->selectRaw('class_name, count(*) as total')
-            ->pluck('total', 'class_name');
+            ->pluck('total', 'class_name'));
+
+        $classes = array_unique(array_merge(array_keys($memberTotals), array_keys($saverTotals)));
+        sort($classes);
 
         $groups = [];
 
-        foreach ($totals as $class => $total) {
-            $class = trim((string) $class);
+        foreach ($classes as $class) {
             $parts = ClassRoom::parse($class);
-            $next = ClassRoom::nextLevel($parts['level']);
+            $target = ClassRoom::promote($class);
 
             $groups[] = [
                 'class' => $class,
-                'total' => (int) $total,
-                'blocked' => (int) ($blocked[$class] ?? 0),
+                'members' => $memberTotals[$class] ?? 0,
+                'savers' => $saverTotals[$class] ?? 0,
+                'blocked' => $blocked[$class] ?? 0,
                 'level' => $parts['level'],
-                'major' => $parts['major'],
-                'rombel' => $parts['rombel'],
-                'next_level' => $next,
+                'target' => $target,
                 'kind' => match (true) {
-                    $class === '' => 'empty',
-                    $parts['level'] === null => 'unknown',
-                    $next === null => 'final',
+                    $parts['level'] === 'XII' => 'final',
+                    $target === null => 'unknown',
                     default => 'ready',
                 },
             ];
         }
 
-        // Kelas yang belum diisi diletakkan paling bawah: bukan baris kerja utama.
-        $sorted = collect($groups)
-            ->sortBy(static fn (array $group): string => ($group['class'] === '' ? '1' : '0').mb_strtoupper($group['class']))
-            ->all();
-
-        return array_values($sorted);
+        return $groups;
     }
 
     /**
-     * Penabung aktif/diblokir yang kelasnya masih kosong. Ditampilkan di halaman kenaikan
+     * Daftar siswa tiap kelas yang siap dinaikkan, dipakai untuk memilih satu per satu
+     * siapa yang tinggal kelas. Satu siswa yang sudah punya rekening hanya muncul sekali:
+     * anggota yang punya rekening dikeluarkan dari daftar anggota dan terbaca dari penabungnya.
+     *
+     * @param  list<array{class: string, kind: string}>  $groups
+     * @return array<string, list<array{key: string, name: string, number: string, type: string, blocked: bool}>>
+     */
+    public function studentsByClass(array $groups): array
+    {
+        $ready = [];
+
+        foreach ($groups as $group) {
+            if ($group['kind'] === 'ready') {
+                $ready[trim($group['class'])] = true;
+            }
+        }
+
+        if ($ready === []) {
+            return [];
+        }
+
+        $students = [];
+
+        $savers = Saver::query()
+            ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
+            ->orderBy('full_name')
+            ->get(['student_number', 'full_name', 'class_name', 'status']);
+
+        foreach ($savers as $saver) {
+            $class = trim((string) $saver->class_name);
+
+            if (! isset($ready[$class])) {
+                continue;
+            }
+
+            $students[$class][] = [
+                'key' => 'saver:'.$saver->student_number,
+                'name' => $saver->full_name,
+                'number' => $saver->student_number,
+                'type' => 'Penabung',
+                'blocked' => $saver->status === Saver::STATUS_BLOCKED,
+            ];
+        }
+
+        $members = Member::query()
+            ->whereNull('graduated_at')
+            ->whereNotIn('nis', Saver::withTrashed()->whereNotNull('member_nis')->select('member_nis'))
+            ->orderBy('full_name')
+            ->get(['nis', 'full_name', 'class_name']);
+
+        foreach ($members as $member) {
+            $class = trim((string) $member->class_name);
+
+            if (! isset($ready[$class])) {
+                continue;
+            }
+
+            $students[$class][] = [
+                'key' => 'member:'.$member->nis,
+                'name' => $member->full_name,
+                'number' => $member->nis,
+                'type' => 'Anggota',
+                'blocked' => false,
+            ];
+        }
+
+        foreach ($students as $class => $list) {
+            usort($list, static fn (array $a, array $b): int => mb_strtolower($a['name']) <=> mb_strtolower($b['name']));
+            $students[$class] = $list;
+        }
+
+        return $students;
+    }
+
+    /**
+     * Anggota dan penabung yang kelasnya masih kosong. Ditampilkan di halaman kenaikan
      * kelas supaya tidak ada siswa yang diam-diam tertinggal.
      *
-     * @return Collection<int, Saver>
+     * @return array{members: Collection<int, Member>, savers: Collection<int, Saver>}
      */
-    public function withoutClass(int $limit = 20): Collection
+    public function withoutClass(int $limit = 20): array
     {
-        return Saver::query()
+        $members = Member::query()
+            ->whereNull('graduated_at')
+            ->whereNotIn('nis', Saver::withTrashed()->whereNotNull('member_nis')->select('member_nis'))
+            ->where(function ($query) {
+                $query->whereNull('class_name')->orWhere('class_name', '');
+            })
+            ->orderBy('full_name')
+            ->limit($limit)
+            ->get();
+
+        $savers = Saver::query()
             ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
             ->where(function ($query) {
                 $query->whereNull('class_name')->orWhere('class_name', '');
@@ -84,81 +174,143 @@ class ClassPromotionService
             ->orderBy('full_name')
             ->limit($limit)
             ->get();
+
+        return ['members' => $members, 'savers' => $savers];
     }
 
     /**
-     * Kelas tingkat akhir yang belum lulus dan karenanya tidak ikut dinaikkan.
-     *
-     * @param  array<int, array{class: string, total: int, blocked: int, level: string|null, major: string|null, rombel: string|null, next_level: string|null, kind: string}>  $groups
+     * @param  array<int, array{class: string, members: int, savers: int, blocked: int, level: string|null, target: string|null, kind: string}>  $groups
+     * @return array{members: int, savers: int}
      */
-    public function finalYearTotal(array $groups): int
+    public function finalYearCounts(array $groups): array
     {
-        return (int) collect($groups)
-            ->filter(static fn (array $group): bool => $group['level'] === 'XII')
-            ->sum('total');
+        $final = collect($groups)->where('level', 'XII');
+
+        return [
+            'members' => (int) $final->sum('members'),
+            'savers' => (int) $final->sum('savers'),
+        ];
     }
 
     /**
-     * Terapkan kenaikan kelas. Semua penabung dibaca lebih dulu sebelum ada perubahan,
-     * jadi satu siswa tidak mungkin naik dua kali dalam satu kali proses (misalnya kelas
-     * "X RPL 1" menjadi "XI RPL 1" sementara baris berikutnya memindahkan "XI RPL 1").
+     * Terapkan kenaikan kelas sekaligus tinggal kelas. Semua sasaran dibaca lebih dulu
+     * sebelum ada perubahan, jadi satu siswa tidak mungkin naik dua kali dalam satu proses
+     * (misalnya "X RPL 1" menjadi "XI RPL 1" sementara baris berikutnya memproses "XI RPL 1").
      *
-     * @param  array<int, array{class?: string|null, level?: string|null, major?: string|null, rombel?: string|null}>  $rows
-     * @return array{classes: int, savers: int, skipped: int, mapping: array<string, string>}
+     * Tindakan tinggal kelas ada dua tingkat: seluruh kelas lewat action retain, atau
+     * siswa tertentu lewat retain[] pada baris yang dinaikkan. Siswa yang dicentang tidak
+     * disentuh sama sekali, jadi kelasnya tetap dan rekan seangkatannya tetap naik.
+     *
+     * @param  array<int, array{class?: string|null, action?: string|null, retain?: array<int|string, mixed>|null}>  $rows
+     * @return array{classes: int, members: int, savers: int, retained: int, retained_students: int, skipped: int, mapping: array<string, string>}
      */
     public function apply(array $rows, string $academicYear, ?User $admin = null): array
     {
         return DB::transaction(function () use ($rows, $academicYear, $admin) {
-            $plan = [];
+            $memberPlan = [];
+            $saverPlan = [];
             $mapping = [];
+            $retainedByClass = [];
+            $retained = 0;
+            $retainedStudents = 0;
             $skipped = 0;
+            $handled = [];
 
             foreach ($rows as $row) {
                 $source = trim((string) ($row['class'] ?? ''));
-                $level = mb_strtoupper(trim((string) ($row['level'] ?? '')));
-                $major = mb_strtoupper(trim((string) ($row['major'] ?? '')));
 
-                if ($source === '' || $major === '' || ! in_array($level, ClassRoom::LEVELS, true)) {
+                if ($source === '' || isset($handled[$source])) {
+                    continue;
+                }
+
+                $handled[$source] = true;
+
+                if (($row['action'] ?? self::ACTION_PROMOTE) === self::ACTION_RETAIN) {
+                    $retained++;
+
+                    continue;
+                }
+
+                $target = ClassRoom::promote($source);
+
+                if ($target === null || mb_strlen($target) > 30) {
                     $skipped++;
 
                     continue;
                 }
 
-                $target = ClassRoom::compose($level, $major, $row['rombel'] ?? null);
+                $keep = $this->retainedKeys($row['retain'] ?? []);
+                $moveMembers = [];
+                $staying = [];
 
-                if ($target === $source || mb_strlen($target) > 30) {
-                    $skipped++;
+                foreach ($this->promotableMembers($source) as $nis) {
+                    if (isset($keep['members'][$nis])) {
+                        $staying[] = 'member:'.$nis;
+                    } else {
+                        $moveMembers[] = $nis;
+                    }
+                }
+
+                $moveSaverIds = [];
+
+                foreach ($this->promotableSavers($source) as $saver) {
+                    if (isset($keep['savers'][$saver['student_number']])) {
+                        $staying[] = 'saver:'.$saver['student_number'];
+                    } else {
+                        $moveSaverIds[] = $saver['id'];
+                    }
+                }
+
+                if ($staying !== []) {
+                    $retainedStudents += count($staying);
+                    $retainedByClass[$source] = $staying;
+                }
+
+                if ($moveMembers === [] && $moveSaverIds === []) {
+                    // Seluruh siswa dicentang tinggal kelas: tidak ada yang bergerak, tapi ini
+                    // bukan baris yang datanya hilang, jadi tidak dihitung sebagai baris dilewati.
+                    if ($staying === []) {
+                        $skipped++;
+                    }
 
                     continue;
                 }
 
-                $ids = Saver::query()
-                    ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
-                    ->where('class_name', $source)
-                    ->pluck('id')
-                    ->all();
-
-                if ($ids === []) {
-                    $skipped++;
-
-                    continue;
-                }
-
-                $plan[$target] = array_merge($plan[$target] ?? [], $ids);
+                $memberPlan[$target] = array_merge($memberPlan[$target] ?? [], $moveMembers);
+                $saverPlan[$target] = array_merge($saverPlan[$target] ?? [], $moveSaverIds);
                 $mapping[$source] = $target;
             }
 
-            $savers = 0;
+            $members = 0;
 
-            foreach ($plan as $target => $ids) {
-                Saver::query()->whereKey($ids)->update(['class_name' => $target]);
-                $savers += count($ids);
+            foreach ($memberPlan as $target => $nis) {
+                $members += Member::query()->whereIn('nis', $nis)->update(['class_name' => $target]);
+            }
+
+            $savers = 0;
+            $linkedMembers = 0;
+
+            foreach ($saverPlan as $target => $ids) {
+                $linkedNis = Saver::query()->whereKey($ids)->whereNotNull('member_nis')->pluck('member_nis')->all();
+
+                $savers += Saver::query()->whereKey($ids)->update(['class_name' => $target]);
+
+                // Anggota yang sudah punya rekening menyimpan salinan kelas, jadi keduanya
+                // disamakan supaya data kelulusan dan laporan tidak terpecah.
+                if ($linkedNis !== []) {
+                    $linkedMembers += Member::query()->whereIn('nis', $linkedNis)->update(['class_name' => $target]);
+                }
             }
 
             AuditLogService::record('class_promotion_processed', 'saver', null, [
                 'academic_year' => $academicYear,
                 'mapping' => $mapping,
+                'members' => $members,
                 'savers' => $savers,
+                'linked_members_synced' => $linkedMembers,
+                'retained_classes' => $retained,
+                'retained_students' => $retainedStudents,
+                'retained_student_keys' => $retainedByClass,
                 'skipped_rows' => $skipped,
             ], $admin?->id);
 
@@ -167,38 +319,15 @@ class ClassPromotionService
                 ['config_value' => $academicYear],
             );
 
-            return ['classes' => count($plan), 'savers' => $savers, 'skipped' => $skipped, 'mapping' => $mapping];
-        });
-    }
-
-    /**
-     * Pindahkan sebagian penabung ke rombel lain. Dipakai saat jumlah rombel berubah
-     * (mis. dua kelas dibagi menjadi tiga) atau ada siswa pindah rombel di tengah tahun.
-     *
-     * @param  array<int, int>  $saverIds
-     * @return array{moved: int, requested: int}
-     */
-    public function move(array $saverIds, string $target, ?User $admin = null): array
-    {
-        return DB::transaction(function () use ($saverIds, $target, $admin) {
-            $savers = Saver::query()
-                ->whereKey($saverIds)
-                ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
-                ->get(['id', 'class_name']);
-
-            $moved = $savers->filter(static fn (Saver $saver): bool => trim((string) $saver->class_name) !== $target);
-
-            if ($moved->isNotEmpty()) {
-                Saver::query()->whereKey($moved->modelKeys())->update(['class_name' => $target]);
-            }
-
-            AuditLogService::record('class_members_moved', 'saver', null, [
-                'target' => $target,
-                'savers' => $moved->count(),
-                'requested' => count($saverIds),
-            ], $admin?->id);
-
-            return ['moved' => $moved->count(), 'requested' => count($saverIds)];
+            return [
+                'classes' => count($mapping),
+                'members' => $members,
+                'savers' => $savers,
+                'retained' => $retained,
+                'retained_students' => $retainedStudents,
+                'skipped' => $skipped,
+                'mapping' => $mapping,
+            ];
         });
     }
 
@@ -211,5 +340,84 @@ class ClassPromotionService
         $value = SystemConfig::value(self::LAST_RUN_KEY);
 
         return $value === null || $value === '' ? null : (string) $value;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function promotableMembers(string $class): array
+    {
+        return Member::query()
+            ->whereNull('graduated_at')
+            ->whereNotIn('nis', Saver::withTrashed()->whereNotNull('member_nis')->select('member_nis'))
+            // TRIM supaya kelas yang tersimpan berspasi di tepi tetap ikut terbaca, sama
+            // dengan perhitungan jumlah kelas di halaman ini.
+            ->whereRaw('TRIM(class_name) = ?', [$class])
+            ->pluck('nis')
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, student_number: string}>
+     */
+    private function promotableSavers(string $class): array
+    {
+        return Saver::query()
+            ->whereIn('status', [Saver::STATUS_ACTIVE, Saver::STATUS_BLOCKED])
+            ->whereRaw('TRIM(class_name) = ?', [$class])
+            ->get(['id', 'student_number'])
+            ->map(static fn (Saver $saver): array => ['id' => (int) $saver->id, 'student_number' => (string) $saver->student_number])
+            ->all();
+    }
+
+    /**
+     * Kunci siswa yang dicentang tinggal kelas, dipisah per jenis pemilik datanya.
+     * Kuncinya memakai nomor siswa, bukan id baris, supaya bisa dibaca langsung dari
+     * catatan audit tanpa membuka tabel.
+     *
+     * @param  array<int|string, mixed>  $keys
+     * @return array{members: array<string, true>, savers: array<string, true>}
+     */
+    private function retainedKeys(array $keys): array
+    {
+        $members = [];
+        $savers = [];
+
+        foreach ($keys as $key) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            if (str_starts_with($key, 'member:')) {
+                $members[substr($key, 7)] = true;
+            } elseif (str_starts_with($key, 'saver:')) {
+                $savers[substr($key, 6)] = true;
+            }
+        }
+
+        return ['members' => $members, 'savers' => $savers];
+    }
+
+    /**
+     * Total per kelas dengan kunci bersih: nama kelas lama masih ada yang berspasi di tepi.
+     *
+     * @param  Collection<string, int|string>  $totals
+     * @return array<string, int>
+     */
+    private function totals(Collection $totals): array
+    {
+        $clean = [];
+
+        foreach ($totals as $class => $total) {
+            $key = trim((string) $class);
+
+            if ($key === '') {
+                continue;
+            }
+
+            $clean[$key] = ($clean[$key] ?? 0) + (int) $total;
+        }
+
+        return $clean;
     }
 }

@@ -35,10 +35,12 @@
                 <x-input id="email" name="email" type="email" :value="$saver->email" required placeholder="Tempat kode verifikasi dikirim" />
             </div>
             <div>
-                <x-input-label for="pin">PIN Baru <span class="text-stone-500 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
+                <x-input-label for="pin">PIN Transaksi Baru <span class="text-stone-500 font-normal">(kosongkan jika tidak diubah)</span></x-input-label>
                 <x-input id="pin" name="pin" type="password" pattern="\d{6}" maxlength="6" aria-describedby="pin-help" />
                 <p id="pin-help" class="text-[13px] text-stone-600 mt-1.5">
-                    Mengisi kolom ini langsung mengganti PIN. Alasan di bawah wajib diisi dan tersimpan di log audit.
+                    Mengisi kolom ini langsung mengganti PIN transaksi yang dipakai di loket.
+                    Password login penabung tidak terpengaruh. Alasan di bawah wajib diisi
+                    dan tersimpan di log audit.
                 </p>
             </div>
             <div>

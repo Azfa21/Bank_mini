@@ -48,6 +48,7 @@ class AuthRbacTest extends TestCase
             'student_number' => '2023001',
             'full_name' => 'Ani',
             'pin_hash' => Hash::make('123456'),
+            'password_hash' => Hash::make('password123'),
             'qr_code_value' => 'qr-test-1',
             'created_by' => $this->admin->id,
             'status' => 'active',
@@ -145,7 +146,7 @@ class AuthRbacTest extends TestCase
         $this->assertGuest('nasabah');
     }
 
-    public function test_login_with_wrong_student_number_or_pin_is_rejected_with_same_message(): void
+    public function test_login_with_wrong_student_number_or_password_is_rejected_with_same_message(): void
     {
         $wrongStaff = $this->post('/login', [
             'identifier' => 'teller1',
@@ -154,7 +155,7 @@ class AuthRbacTest extends TestCase
 
         $wrongNasabah = $this->post('/login', [
             'identifier' => '2023001',
-            'secret' => '000000',
+            'secret' => 'wrong-password',
         ]);
 
         $wrongStaff->assertSessionHasErrors(['identifier' => 'Kredensial tidak valid.']);
@@ -179,7 +180,7 @@ class AuthRbacTest extends TestCase
     {
         $response = $this->post('/login', [
             'identifier' => '2023001',
-            'secret' => '123456',
+            'secret' => 'password123',
         ]);
 
         $response->assertRedirect(route('nasabah.dashboard'));
@@ -196,14 +197,14 @@ class AuthRbacTest extends TestCase
         $this->assertNotSame('password', $hash);
     }
 
-    public function test_customer_pin_hash_is_bcrypt_not_plain_pin(): void
+    public function test_customer_password_hash_is_bcrypt_not_plaintext(): void
     {
-        $this->post('/login', ['identifier' => '2023001', 'secret' => '123456']);
+        $this->post('/login', ['identifier' => '2023001', 'secret' => 'password123']);
 
-        $hash = $this->nasabah->fresh()->pin_hash;
+        $hash = $this->nasabah->fresh()->password_hash;
 
         $this->assertStringStartsWith('$2y$', $hash);
-        $this->assertNotSame('123456', $hash);
+        $this->assertNotSame('password123', $hash);
     }
 
     public function test_logout_destroys_session(): void

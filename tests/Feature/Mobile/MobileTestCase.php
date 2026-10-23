@@ -12,7 +12,7 @@ abstract class MobileTestCase extends TellerTestCase
     {
         $response = $this->postJson(route('api.mobile.login'), [
             'student_number' => $this->nasabah->student_number,
-            'pin' => '123456',
+            'password' => 'password123',
         ]);
 
         $response->assertOk();

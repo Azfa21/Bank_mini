@@ -21,18 +21,14 @@ class LoginController extends Controller
         $identifier = $request->input('identifier', '');
         $secret = $request->input('secret', '');
 
-        $secretRules = ['required', 'string'];
-        if (preg_match('/^\d+$/', $identifier)) {
-            $secretRules[] = 'digits:6';
-        }
-
+        // Pegawai dan penabung sama-sama masuk dengan password
+        // (penabung memakai nomor siswa sebagai identitasnya).
         $request->validate([
             'identifier' => ['required', 'string'],
-            'secret' => $secretRules,
+            'secret' => ['required', 'string'],
         ], [
             'identifier.required' => 'Username atau nomor siswa wajib diisi.',
-            'secret.required' => 'Password atau PIN wajib diisi.',
-            'secret.digits' => 'PIN harus tepat 6 digit angka.',
+            'secret.required' => 'Password wajib diisi.',
         ]);
 
         if (Auth::guard('web')->attempt(['username' => $identifier, 'password' => $secret])) {

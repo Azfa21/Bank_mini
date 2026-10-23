@@ -5,6 +5,7 @@ return [
     /*
      * Alasan: admin punya 10 tujuan. Dikelompokkan supaya bilah tab tetap satu baris tanpa
      * geser ke kanan. "Data" = pengelolaan orang dan rekening, "Laporan" = keluaran angka.
+     * Penutupan rekening diputuskan di halaman Kelulusan, jadi tidak punya menu sendiri.
      * Neraca Saldo dan Buku Besar kini satu halaman, jadi Laporan cukup satu item untuknya.
      * Konfigurasi dibiarkan tautan langsung karena hanya satu tujuan; dropdown berisi satu
      * item menambah satu klik tanpa membantu.
@@ -16,7 +17,6 @@ return [
                 ['label' => 'Kelola Pengguna', 'route' => 'admin.users.index', 'routes' => ['admin.users.*']],
                 ['label' => 'Kelola Anggota', 'route' => 'admin.members.index', 'routes' => ['admin.members.*']],
                 ['label' => 'Kelola Penabung', 'route' => 'admin.savers.index', 'routes' => ['admin.savers.*', 'admin.accounts.*']],
-                ['label' => 'Penutupan Rekening', 'route' => 'admin.closures.index', 'routes' => ['admin.closures.*']],
                 ['label' => 'Kelulusan', 'route' => 'admin.graduations.index', 'routes' => ['admin.graduations.*']],
                 ['label' => 'Kenaikan Kelas', 'route' => 'admin.class-promotions.index', 'routes' => ['admin.class-promotions.*']],
             ],
@@ -42,6 +42,7 @@ return [
     'nasabah' => [
         ['label' => 'Riwayat Mutasi', 'route' => 'nasabah.mutasi', 'routes' => ['nasabah.mutasi']],
         ['label' => 'Rekening Koran', 'route' => 'nasabah.statement', 'routes' => ['nasabah.statement']],
+        ['label' => 'Ubah PIN Transaksi', 'route' => 'nasabah.pin', 'routes' => ['nasabah.pin', 'nasabah.pin.update']],
     ],
 
 ];

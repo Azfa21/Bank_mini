@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AccountingReportController;
-use App\Http\Controllers\Admin\AccountClosureController as AdminAccountClosureController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\DailyReportController;
 use App\Http\Controllers\Admin\GraduationController;
@@ -35,11 +34,12 @@ Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetCr
 
 Route::prefix('mobile')->group(function () {
     Route::post('/login', [MobileAuthController::class, 'login'])->middleware('throttle:login')->name('api.mobile.login');
-    Route::post('/forgot-pin/request-otp', [ForgotPasswordController::class, 'requestOtp'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-pin.request');
-    Route::post('/forgot-pin/reset', [ForgotPasswordController::class, 'resetCredential'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-pin.reset');
+    Route::post('/forgot-password/request-otp', [ForgotPasswordController::class, 'requestOtp'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-password.request');
+    Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetCredential'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-password.reset');
 
     Route::middleware('mobile.auth')->group(function () {
         Route::post('/logout', [MobileAuthController::class, 'logout'])->name('api.mobile.logout');
+        Route::post('/pin/change', [MobileAuthController::class, 'changePin'])->name('api.mobile.pin.change');
         Route::get('/me', [MobileAuthController::class, 'me'])->name('api.mobile.me');
         Route::get('/dashboard', [MobileDashboardController::class, 'index'])->name('api.mobile.dashboard');
         Route::get('/card', [MobileDashboardController::class, 'card'])->name('api.mobile.card');
@@ -67,13 +67,11 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
 
     Route::get('/accounts/{account}', [AccountController::class, 'show']);
 
-    Route::get('/closures', [AdminAccountClosureController::class, 'index']);
-    Route::get('/closures/{closure}', [AdminAccountClosureController::class, 'show']);
-    Route::post('/closures/{closure}/approve', [AdminAccountClosureController::class, 'approve']);
-    Route::post('/closures/{closure}/reject', [AdminAccountClosureController::class, 'reject']);
-
     Route::get('/graduations', [GraduationController::class, 'index']);
     Route::post('/graduations', [GraduationController::class, 'store']);
+    Route::post('/graduations/closures/{closure}/approve', [GraduationController::class, 'approveClosure']);
+    Route::post('/graduations/closures/{closure}/reject', [GraduationController::class, 'rejectClosure']);
+    Route::post('/graduations/{member}/not-graduate', [GraduationController::class, 'notGraduate']);
     Route::post('/graduations/{member}', [GraduationController::class, 'graduateMember']);
 
     Route::get('/config', [SystemConfigController::class, 'edit']);

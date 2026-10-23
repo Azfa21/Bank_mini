@@ -20,14 +20,13 @@ class ResetCredentialRequest extends FormRequest
 
     public function rules(): array
     {
-        $isStaff = $this->input('account_type') === 'staff';
-
+        // Pegawai maupun penabung sama-sama memulihkan password login; PIN
+        // transaksi tidak pernah ikut alur OTP ini.
         return [
             'account_type' => ['required', 'in:staff,nasabah'],
             'identifier' => ['required', 'string', 'max:255'],
             'otp' => ['required', 'string', 'digits:6'],
-            'password' => $isStaff ? ['required', 'string', 'min:8', 'confirmed'] : ['nullable'],
-            'pin' => $isStaff ? ['nullable'] : ['required', 'string', 'digits:6', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
 
@@ -43,9 +42,6 @@ class ResetCredentialRequest extends FormRequest
             'password.required' => 'Password baru wajib diisi.',
             'password.min' => 'Password baru minimal harus 8 karakter.',
             'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
-            'pin.required' => 'PIN baru wajib diisi.',
-            'pin.digits' => 'PIN baru harus tepat 6 digit angka.',
-            'pin.confirmed' => 'Konfirmasi PIN baru tidak cocok.',
         ];
     }
 }

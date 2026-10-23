@@ -18,6 +18,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property string|null $phone_number
  * @property string|null $email
  * @property string $pin_hash
+ * @property string|null $password_hash
  * @property string $qr_code_value
  * @property int|null $created_by
  * @property string $status
@@ -49,6 +50,7 @@ class Saver extends Authenticatable
         'phone_number',
         'email',
         'pin_hash',
+        'password_hash',
         'qr_code_value',
         'created_by',
         'status',
@@ -59,10 +61,12 @@ class Saver extends Authenticatable
 
     protected $hidden = [
         'pin_hash',
+        'password_hash',
     ];
 
     protected $casts = [
         'pin_hash' => 'hashed',
+        'password_hash' => 'hashed',
         'failed_pin_attempts' => 'integer',
         'locked_until' => 'datetime',
         'graduated_at' => 'datetime',
@@ -95,9 +99,14 @@ class Saver extends Authenticatable
         };
     }
 
+    /**
+     * Login penabung memakai password buatannya sendiri. PIN dipisah dari
+     * gerbang login dan hanya berhak di loket transaksi, jadi penabung bisa
+     * menyebut PIN pada teller tanpa membuka akunnya.
+     */
     public function getAuthPassword(): string
     {
-        return $this->pin_hash;
+        return $this->password_hash ?? '';
     }
 
     /** @return HasOne<Account, $this> */

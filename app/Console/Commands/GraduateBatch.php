@@ -14,7 +14,7 @@ class GraduateBatch extends Command
                             {--operator= : Username Administrator yang dicatat pada audit log}
                             {--dry-run : Tampilkan rencana tanpa mengubah data}';
 
-    protected $description = 'Mengarsipkan satu angkatan lulus: anggota dan penabung bersaldo nol diproses, penabung bersaldo menunggu loket';
+    protected $description = 'Mengarsipkan satu angkatan lulus: anggota dan penabung dengan sisa saldo tinggal saldo mengendap diproses, sisanya menunggu loket';
 
     public function handle(GraduationService $graduations): int
     {
@@ -81,9 +81,9 @@ class GraduateBatch extends Command
         return match ($state) {
             'alumni' => 'Sudah alumni',
             'roster_only' => 'Tanpa rekening, siap diarsipkan',
-            'ready' => 'Saldo nol, siap ditutup',
+            'ready' => 'Sisa saldo hanya saldo mengendap, siap ditutup',
             'pending_approval' => 'Menunggu persetujuan penutupan',
-            'pending_counter' => 'Menunggu loket (masih bersaldo)',
+            'pending_counter' => 'Menunggu loket (saldo di atas saldo mengendap)',
             default => $state,
         };
     }

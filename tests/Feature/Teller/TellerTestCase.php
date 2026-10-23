@@ -62,6 +62,7 @@ abstract class TellerTestCase extends TestCase
             'phone_number' => '081234567001',
             'email' => 'ani.wijaya@example.test',
             'pin_hash' => Hash::make('123456'),
+            'password_hash' => Hash::make('password123'),
             'qr_code_value' => 'qr-test-1',
             'created_by' => $this->admin->id,
             'status' => 'active',

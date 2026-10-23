@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AccountingReportController;
-use App\Http\Controllers\Admin\AccountClosureController as AdminAccountClosureController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\ClassPromotionController;
 use App\Http\Controllers\Admin\CorrectionController;
@@ -18,6 +17,7 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
 use App\Http\Controllers\Nasabah\MutasiController;
+use App\Http\Controllers\Nasabah\PinController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
 use App\Http\Controllers\Teller\ClosingController;
@@ -61,18 +61,16 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('accounts/{account}/card/print', [AccountController::class, 'printCard'])->name('accounts.card-print');
     Route::get('accounts/{account}', [AccountController::class, 'show'])->name('accounts.show');
 
-    Route::get('closures', [AdminAccountClosureController::class, 'index'])->name('closures.index');
-    Route::get('closures/{closure}', [AdminAccountClosureController::class, 'show'])->name('closures.show');
-    Route::post('closures/{closure}/approve', [AdminAccountClosureController::class, 'approve'])->name('closures.approve');
-    Route::post('closures/{closure}/reject', [AdminAccountClosureController::class, 'reject'])->name('closures.reject');
-
     Route::get('graduations', [GraduationController::class, 'index'])->name('graduations.index');
+    Route::get('graduations/export', [GraduationController::class, 'export'])->name('graduations.export');
     Route::post('graduations', [GraduationController::class, 'store'])->name('graduations.store');
+    Route::post('graduations/closures/{closure}/approve', [GraduationController::class, 'approveClosure'])->name('graduations.closures.approve');
+    Route::post('graduations/closures/{closure}/reject', [GraduationController::class, 'rejectClosure'])->name('graduations.closures.reject');
+    Route::post('graduations/{member}/not-graduate', [GraduationController::class, 'notGraduate'])->name('graduations.not-graduate');
     Route::post('graduations/{member}', [GraduationController::class, 'graduateMember'])->name('graduations.member');
 
     Route::get('class-promotions', [ClassPromotionController::class, 'index'])->name('class-promotions.index');
     Route::post('class-promotions', [ClassPromotionController::class, 'store'])->name('class-promotions.store');
-    Route::post('class-promotions/move', [ClassPromotionController::class, 'move'])->name('class-promotions.move');
 
     Route::get('config', [SystemConfigController::class, 'edit'])->name('config.edit');
     Route::put('config', [SystemConfigController::class, 'update'])->name('config.update');
@@ -143,4 +141,9 @@ Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {
     Route::get('/card/print', [NasabahDashboardController::class, 'printCard'])->name('nasabah.card.print');
     Route::get('/mutasi', [MutasiController::class, 'index'])->name('nasabah.mutasi');
     Route::get('/statement', [MutasiController::class, 'statement'])->name('nasabah.statement');
+
+    // PIN transaksi dikelola penabung sendiri setelah masuk; password login
+    // dipulihkan lewat alur lupa password di atas.
+    Route::get('/pin', [PinController::class, 'edit'])->name('nasabah.pin');
+    Route::put('/pin', [PinController::class, 'update'])->name('nasabah.pin.update');
 });

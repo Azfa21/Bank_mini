@@ -1,39 +1,68 @@
 # Sistem Informasi E-Teller Bank Mini Sekolah
 
-## 🛠️ Panduan Menjalankan Aplikasi
+Aplikasi web (Laravel, Blade + Tailwind CSS v4) untuk operasional tabungan siswa:
+setoran, penarikan, transfer antar rekening, penutupan kas harian, jurnal akuntansi,
+dan laporan keuangan. Co-located application di `mobile/` adalah aplikasi nasabah.
 
-### Persyaratan Sistem
-- PHP >= 8.2 (dengan ekstensi `pdo_mysql`, `pdo_sqlite`, `bcmath`, `mbstring`)
+## Persyaratan Sistem
+- PHP >= 8.3 (dengan ekstensi `pdo_mysql`, `pdo_sqlite`, `bcmath`, `mbstring`)
 - Composer
 - Node.js & NPM
+- Flutter (hanya untuk aplikasi nasabah di `mobile/`)
 
-### Instalasi
+## Instalasi
 ```bash
-# Clone repository dan masuk ke folder project
+# Masuk ke folder project
 cd Bank_Mini
+
+# Install dependensi backend
+composer install
 
 # Salin environment file dan generate app key
 cp .env.example .env
 php artisan key:generate
 
-# Jalankan migrasi database
+# Jalankan migrasi database (isi DB_CONNECTION/DB_* pada .env terlebih dahulu)
 php artisan migrate
 
-# Install dependensi frontend & backend
-composer install
+# Install dependensi frontend dan kompilasi aset
 npm install
 npm run build
 ```
 
-### Menjalankan Server
+## Menjalankan Server
 ```bash
+# Web + antrean, log request, dan watcher aset dalam satu perintah (development)
+composer dev
+
+# Atau web saja
 php artisan serve
+
+# Atau watcher aset saat mengubah frontend
+npm run dev
 ```
 
-### Membersihkan Data Testing (Peluncuran)
+### Menjalankan Aplikasi Mobile (Nasabah)
+```bash
+cd mobile
+flutter pub get
+flutter analyze   # analisis statis
+flutter test      # test aplikasi
+# Jalankan di emulator/perangkat. Alamat API diatur lewat --dart-define,
+# default untuk emulator Android mengarah ke http://10.0.2.2:8000/api
+flutter run --dart-define=API_BASE_URL=http://<host>:<port>/api
+```
+
+### Perintah Artisan Khusus Bank Mini
+```bash
+# Menyiapkan arsip satu angkatan siswa untuk kelulusan (ada konfirmasi; --dry-run hanya melihat rencana)
+php artisan bankmini:graduate --year=<Tahun> [--dry-run] [--operator=<username>]
+```
+
+## Membersihkan Data Testing (Peluncuran)
 ```bash
 # Hapus permanen seluruh data hasil testing: member, penabung, rekening, transaksi, jurnal,
-# laporan kas, permintaan penutupan rekening, OTP lupa PIN, token aplikasi mobile, audit log,
+# laporan kas, permintaan penutupan rekening, OTP lupa password, token aplikasi mobile, audit log,
 # sesi login, cache, dan antrean. Akun staff (halaman Pengguna, beserta password) dan
 # konfigurasi sistem tetap utuh.
 #
@@ -48,20 +77,22 @@ php artisan bankmini:reset-nasabah --dry-run
 php artisan bankmini:reset-nasabah
 php artisan bankmini:reset-nasabah --force
 
-# Production (hanya untuk peluncuran): perlu --allow-production dan --operator,
-# lalu ketik HAPUS saat diminta. Konfirmasi ketik ini TIDAK bisa dilewati --force.
-php artisan bankmini:reset-nasabah --allow-production --force --operator="Nama Anda"
-
-# Catat nama operator pada entri audit log (opsional, berlaku di semua environment)
+# Catat nama operator pada entri audit log (opsional)
 php artisan bankmini:reset-nasabah --operator="Nama Operator"
+
+# Production: perintah reset ini ditolak, tanpa flag yang bisa melewatkannya.
+# Bersih-bersih data testing wajib dilakukan saat environment masih lokal atau
+# staging, sebelum APP_ENV diubah menjadi production. Karena ini bank, setelah
+# peluncuran tidak ada jalur penghapusan data nasabah lewat perintah ini.
 ```
 
-### Menjalankan Pengujian (Testing)
+## Menjalankan Pengujian (Testing)
 ```bash
 # Jalankan seluruh unit & feature tests
 php artisan test
 
-# Atau jalankan feature test tertentu
-php vendor/bin/phpunit tests/Feature/ForgotPasswordTest.php
-php vendor/bin/phpunit tests/Feature/AuthRbacTest.php
+# Atau pemeriksaan kualitas lainnya
+composer lint      # pint (check)
+composer analyse   # phpstan
+composer ci        # lint + analyse + test
 ```

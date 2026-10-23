@@ -22,7 +22,7 @@ class SystemConfigTest extends TellerTestCase
         $this->assertDatabaseHas('system_configs', ['config_key' => 'min_deposit_to_activate', 'config_value' => '20000']);
     }
 
-    public function test_major_list_can_be_changed_and_is_used_for_class_promotion(): void
+    public function test_major_list_can_be_changed_and_is_used_for_class_suggestions(): void
     {
         $this->actingAs($this->admin, 'web')
             ->put(route('admin.config.update'), [
@@ -35,6 +35,11 @@ class SystemConfigTest extends TellerTestCase
 
         $this->assertDatabaseHas('system_configs', ['config_key' => 'class_majors', 'config_value' => 'RPL, TKJ, MP']);
         $this->assertSame(['RPL', 'TKJ', 'MP'], ClassRoom::majors());
+
+        $suggestions = ClassRoom::suggestions();
+
+        $this->assertContains('X MP 1', $suggestions);
+        $this->assertNotContains('X DKV 1', $suggestions);
     }
 
     public function test_configuration_page_shows_the_official_major_list(): void

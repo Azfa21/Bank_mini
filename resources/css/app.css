@@ -41,8 +41,9 @@ body {
     text-rendering: optimizeLegibility;
 }
 
-/* Alasan: indikator fokus harus terlihat keyboard di semua tema dan komponen. */
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+/* Alasan: indikator fokus harus terlihat keyboard di semua tema dan komponen. summary
+   ikut dihitung karena membuka daftar siswa tinggal kelas di halaman kenaikan kelas. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 3px solid var(--color-brand-800);
     outline-offset: 2px;
     border-radius: 6px;
