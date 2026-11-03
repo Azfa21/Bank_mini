@@ -65,7 +65,7 @@ Sub-Fitur:
 - Rekap kas harian Teller
 - Pembuatan laporan harian Teller
 - Validasi dan persetujuan Administrator
-- Pemindahan tanggung jawab kas ke brankas utama
+- Pemindahan tanggung jawab kas ke kas utama
 - Siklus penolakan laporan dengan catatan audit
 Tasks:
 - Buat halaman penutupan kas Teller berdasarkan tanggal kerja.
@@ -77,7 +77,7 @@ Tasks:
 - Implementasikan approval laporan oleh Administrator dengan larangan menyetujui laporan milik sendiri.
 - Implementasikan penolakan laporan dengan catatan wajib beserta penerbitan ulang dengan nomor laporan yang sama.
 - Tolak approval bila arus kas tanggal tersebut berubah setelah laporan dibuat.
-- Implementasikan pembukuan pemindahan seluruh kas laci ke brankas utama saat approval (Debet 102 Kas Brankas, Kredit 101 Kas Teller) beserta audit log.
+- Implementasikan pembukuan pemindahan seluruh kas laci ke kas utama saat approval (Debet 102 Kas Utama, Kredit 101 Kas Teller) beserta audit log.
 FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi (8/8) — Status: Selesai  
 Sub-Fitur:
 - Dasbor saldo nasabah
@@ -109,9 +109,9 @@ FASE 7 — Modul Laporan Keuangan dan Akuntansi Lengkap (3/3) — Status: Selesa
 Sub-Fitur:
 - Buku Besar (General Ledger)
 - Neraca Saldo (Trial Balance) dan Laporan Likuiditas
-- Pemindahan Kas Brankas (Akun 102 Kas Brankas)
+- Pemindahan Kas Utama (Akun 102 Kas Utama)
 Tasks:
-- Implementasikan pencatatan jurnal otomatis saat approval laporan harian (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+- Implementasikan pencatatan jurnal otomatis saat approval laporan harian (Debet 102 Kas Utama, Kredit 101 Kas Teller).
 - Buat halaman dan filter Buku Besar per akun (101, 102, 201).
 - Buat halaman Neraca Saldo beserta ekspor laporan akuntansi ke CSV.
 FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna (3/3) — Status: Selesai  
@@ -184,7 +184,7 @@ Tasks:
 FASE 12 — Restrukturisasi Peran dan Model Kas (10/10) — Status: Selesai  
 Sub-Fitur:
 - Penggabungan role Supervisor ke Administrator; Administrator memeriksa, menyetujui/menolak laporan harian, dan mengotorisasi koreksi, dengan larangan approval laporan milik sendiri
-- Model brankas: setiap laporan disetujui menyapu seluruh kas laci ke Brankas Utama (Debet 102, Kredit 101)
+- Model kas utama: setiap laporan disetujui menyapu seluruh kas laci ke Kas Utama (Debet 102, Kredit 101)
 - Penutupan kas memakai saldo akhir sistem tanpa perbandingan uang fisik
 - Penabung membuat sendiri password aplikasi dan PIN transaksi saat registrasi dan setoran aktivasi
 Tasks:
@@ -196,8 +196,24 @@ Tasks:
 - Hapus kolom closing_balance_physical, closing_breakdown, dan cash_difference dari daily_reports; hapus physical_cash_amount dan denomination_breakdown dari transactions.
 - Hapus konfigurasi jam operasional dan batas penarikan dari system_configs; konfigurasi tinggal bank_name, minimum_balance, dan min_deposit_to_activate.
 - Kembalikan validasi penarikan ke aturan saldo mengendap: saldo akhir tidak boleh jatuh di bawah minimum_balance.
-- Atur endpoint DailyReportController (Admin): approve dan reject laporan; approval menyapu seluruh kas laci ke Brankas Utama dan menolak bila arus kas tanggalnya berubah setelah laporan dibuat.
+- Atur endpoint DailyReportController (Admin): approve dan reject laporan; approval menyapu seluruh kas laci ke Kas Utama dan menolak bila arus kas tanggalnya berubah setelah laporan dibuat.
 - Perbarui halaman penutupan kas Teller, navigasi, dashboard, dan matriks otorisasi untuk struktur role baru (admin, teller, nasabah).
+FASE 13 — Permintaan Kas Modal Teller dan Penamaan Kas Utama (8/8) — Status: Selesai  
+Sub-Fitur:
+- Pengajuan modal kas oleh Teller (uang tunai jaga-jaga penarikan), berulang bila uang laci kurang
+- Keputusan Administrator: setujui (langsung cair) atau tolak dengan catatan wajib
+- Jurnal pengiriman kas: Debet 101 Kas Teller, Kredit 102 Kas Utama
+- Ikhtisar pos kas di dashboard Teller dan panel Administrator
+- Pengajuan dan persetujuan kas ditutup setelah laporan penutupan kas hari itu dikirim
+Tasks:
+- Buat tabel cash_requests beserta kolom cash_request_id pada jurnal_akuntansi dan total_cash_received pada daily_reports.
+- Buat CashRequestService: pengajuan tanpa pembatasan permintaan aktif, approval dengan jurnal dalam DB::transaction, penolakan dengan catatan, dan audit log.
+- Buat halaman Teller (formulir, saldo laci hari ini, riwayat status) dan panel Administrator (pos kas dari jurnal akun 101/102, keputusan, riwayat).
+- Rebita rekap laporan harian agar kas dari kas utama ikut menghitung saldo laci dan penyapuan akhir hari.
+- Tampilkan saldo kas laci di dashboard Teller beserta tautan menu Permintaan Kas.
+- Ganti seluruh penamaan brankas/khazanah menjadi kas utama pada aplikasi, data destination_location, dan dokumen.
+- Tambahkan pengujian CashRequestTest untuk pengajuan, keputusan, jurnal, otorisasi, rekap, dan penyapuan laporan.
+- Perbarui prd.md, task.md, dan use case (UC-50) beserta diagramnya.
 Asumsi:
 - Peran aktif aplikasi web adalah admin, teller, dan nasabah; nasabah mengakses dasbor melalui web atau aplikasi mobile dengan autentikasi masing-masing.
 - Detail tabel database dirinci di prd.md (ERD dan aturan integritas).

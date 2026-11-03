@@ -90,11 +90,11 @@ class AuthRbacTest extends TestCase
             ->assertOk();
     }
 
-    public function test_nasabah_can_access_own_dashboard(): void
+    public function test_nasabah_has_no_web_dashboard(): void
     {
         $this->actingAs($this->nasabah, 'nasabah')
             ->get('/nasabah/dashboard')
-            ->assertOk();
+            ->assertNotFound();
     }
 
     public function test_admin_is_forbidden_from_creating_transactions(): void
@@ -176,15 +176,15 @@ class AuthRbacTest extends TestCase
         $this->assertGuest('nasabah');
     }
 
-    public function test_nasabah_login_success_redirects_to_nasabah_dashboard(): void
+    public function test_nasabah_login_on_web_is_blocked_and_redirects_with_message(): void
     {
         $response = $this->post('/login', [
             'identifier' => '2023001',
             'secret' => 'password123',
         ]);
 
-        $response->assertRedirect(route('nasabah.dashboard'));
-        $this->assertAuthenticated('nasabah');
+        $response->assertSessionHasErrors(['identifier' => 'Akun penabung hanya dapat diakses melalui aplikasi mobile Bank Mini.']);
+        $this->assertGuest('nasabah');
     }
 
     public function test_user_password_hash_is_bcrypt_not_plaintext(): void

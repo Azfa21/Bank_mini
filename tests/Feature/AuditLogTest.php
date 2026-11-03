@@ -62,12 +62,14 @@ class AuditLogTest extends TestCase
         ]);
     }
 
-    public function test_nasabah_login_success_creates_audit_log(): void
+    public function test_nasabah_web_login_is_blocked_and_creates_audit_log(): void
     {
-        $this->post('/login', ['identifier' => '2023001', 'secret' => 'password123']);
+        $response = $this->post('/login', ['identifier' => '2023001', 'secret' => 'password123']);
+
+        $response->assertSessionHasErrors(['identifier' => 'Akun penabung hanya dapat diakses melalui aplikasi mobile Bank Mini.']);
 
         $this->assertDatabaseHas('audit_logs', [
-            'action' => 'login_success',
+            'action' => 'web_login_blocked',
             'entity_name' => 'saver',
             'entity_id' => $this->nasabah->id,
             'user_id' => null,

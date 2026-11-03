@@ -25,7 +25,7 @@ class AccountingService
      */
     public const CHART_OF_ACCOUNTS = [
         self::ACCOUNT_CODE_CASH_TELLER => ['name' => 'Kas Teller (Laci Loket)', 'normal' => 'debit', 'type' => 'asset', 'presented' => true],
-        self::ACCOUNT_CODE_CASH_VAULT => ['name' => 'Kas Brankas Utama (Khazanah)', 'normal' => 'debit', 'type' => 'asset', 'presented' => true],
+        self::ACCOUNT_CODE_CASH_VAULT => ['name' => 'Kas Utama (Pos Kas Induk)', 'normal' => 'debit', 'type' => 'asset', 'presented' => true],
         self::ACCOUNT_CODE_SAVINGS => ['name' => 'Tabungan Nasabah (Simpanan Siswa)', 'normal' => 'credit', 'type' => 'liability', 'presented' => false],
     ];
 

@@ -198,7 +198,7 @@ class JournalTest extends TellerTestCase
             'amount' => 80000,
             'debit_amount' => 80000,
             'credit_amount' => 0,
-            'description' => 'Pemindahan kas ke brankas',
+            'description' => 'Pemindahan kas ke Kas Utama',
             'status' => 'posted',
             'journal_at' => now(),
         ]);

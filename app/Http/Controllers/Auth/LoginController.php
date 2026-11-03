@@ -64,41 +64,23 @@ class LoginController extends Controller
             return $this->redirectByRole($user->role);
         }
 
+        // Penabung tidak punya halaman web. Kredensial yang benar ditolak tanpa
+        // meninggalkan sesi browser, lalu diarahkan ke aplikasi mobile.
         if (Auth::guard('nasabah')->attempt(['student_number' => $identifier, 'password' => $secret])) {
             $nasabah = Auth::guard('nasabah')->user();
+            Auth::guard('nasabah')->logout();
 
-            if ($nasabah->status !== 'active') {
-                Auth::guard('nasabah')->logout();
-                AuditLogService::record('login_blocked', 'saver', $nasabah->id, ['student_number' => $nasabah->student_number]);
+            AuditLogService::record('web_login_blocked', 'saver', $nasabah->id, [
+                'student_number' => $nasabah->student_number,
+            ]);
 
-                $message = $nasabah->isGraduated()
-                    ? 'Rekening ini sudah ditutup karena kelulusan. Hubungi Administrator bila masih ada sisa saldo.'
-                    : 'Akun Anda diblokir.';
-
-                if ($this->wantsJson($request)) {
-                    return response()->json(['success' => false, 'message' => $message], 403);
-                }
-
-                return back()->withErrors(['identifier' => $message]);
-            }
-
-            $request->session()->regenerate();
-            AuditLogService::record('login_success', 'saver', $nasabah->id, ['student_number' => $nasabah->student_number]);
+            $message = 'Akun penabung hanya dapat diakses melalui aplikasi mobile Bank Mini.';
 
             if ($this->wantsJson($request)) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Login berhasil.',
-                    'customer' => [
-                        'id' => $nasabah->id,
-                        'full_name' => $nasabah->full_name,
-                        'student_number' => $nasabah->student_number,
-                        'role' => 'nasabah',
-                    ],
-                ]);
+                return response()->json(['success' => false, 'message' => $message], 403);
             }
 
-            return redirect()->route('nasabah.dashboard');
+            return back()->withErrors(['identifier' => $message]);
         }
 
         AuditLogService::record('login_failed', null, null, ['identifier' => $identifier]);

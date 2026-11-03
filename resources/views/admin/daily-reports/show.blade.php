@@ -60,6 +60,10 @@
                         <dd class="tnum font-semibold text-brand-900">+ Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-3">
+                        <dt class="text-stone-600">Kas dari kas utama</dt>
+                        <dd class="tnum font-semibold text-brand-900">+ Rp {{ number_format($report->total_cash_received, 0, ',', '.') }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-3">
                         <dt class="text-stone-600">Total penarikan</dt>
                         <dd class="tnum font-semibold text-red-800">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</dd>
                     </div>
@@ -71,7 +75,7 @@
 
                 @if ($report->cashTransfer)
                     <div class="mt-4 pt-4 border-t border-stone-100 text-sm space-y-1.5">
-                        <h3 class="text-[13px] font-semibold text-stone-700">Kas pindah ke brankas</h3>
+                        <h3 class="text-[13px] font-semibold text-stone-700">Kas pindah ke kas utama</h3>
                         <div class="flex justify-between gap-3">
                             <span class="text-stone-600">Nominal</span>
                             <span class="tnum">Rp {{ number_format($report->cashTransfer->amount, 0, ',', '.') }}</span>
@@ -91,7 +95,7 @@
             @if ($report->status === 'submitted')
                 <section aria-label="Keputusan validasi" class="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
                     <h2 class="text-[15px] font-bold text-stone-900">Keputusan validasi</h2>
-                    <form method="POST" action="{{ route('admin.daily-reports.approve', $report) }}" class="space-y-3" id="approve-form" data-confirm="Setujui laporan ini? Kas laci pindah ke brankas dan tidak bisa dibatalkan.">
+                    <form method="POST" action="{{ route('admin.daily-reports.approve', $report) }}" class="space-y-3" id="approve-form" data-confirm="Setujui laporan ini? Kas laci pindah ke kas utama dan tidak bisa dibatalkan.">
                         @csrf
                         <div>
                             <x-input-label for="approval_notes">Catatan pemeriksaan wajib</x-input-label>

@@ -73,7 +73,7 @@ Target Pengguna
 - Jika salah satu proses gagal, seluruh perubahan harus dibatalkan melalui rollback.
 - Kode akun yang digunakan:
 - Kas Teller: 101
-- Kas Brankas: 102
+- Kas Utama: 102
 - Tabungan: 201
 3. Core Features
 FASE 1 — Autentikasi, RBAC, dan Keamanan Akses
@@ -236,7 +236,7 @@ Sub-Fitur
 - Rekap kas harian Teller
 - Pembuatan laporan harian Teller
 - Validasi dan persetujuan Administrator
-- Pemindahan tanggung jawab kas ke brankas utama
+- Pemindahan tanggung jawab kas ke kas utama
 - Penolakan laporan dan audit transaksi
 Requirements Fitur
 1. Rekap transaksi harian
@@ -254,9 +254,9 @@ Saldo Awal (kas yang belum tersapu) + Total Setoran - Total Penarikan
 - Bila arus kas tanggal tersebut berubah setelah laporan dibuat, sistem menolak approval dan mewajibkan Teller menghitung ulang.
 - Laporan berstatus menunggu validasi dapat disetujui atau ditolak dengan catatan wajib.
 - Pembuat laporan tidak dapat menyetujui laporan miliknya sendiri.
-5. Pemindahan kas ke brankas
-- Approval memindahkan seluruh kas laci Teller ke brankas utama.
-- Sistem membukukan Debet 102 Kas Brankas dan Kredit 101 Kas Teller, dan mencatat waktu, pengguna, dan nominal pemindahan.
+5. Pemindahan kas ke kas utama
+- Approval memindahkan seluruh kas laci Teller ke kas utama.
+- Sistem membukukan Debet 102 Kas Utama dan Kredit 101 Kas Teller, dan mencatat waktu, pengguna, dan nominal pemindahan.
 6. Penolakan laporan
 - Laporan yang ditolak dapat dibuat ulang oleh Teller dengan nomor laporan yang sama.
 - Administrator dapat melihat detail transaksi dan audit log untuk investigasi.
@@ -335,14 +335,14 @@ Selesai
 Sub-Fitur
 - Buku Besar (General Ledger)
 - Neraca Saldo (Trial Balance) dan indikator likuiditas kas
-- Jurnal pemindahan kas brankas (Akun 102 Kas Brankas)
+- Jurnal pemindahan kas utama (Akun 102 Kas Utama)
 Requirements Fitur
 1. Buku Besar
 - Filter per kode akun (101, 102, 201) dan rentang tanggal.
 2. Neraca Saldo
 - Perbandingan debit-kredit per akun dan ekspor CSV laporan akuntansi.
 3. Jurnal pemindahan kas
-- Terbit otomatis saat approval laporan harian (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+- Terbit otomatis saat approval laporan harian (Debet 102 Kas Utama, Kredit 101 Kas Teller).
 FASE 8 — Keamanan Transaksi dan Pengalaman Pengguna
 Status
 Selesai
@@ -381,7 +381,7 @@ Requirements Fitur
 - Administrator dapat mengoreksi transaksi berstatus sukses dengan alasan wajib.
 - Sistem membuat jurnal pembalik, memulihkan saldo, dan menandai transaksi asal sebagai "reversed".
 - Transaksi yang sudah dikoreksi tidak dapat dikoreksi ulang.
-- Koreksi ditolak jika laporan harian tanggal transaksi telah disetujui dan kas telah dipindahkan ke brankas.
+- Koreksi ditolak jika laporan harian tanggal transaksi telah disetujui dan kas telah dipindahkan ke kas utama.
 3. Pencarian nasabah
 - Teller dapat mencari berdasarkan nomor rekening, NIS, nama lengkap, atau QR Code.
 - Pencarian yang menghasilkan lebih dari satu nasabah menampilkan daftar hasil.
@@ -458,7 +458,7 @@ Catatan
  9. Bila arus kas tanggal tersebut berubah setelah laporan dibuat, Administrator menolak laporan dan Teller menghitung ulang.
 10. Jika valid, Administrator menyetujui laporan.
 11. Sistem mengubah status laporan menjadi disetujui.
-12. Sistem menyapu seluruh kas laci ke Brankas Utama dan membukukan Debet 102 Kas Brankas, Kredit 101 Kas Teller.
+12. Sistem menyapu seluruh kas laci ke Kas Utama dan membukukan Debet 102 Kas Utama, Kredit 101 Kas Teller.
 13. Sistem mengarsipkan laporan dan mencatat approval.
 4.5 Flow Nasabah Melihat Saldo dan Mutasi
 1. Nasabah login.
@@ -466,8 +466,21 @@ Catatan
 3. Sistem menampilkan saldo rekening milik nasabah.
 4. Nasabah membuka riwayat mutasi.
 5. Sistem menampilkan transaksi rekening tersebut.
+6. Nasabah membuka riwayat mutasi.
+5. Sistem menampilkan transaksi rekening tersebut.
 6. Sistem menolak akses terhadap rekening atau profil nasabah lain.
 7. Nasabah logout.
+4.6 Flow Permintaan Kas Teller
+ 1. Teller membuka menu Permintaan Kas dan melihat saldo kas laci hari ini.
+ 2. Teller mengisi nominal dan alasan permintaan.
+ 3. Sistem menerbitkan nomor permintaan REQ dan menyimpannya berstatus menunggu, lalu mencatat audit.
+ 4. Administrator membuka panel Permintaan Kas dan melihat saldo kas utama (akun 102) dan kas laci (akun 101) berdasarkan jurnal.
+ 5. Administrator menyetujui dengan catatan wajib.
+ 6. Sistem memposting jurnal Debet 101 Kas Teller, Kredit 102 Kas Utama; kas dianggap cair ke laci.
+ 7. Rekap kas laci, laporan harian, dan penyapuan akhir hari menghitung kas tersebut.
+ 8. Jika uang laci masih kurang, Teller mengajukan permintaan lagi tanpa menunggu keputusan sebelumnya.
+ 9. Bila ditolak, sistem menyimpan alasan wajib tanpa jurnal dan Teller dapat mengajukan ulang.
+10. Setelah laporan penutupan kas hari itu dikirim, sistem menutup formulir permintaan kas sampai hari berikutnya; laporan yang ditolak membuka kembali pengajuan.
 5. Architecture
 Sequence Diagram — Proses Setoran Tunai
 sequenceDiagram
@@ -616,6 +629,7 @@ erDiagram
         VARCHAR journal_number UK
         BIGINT transaction_id FK
         BIGINT cash_transfer_id FK
+        BIGINT cash_request_id FK
         VARCHAR account_code
         ENUM entry_type
         BIGINT debit_amount
@@ -633,6 +647,7 @@ erDiagram
         BIGINT teller_id FK
         BIGINT opening_balance
         BIGINT total_deposit
+        BIGINT total_cash_received
         BIGINT total_withdrawal
         BIGINT closing_balance_system
         ENUM status
@@ -653,6 +668,19 @@ erDiagram
         ENUM status
         DATETIME transferred_at
         VARCHAR notes
+        DATETIME created_at
+    }
+
+    CASH_REQUESTS {
+        BIGINT id PK
+        BIGINT teller_id FK
+        BIGINT amount
+        VARCHAR reason
+        VARCHAR request_number UK
+        ENUM status
+        BIGINT approved_by FK
+        DATETIME approved_at
+        VARCHAR decision_notes
         DATETIME created_at
     }
 
@@ -727,6 +755,9 @@ erDiagram
     ACCOUNT_CLOSURES ||--o| TRANSACTIONS : payout
     DAILY_REPORTS ||--o| CASH_TRANSFERS : authorizes
     CASH_TRANSFERS ||--|{ JURNAL_AKUNTANSI : generates
+    USERS ||--o{ CASH_REQUESTS : requests
+    USERS ||--o{ CASH_REQUESTS : decides
+    CASH_REQUESTS ||--|{ JURNAL_AKUNTANSI : generates
     SAVERS ||--o{ MOBILE_TOKENS : owns
     SAVERS ||--o{ PASSWORD_RESET_OTPS : requests
     USERS ||--o{ PASSWORD_RESET_OTPS : requests
@@ -740,9 +771,10 @@ ACCOUNTS	Menyimpan nomor rekening, tahun ajaran, saldo awal, saldo berjalan, sal
 SYSTEM_CONFIGS	Menyimpan konfigurasi global: bank_name, minimum_balance (saldo mengendap), dan min_deposit_to_activate.
 DOCUMENT_SEQUENCES	Menyimpan konter nomor dokumen anti-collision untuk nomor transaksi dan nomor laporan.
 TRANSACTIONS	Menyimpan transaksi setoran, penarikan, transfer, dan jurnal pembalik (reversal) yang diproses di loket, lengkap dengan saldo sebelum/sesudah dan status.
-JURNAL_AKUNTANSI	Menyimpan baris double-entry dari transaksi operasional maupun pemindahan kas brankas.
+JURNAL_AKUNTANSI	Menyimpan baris double-entry dari transaksi operasional maupun pemindahan kas antar pos (kas utama, permintaan kas teller).
 DAILY_REPORTS	Menyimpan laporan penutupan kas harian Teller (status draft, submitted, approved, rejected) beserta persetujuan Administrator.
-CASH_TRANSFERS	Menyimpan pemindahan kas dari laci Teller ke brankas utama yang terbit saat laporan disetujui.
+CASH_TRANSFERS	Menyimpan pemindahan kas dari laci Teller ke kas utama yang terbit saat laporan disetujui.
+CASH_REQUESTS	Menyimpan permintaan modal kas Teller dari kas utama: nominal, alasan, status keputusan (pending/approved/rejected), catatan Administrator, dan nomor dokumen REQ.
 ACCOUNT_CLOSURES	Menyimpan permintaan penutupan rekening karena kelulusan, pencairan saldo oleh Teller, dan keputusan Administrator (approve/reject).
 MOBILE_TOKENS	Menyimpan token perangkat aplikasi nasabah (disimpan sebagai hash) beserta kedaluwarsa.
 PASSWORD_RESET_OTPS	Menyimpan OTP pemulihan password untuk akun staff dan nasabah, terkunci per akun.

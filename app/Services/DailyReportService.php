@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\TransactionValidationException;
+use App\Models\CashRequest;
 use App\Models\CashTransfer;
 use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
@@ -19,26 +20,43 @@ class DailyReportService
 
     public function recap(User $teller, string $date): array
     {
-        // Model brankas: setiap laporan yang disetujui menyapu seluruh kas laci ke brankas,
+        // Model kas utama: setiap laporan yang disetujui menyapu seluruh kas laci ke kas utama,
         // sehingga saldo awal = mutasi kas yang belum tersapu sebelum tanggal ini.
         $before = $this->cashFlow($teller, '<', $date);
         $today = $this->cashFlow($teller, '=', $date);
+
+        // Kas yang cair dari kas utama (permintaan kas teller yang disetujui)
+        // menambah isian laci, jadi ikut dihitung pada mutasi dan saldo laporan.
+        $receivedBefore = $this->cashReceived($teller, '<', $date);
+        $receivedToday = $this->cashReceived($teller, '=', $date);
 
         $sweptBefore = (int) DailyReport::where('teller_id', $teller->id)
             ->whereDate('report_date', '<', $date)
             ->where('status', 'approved')
             ->sum('closing_balance_system');
 
-        $opening = $before['deposit'] - $before['withdrawal'] - $sweptBefore;
+        $opening = $before['deposit'] - $before['withdrawal'] + $receivedBefore - $sweptBefore;
 
-        $systemEnding = $opening + $today['deposit'] - $today['withdrawal'];
+        $systemEnding = $opening + $today['deposit'] + $receivedToday - $today['withdrawal'];
 
         return [
             'opening_balance' => $opening,
             'total_deposit' => $today['deposit'],
+            'total_cash_received' => $receivedToday,
             'total_withdrawal' => $today['withdrawal'],
             'closing_balance_system' => $systemEnding,
         ];
+    }
+
+    /**
+     * Total kas permintaan teller yang sudah disetujui dan dianggap cair.
+     */
+    protected function cashReceived(User $teller, string $operator, string $date): int
+    {
+        return (int) CashRequest::where('teller_id', $teller->id)
+            ->where('status', 'approved')
+            ->whereDate('approved_at', $operator, $date)
+            ->sum('amount');
     }
 
     /**
@@ -114,6 +132,7 @@ class DailyReportService
                 'report_date' => $date,
                 'opening_balance' => $recap['opening_balance'],
                 'total_deposit' => $recap['total_deposit'],
+                'total_cash_received' => $recap['total_cash_received'],
                 'total_withdrawal' => $recap['total_withdrawal'],
                 'closing_balance_system' => $recap['closing_balance_system'],
                 'status' => 'submitted',
@@ -194,7 +213,7 @@ class DailyReportService
                 'approved_by' => $approver->id,
                 'amount' => $transferAmount,
                 'source_location' => 'Laci Teller',
-                'destination_location' => 'Brankas Utama',
+                'destination_location' => 'Kas Utama',
                 'status' => 'transferred',
                 'transferred_at' => now(),
                 'notes' => $notes,
@@ -202,21 +221,21 @@ class DailyReportService
             ]);
 
             if ($transferAmount > 0) {
-                // Post double-entry journal for Cash Transfer: Debet 102 Kas Brankas, Kredit 101 Kas Teller
+                // Post double-entry journal for Cash Transfer: Debet 102 Kas Utama, Kredit 101 Kas Teller
                 $journalRows = [
                     [
                         'account_code' => self::ACCOUNT_CODE_CASH_VAULT,
                         'entry_type' => 'debit',
                         'debit_amount' => $transferAmount,
                         'credit_amount' => 0,
-                        'description' => 'Pemindahan kas Laci Teller ke Brankas Utama (Lap: '.$locked->report_number.')',
+                        'description' => 'Pemindahan kas Laci Teller ke Kas Utama (Lap: '.$locked->report_number.')',
                     ],
                     [
                         'account_code' => self::ACCOUNT_CODE_CASH_TELLER,
                         'entry_type' => 'credit',
                         'debit_amount' => 0,
                         'credit_amount' => $transferAmount,
-                        'description' => 'Pemindahan kas Laci Teller ke Brankas Utama (Lap: '.$locked->report_number.')',
+                        'description' => 'Pemindahan kas Laci Teller ke Kas Utama (Lap: '.$locked->report_number.')',
                     ],
                 ];
 
@@ -246,7 +265,7 @@ class DailyReportService
             AuditLogService::record('cash_transferred', 'daily_report', $locked->id, [
                 'amount' => $transferAmount,
                 'source_location' => 'Laci Teller',
-                'destination_location' => 'Brankas Utama',
+                'destination_location' => 'Kas Utama',
             ], $approver->id);
 
             return $locked;

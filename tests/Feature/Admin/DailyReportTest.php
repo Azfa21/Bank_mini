@@ -101,7 +101,7 @@ class DailyReportTest extends TestCase
         $this->assertSame($this->admin->id, $transfer->approved_by);
         $this->assertSame(50000, $transfer->amount);
         $this->assertSame('Laci Teller', $transfer->source_location);
-        $this->assertSame('Brankas Utama', $transfer->destination_location);
+        $this->assertSame('Kas Utama', $transfer->destination_location);
         $this->assertNotNull($transfer->transferred_at);
 
         $this->assertDatabaseHas('audit_logs', [

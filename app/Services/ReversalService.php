@@ -189,7 +189,7 @@ class ReversalService
 
         if ($reports->contains('status', 'approved')) {
             throw new TransactionValidationException(
-                'Transaksi tidak dapat dikoreksi karena laporan harian tanggal tersebut telah disetujui dan kas telah dipindahkan ke brankas.'
+                'Transaksi tidak dapat dikoreksi karena laporan harian tanggal tersebut telah disetujui dan kas telah dipindahkan ke kas utama.'
             );
         }
     }

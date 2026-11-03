@@ -52,13 +52,12 @@ class QrCardTest extends TellerTestCase
         );
     }
 
-    public function test_all_roles_can_access_qr_endpoints(): void
+    public function test_staff_roles_can_access_qr_endpoints(): void
     {
         foreach ([
             [$this->admin, 'web'],
             [$this->teller, 'web'],
             [$this->admin2, 'web'],
-            [$this->nasabah, 'nasabah'],
         ] as [$user, $guard]) {
             $this->actingAs($user, $guard)
                 ->get(route('qr.show', ['data' => 'access-check']))
@@ -68,6 +67,13 @@ class QrCardTest extends TellerTestCase
                 ->get(route('qr.download', ['data' => 'access-check']))
                 ->assertOk();
         }
+    }
+
+    public function test_nasabah_cannot_access_qr_web_endpoints(): void
+    {
+        $this->actingAs($this->nasabah, 'nasabah')
+            ->get(route('qr.show', ['data' => 'access-check']))
+            ->assertRedirect(route('login'));
     }
 
     public function test_guest_cannot_access_qr_endpoints(): void

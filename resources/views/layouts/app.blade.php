@@ -19,7 +19,7 @@
         $dashboardRouteName = match ($role) {
             'admin' => 'admin.dashboard',
             'teller' => 'teller.dashboard',
-            default => 'nasabah.dashboard',
+            default => 'login',
         };
 
         $menuItems = [];

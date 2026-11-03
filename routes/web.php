@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountingReportController;
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\CashRequestController as AdminCashRequestController;
 use App\Http\Controllers\Admin\ClassPromotionController;
 use App\Http\Controllers\Admin\CorrectionController;
 use App\Http\Controllers\Admin\DailyReportController;
@@ -15,21 +16,20 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\MonthlyReportController;
-use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
-use App\Http\Controllers\Nasabah\MutasiController;
-use App\Http\Controllers\Nasabah\PinController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
+use App\Http\Controllers\Teller\CashRequestController as TellerCashRequestController;
 use App\Http\Controllers\Teller\ClosingController;
 use App\Http\Controllers\Teller\MemberActivationController;
 use App\Http\Controllers\Teller\MemberRegistrationController;
 use App\Http\Controllers\Teller\MemberSearchController;
 use App\Http\Controllers\Teller\PassbookController;
 use App\Http\Controllers\Teller\TransactionController;
+use App\Services\DailyReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['role:admin,teller,nasabah'])->group(function () {
+Route::middleware(['role:admin,teller'])->group(function () {
     Route::get('/qr', [QrCodeController::class, 'show'])->name('qr.show');
     Route::get('/qr/download', [QrCodeController::class, 'download'])->name('qr.download');
 });
@@ -84,6 +84,10 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
 
     Route::post('transactions/{transaction}/reverse', [CorrectionController::class, 'store'])->name('transactions.reverse');
 
+    Route::get('cash-requests', [AdminCashRequestController::class, 'index'])->name('cash-requests.index');
+    Route::post('cash-requests/{cashRequest}/approve', [AdminCashRequestController::class, 'approve'])->name('cash-requests.approve');
+    Route::post('cash-requests/{cashRequest}/reject', [AdminCashRequestController::class, 'reject'])->name('cash-requests.reject');
+
     Route::get('reports/monthly', [MonthlyReportController::class, 'index'])->name('reports.monthly');
     Route::get('reports/monthly/print', [MonthlyReportController::class, 'print'])->name('reports.monthly.print');
     Route::get('reports/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('reports.general-ledger');
@@ -104,7 +108,15 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
 });
 
 Route::middleware(['role:teller'])->prefix('teller')->as('teller.')->group(function () {
-    Route::get('/dashboard', fn () => view('teller.dashboard'))->name('dashboard');
+    Route::get('/dashboard', function (Request $request, DailyReportService $reports) {
+        // Saldo laci tampil di dashboard agar teller tahu saatnya mengajukan modal.
+        $recap = $reports->recap($request->user(), now()->toDateString());
+
+        return view('teller.dashboard', compact('recap'));
+    })->name('dashboard');
+
+    Route::get('/cash-requests', [TellerCashRequestController::class, 'index'])->name('cash-requests.index');
+    Route::post('/cash-requests', [TellerCashRequestController::class, 'store'])->name('cash-requests.store');
 
     Route::get('/members/search', [MemberSearchController::class, 'search'])->name('members.search');
     Route::get('/members/lookup', [MemberSearchController::class, 'lookup'])->name('members.lookup');
@@ -134,16 +146,4 @@ Route::middleware(['role:teller'])->prefix('teller')->as('teller.')->group(funct
     Route::get('/closing', [ClosingController::class, 'index'])->name('closing.index');
     Route::post('/closing', [ClosingController::class, 'store'])->name('closing.store');
     Route::get('/closing/reports/{report}/print', [ClosingController::class, 'print'])->name('closing.print');
-});
-
-Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {
-    Route::get('/dashboard', [NasabahDashboardController::class, 'index'])->name('nasabah.dashboard');
-    Route::get('/card/print', [NasabahDashboardController::class, 'printCard'])->name('nasabah.card.print');
-    Route::get('/mutasi', [MutasiController::class, 'index'])->name('nasabah.mutasi');
-    Route::get('/statement', [MutasiController::class, 'statement'])->name('nasabah.statement');
-
-    // PIN transaksi dikelola penabung sendiri setelah masuk; password login
-    // dipulihkan lewat alur lupa password di atas.
-    Route::get('/pin', [PinController::class, 'edit'])->name('nasabah.pin');
-    Route::put('/pin', [PinController::class, 'update'])->name('nasabah.pin.update');
 });

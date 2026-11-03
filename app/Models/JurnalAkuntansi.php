@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int|null $transaction_id
  * @property int|null $cash_transfer_id
+ * @property int|null $cash_request_id
  * @property string $journal_number
  * @property string $account_code
  * @property string $entry_type
@@ -30,6 +31,7 @@ class JurnalAkuntansi extends Model
     protected $fillable = [
         'transaction_id',
         'cash_transfer_id',
+        'cash_request_id',
         'journal_number',
         'account_code',
         'entry_type',
@@ -59,5 +61,11 @@ class JurnalAkuntansi extends Model
     public function cashTransfer(): BelongsTo
     {
         return $this->belongsTo(CashTransfer::class, 'cash_transfer_id');
+    }
+
+    /** @return BelongsTo<CashRequest, $this> */
+    public function cashRequest(): BelongsTo
+    {
+        return $this->belongsTo(CashRequest::class, 'cash_request_id');
     }
 }

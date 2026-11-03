@@ -358,8 +358,8 @@ class ForgotPasswordTest extends TestCase
             'identifier' => '2023001',
             'secret' => 'password-baru-123',
         ]);
-        $loginResponse->assertRedirect(route('nasabah.dashboard'));
-        $this->assertAuthenticated('nasabah');
+        $loginResponse->assertSessionHasErrors(['identifier' => 'Akun penabung hanya dapat diakses melalui aplikasi mobile Bank Mini.']);
+        $this->assertGuest('nasabah');
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'password_reset_success',
@@ -395,7 +395,7 @@ class ForgotPasswordTest extends TestCase
         $this->post('/login', [
             'identifier' => '2023005',
             'secret' => 'password-pertama-123',
-        ])->assertRedirect(route('nasabah.dashboard'));
+        ])->assertSessionHasErrors(['identifier' => 'Akun penabung hanya dapat diakses melalui aplikasi mobile Bank Mini.']);
     }
 
     public function test_nasabah_reset_validates_password_rules(): void

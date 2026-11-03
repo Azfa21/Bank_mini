@@ -213,8 +213,13 @@ class MemberActivationTest extends TellerTestCase
         $this->post('/login', [
             'identifier' => '20260001',
             'secret' => 'password-awal-123',
-        ])->assertRedirect(route('nasabah.dashboard'));
+        ])->assertSessionHasErrors(['identifier' => 'Akun penabung hanya dapat diakses melalui aplikasi mobile Bank Mini.']);
 
-        $this->assertAuthenticated('nasabah');
+        $this->assertGuest('nasabah');
+
+        $this->postJson(route('api.mobile.login'), [
+            'student_number' => '20260001',
+            'password' => 'password-awal-123',
+        ])->assertOk();
     }
 }

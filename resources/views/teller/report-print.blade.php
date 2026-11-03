@@ -64,6 +64,10 @@
                 <span class="tnum font-semibold text-brand-900">+ Rp {{ number_format($report->total_deposit, 0, ',', '.') }}</span>
             </div>
             <div class="flex justify-between gap-3">
+                <span class="text-stone-600">Kas dari kas utama</span>
+                <span class="tnum font-semibold text-brand-900">+ Rp {{ number_format($report->total_cash_received, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between gap-3">
                 <span class="text-stone-600">Total penarikan</span>
                 <span class="tnum font-semibold text-red-800">− Rp {{ number_format($report->total_withdrawal, 0, ',', '.') }}</span>
             </div>

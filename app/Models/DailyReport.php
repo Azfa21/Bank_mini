@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property CarbonInterface $report_date
  * @property int $opening_balance
  * @property int $total_deposit
+ * @property int $total_cash_received
  * @property int $total_withdrawal
  * @property int $closing_balance_system
  * @property string $status
@@ -36,6 +37,7 @@ class DailyReport extends Model
         'report_date',
         'opening_balance',
         'total_deposit',
+        'total_cash_received',
         'total_withdrawal',
         'closing_balance_system',
         'status',
@@ -49,6 +51,7 @@ class DailyReport extends Model
         'report_date' => 'date',
         'opening_balance' => 'integer',
         'total_deposit' => 'integer',
+        'total_cash_received' => 'integer',
         'total_withdrawal' => 'integer',
         'closing_balance_system' => 'integer',
         'approved_at' => 'datetime',

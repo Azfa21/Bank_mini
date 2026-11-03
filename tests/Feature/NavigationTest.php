@@ -32,15 +32,6 @@ class NavigationTest extends TellerTestCase
             ->assertSee('>Kenaikan Kelas</li>', false);
     }
 
-    public function test_nasabah_dashboard_shows_role_menu(): void
-    {
-        $this->actingAs($this->nasabah, 'nasabah')
-            ->get(route('nasabah.dashboard'))
-            ->assertOk()
-            ->assertSee('Dashboard')
-            ->assertSee('Riwayat Mutasi');
-    }
-
     public function test_admin_submenu_shows_dashboard_link_in_navbar(): void
     {
         $this->actingAs($this->admin, 'web')
@@ -57,14 +48,6 @@ class NavigationTest extends TellerTestCase
             ->assertOk()
             ->assertSee(route('teller.dashboard'))
             ->assertSee('Pencarian Penabung');
-    }
-
-    public function test_nasabah_dashboard_shows_navbar(): void
-    {
-        $this->actingAs($this->nasabah, 'nasabah')
-            ->get(route('nasabah.dashboard'))
-            ->assertOk()
-            ->assertSee(route('nasabah.dashboard'));
     }
 
     public function test_admin_page_shows_breadcrumb_with_the_active_menu_label(): void
@@ -84,13 +67,5 @@ class NavigationTest extends TellerTestCase
             ->assertSee('aria-label="Posisi halaman"', false)
             ->assertSee('>Dashboard</a>', false)
             ->assertSee(route('teller.dashboard'));
-    }
-
-    public function test_nasabah_pages_have_no_staff_breadcrumb(): void
-    {
-        $this->actingAs($this->nasabah, 'nasabah')
-            ->get(route('nasabah.dashboard'))
-            ->assertOk()
-            ->assertDontSee('aria-label="Posisi halaman"', false);
     }
 }

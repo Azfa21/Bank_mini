@@ -166,7 +166,7 @@ class AccountingReportController extends Controller
     }
 
     /**
-     * Kas fisik di laci dan brankas dibanding kewajiban simpanan nasabah.
+     * Kas fisik di laci dan kas utama dibanding kewajiban simpanan nasabah.
      * Alasan: dipakai halaman gabungan dan endpoint JSON neraca saldo agar
      * rasio likuiditas tidak pernah berbeda antar keduanya.
      *

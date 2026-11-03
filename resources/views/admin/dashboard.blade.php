@@ -14,7 +14,7 @@
             <div>
                 @if ($waiting > 0)
                     <h2 class="text-lg font-bold text-stone-900">{{ $waiting }} laporan menunggu validasi</h2>
-                    <p class="text-sm text-stone-600 mt-1">Periksa arus kas laporan sebelum menyetujui. Persetujuan memindahkan kas laci ke brankas utama.</p>
+                    <p class="text-sm text-stone-600 mt-1">Periksa arus kas laporan sebelum menyetujui. Persetujuan memindahkan kas laci ke kas utama.</p>
                 @else
                     <h2 class="text-lg font-bold text-stone-900">Tidak ada laporan menunggu</h2>
                     <p class="text-sm text-stone-600 mt-1">Semua laporan harian teller sudah divalidasi. Antrean baru muncul setiap penutupan kas.</p>
@@ -70,11 +70,11 @@
             <div class="text-xl font-semibold text-stone-900 mt-1">Rp {{ number_format($summary['cash_teller'], 0, ',', '.') }}</div>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="text-sm text-stone-500">Kas brankas</div>
+            <div class="text-sm text-stone-500">Kas utama</div>
             <div class="text-xl font-semibold text-stone-900 mt-1">Rp {{ number_format($summary['cash_vault'], 0, ',', '.') }}</div>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="text-sm text-stone-500">Total kas (laci + brankas)</div>
+            <div class="text-sm text-stone-500">Total kas (laci + kas utama)</div>
             <div class="text-xl font-semibold text-brand-900 mt-1">Rp {{ number_format($summary['total_cash'], 0, ',', '.') }}</div>
         </div>
     </div>

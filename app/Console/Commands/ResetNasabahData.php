@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Account;
 use App\Models\AccountClosure;
 use App\Models\AuditLog;
+use App\Models\CashRequest;
 use App\Models\CashTransfer;
 use App\Models\DailyReport;
 use App\Models\DocumentSequence;
@@ -98,6 +99,7 @@ class ResetNasabahData extends Command
             'password_reset_otps' => PasswordResetOtp::class,
             'account_closures' => AccountClosure::class,
             'jurnal_akuntansi' => JurnalAkuntansi::class,
+            'cash_requests' => CashRequest::class,
             'transactions' => Transaction::class,
             'cash_transfers' => CashTransfer::class,
             'daily_reports' => DailyReport::class,

@@ -38,6 +38,17 @@
         </div>
     </section>
 
+    <section aria-label="Kas laci hari ini" class="mb-5 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+        <div class="shrink-0">
+            <p class="text-[13px] font-medium text-stone-600">Kas di laci hari ini</p>
+            <p class="tnum text-xl font-bold text-stone-900 mt-0.5">Rp {{ number_format($recap['closing_balance_system'], 0, ',', '.') }}</p>
+        </div>
+        <p class="text-[13px] text-stone-600 flex-1 sm:max-w-md">Uang tunai penarikan disiapkan dari modal awal yang diminta ke Administrator. Bila saldo belum memadai, ajukan permintaan kas.</p>
+        <a href="{{ route('teller.cash-requests.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors sm:shrink-0">
+            Minta kas
+        </a>
+    </section>
+
     <section aria-label="Ringkasan transaksi hari ini" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
         <dl class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5">
             <dt class="text-[13px] font-medium text-stone-600">Transaksi berhasil</dt>

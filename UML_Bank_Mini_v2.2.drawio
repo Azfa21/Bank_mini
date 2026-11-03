@@ -1,0 +1,437 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" agent="Bank Mini Sekolah SMKN 1 Bantul" version="24.7.17" type="device">
+  <diagram id="page-usecase" name="01 Use Case Diagram">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t-1" value="DIAGRAM USE CASE: SISTEM INFORMASI E-TELLER BANK MINI SEKOLAH (SMKN 1 BANTUL) v2.2" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="1150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="b-1" value="Sistem Informasi E-Teller Bank Mini Sekolah (Boundary)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;verticalAlign=top;align=center;fontSize=13;fontStyle=1;spacingTop=10;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="70" width="960" height="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="act-teller" value="Petugas Loket&#10;(Teller)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=13;fontStyle=1;fontColor=#000000;strokeColor=#000000;strokeWidth=2;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="120" y="320" width="50" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="act-nasabah" value="Nasabah Siswa&#10;(Savers)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=13;fontStyle=1;fontColor=#000000;strokeColor=#000000;strokeWidth=2;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="120" y="780" width="50" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="act-admin" value="Administrator&#10;(Pengawas Institusi)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=13;fontStyle=1;fontColor=#000000;strokeColor=#000000;strokeWidth=2;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="450" width="50" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-1" value="&lt;b&gt;UC-01: Login Terpusat &amp; Reset Password via Email OTP&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="120" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-1-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-1-n" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-nasabah" target="uc-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-1-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-2" value="&lt;b&gt;UC-02: Kelola Akun Staf &amp; Konfigurasi Sistem&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="120" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-2-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-3" value="&lt;b&gt;UC-03: Kelola Master Anggota &amp; Impor Massal CSV&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="200" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-3-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-4" value="&lt;b&gt;UC-04: Promosi Kenaikan Kelas &amp; Kelulusan Alumni&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="280" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-4-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-5" value="&lt;b&gt;UC-05: Aktivasi Rekening Penabung Baru di Loket&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="220" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-5-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-6" value="&lt;b&gt;UC-06: Identifikasi Nasabah (QR Code / NIS / Nama)&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="310" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-6-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-6-n" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-nasabah" target="uc-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-7" value="&lt;b&gt;UC-07: Transaksi Setoran Tunai Loket&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="400" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-7-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-7-n" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-nasabah" target="uc-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-8" value="&lt;b&gt;UC-08: Transaksi Penarikan Tunai &amp; Otorisasi PIN&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="490" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-8-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-8-n" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-nasabah" target="uc-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-9" value="&lt;b&gt;UC-09: Transaksi Transfer Overbooking (P2P)&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="580" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-9-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-9-n" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-nasabah" target="uc-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-10" value="&lt;b&gt;UC-10: Pengajuan Permintaan Modal Kas Teller (REQ)&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="670" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-10-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-11" value="&lt;b&gt;UC-11: Approval &amp; Pencairan Kas Modal Teller&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="670" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-11-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-12" value="&lt;b&gt;UC-12: Pembuatan Draf Laporan Harian Teller (LHT)&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="760" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-12-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-13" value="&lt;b&gt;UC-13: Approval LHT &amp; Penyapuan Kas ke Kas Utama&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="760" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-13-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-14" value="&lt;b&gt;UC-14: Eksekusi Jurnal Koreksi (Reversal)&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="850" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-14-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-15" value="&lt;b&gt;UC-15: Pengajuan &amp; Approval Penutupan Rekening Lulus&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="640" y="930" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-15-t" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-teller" target="uc-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-15-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-16" value="&lt;b&gt;UC-16: Laporan Buku Besar &amp; Neraca Saldo&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="1020" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-16-a" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="act-admin" target="uc-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-17" value="&lt;b&gt;UC-17: Layanan Mandiri Siswa via Aplikasi Mobile&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1020" width="320" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e-uc-17-n" value="" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="act-nasabah" target="uc-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-activity" name="02 Activity Diagram">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t-2" value="DIAGRAM AKTIVITAS: TRANSAKSI LOKET, PERMINTAAN KAS &amp; PENUTUPAN KAS (LHT)" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="1150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-nasabah" value="&lt;b&gt;Nasabah (Siswa)&lt;/b&gt;" style="swimlane;html=1;startSize=30;fontSize=12;fontStyle=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="360" height="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-teller" value="&lt;b&gt;Petugas Loket (Teller)&lt;/b&gt;" style="swimlane;html=1;startSize=30;fontSize=12;fontStyle=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="440" y="80" width="380" height="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-admin" value="&lt;b&gt;Administrator&lt;/b&gt;" style="swimlane;html=1;startSize=30;fontSize=12;fontStyle=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="820" y="80" width="380" height="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-server" value="&lt;b&gt;Sistem E-Teller (Server &amp; Database)&lt;/b&gt;" style="swimlane;html=1;startSize=30;fontSize=12;fontStyle=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="80" width="380" height="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="act-start" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="160" y="50" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act-login" value="Login Loket &amp; Buka Sesi Hari Ini" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="110" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-cekkas" value="Saldo Kas Laci&#10;Mencukupi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=10;" vertex="1" parent="lane-teller">
+          <mxGeometry x="130" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act-req" value="Ajukan Permintaan Modal Kas&#10;(Nominal REQ)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="270" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-review" value="Periksa Saldo Kas 101/102 &amp;&#10;Approval Permintaan Kas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-admin">
+          <mxGeometry x="70" y="270" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-jrncair" value="Posting Jurnal Otomatis:&#10;Debet 101 Kas Teller, Kredit 102 Kas Utama" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="270" width="250" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-bukaloket" value="Buka Pelayanan Loket Kasir" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="350" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-scan" value="Pindai QR Code Kartu Pelajar / Input NIS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="420" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-naskartu" value="Serahkan Kartu Pelajar &amp;&#10;Uang Tunai / Slip" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-nasabah">
+          <mxGeometry x="60" y="420" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-srvvalid" value="Validasi Rekening Aktif &amp;&#10;Tampilkan Saldo Berjalan" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="420" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-pilihtx" value="Jenis Transaksi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=10;" vertex="1" parent="lane-teller">
+          <mxGeometry x="130" y="490" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act-setor" value="Input Nominal Setoran (min Rp5.000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="30" y="580" width="200" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-setordb" value="DB::transaction:&#10;Tambah Saldo, Debet 101 Kredit 201" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="580" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-tarik" value="Input Nominal Penarikan Tunai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="180" y="650" width="190" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-tarikval" value="Validasi Saldo Mengendap&#10;(Saldo - Nominal &gt;= Rp10.000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="650" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-tarikpin" value="Input PIN Rahasia 6-Digit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-nasabah">
+          <mxGeometry x="60" y="720" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-tarikdb" value="DB::transaction:&#10;Kurangi Saldo, Debet 201 Kredit 101" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="720" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-cetak" value="Cetak Struk Thermal &amp; Buku Tabungan" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="800" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-terimastruk" value="Terima Uang Tunai, Struk &amp; Buku" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-nasabah">
+          <mxGeometry x="60" y="800" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-tutupkas" value="Buka Modul Penutupan Kas Akhir Hari" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="880" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-rekapsrv" value="Kalkulasi Rekapitulasi Otomatis:&#10;Saldo Awal + Setor + Kas Modal - Tarik" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="880" width="250" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act-kirimlht" value="Kirim Draf LHT (Status: Submitted)&#10;Kunci Transaksi Loket Teller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-teller">
+          <mxGeometry x="70" y="960" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act-admlht" value="Periksa Draf LHT &amp; Arus Kas Server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-admin">
+          <mxGeometry x="70" y="960" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-cekarus" value="Arus Kas&#10;Berubah?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=10;" vertex="1" parent="lane-admin">
+          <mxGeometry x="130" y="1030" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act-tolaklht" value="Tolak LHT dengan Catatan Wajib&#10;(Teller Hitung Ulang)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-admin">
+          <mxGeometry x="70" y="1120" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-setujuilht" value="Setujui LHT (Status: Approved)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-admin">
+          <mxGeometry x="70" y="1200" width="240" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="act-sweep" value="Eksekusi Penyapuan Kas (Cash Sweep):&#10;Debet 102 Kas Utama, Kredit 101 Kas Teller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="lane-server">
+          <mxGeometry x="70" y="1200" width="250" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act-end" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="lane-admin">
+          <mxGeometry x="170" y="1280" width="30" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-sequence" name="03 Sequence Diagram">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t-3" value="DIAGRAM SEKUEN: TRANSAKSI SETORAN TUNAI LOKET &amp; PEMBUKUAN ATOMIK" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="1150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-teller-box" value="&lt;b&gt;Petugas Loket&#10;(Teller)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="100" y="80" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-teller-line" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;strokeWidth=1.2;" edge="1" parent="1" source="ll-teller-box">
+          <mxGeometry x="170" y="126" width="1" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-ui-box" value="&lt;b&gt;Antarmuka Loket&#10;(Web Blade)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-ui-line" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;strokeWidth=1.2;" edge="1" parent="1" source="ll-ui-box">
+          <mxGeometry x="430" y="126" width="1" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-auth-box" value="&lt;b&gt;Auth &amp; RBAC&#10;Middleware&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="620" y="80" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-auth-line" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;strokeWidth=1.2;" edge="1" parent="1" source="ll-auth-box">
+          <mxGeometry x="690" y="126" width="1" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-service-box" value="&lt;b&gt;TransactionService&#10;(App Logic)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="80" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-service-line" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;strokeWidth=1.2;" edge="1" parent="1" source="ll-service-box">
+          <mxGeometry x="950" y="126" width="1" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-db-box" value="&lt;b&gt;Database RDBMS&#10;(MySQL InnoDB)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="80" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-db-line" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;strokeWidth=1.2;" edge="1" parent="1" source="ll-db-box">
+          <mxGeometry x="1210" y="126" width="1" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-printer-box" value="&lt;b&gt;Thermal Receipt&#10;Printer&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="80" width="140" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="ll-printer-line" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;strokeWidth=1.2;" edge="1" parent="1" source="ll-printer-box">
+          <mxGeometry x="1470" y="126" width="1" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-e-0" value="1: Pindai QR Code Kartu / Input NIS" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="170" y="160">
+            <mxPoint x="170" y="160" as="sourcePoint" />
+            <mxPoint x="430" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-1" value="2: GET /teller/members/lookup?qr=..." style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="430" y="200">
+            <mxPoint x="430" y="200" as="sourcePoint" />
+            <mxPoint x="690" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-2" value="3: Validasi Sesi Kasir &amp; Role:Teller" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="690" y="240">
+            <mxPoint x="690" y="240" as="sourcePoint" />
+            <mxPoint x="950" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-3" value="4: Query Profil Saver &amp; Rekening Aktif" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="280">
+            <mxPoint x="950" y="280" as="sourcePoint" />
+            <mxPoint x="1210" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-4" value="5: Return Data Rekening &amp; Saldo Berjalan" style="endArrow=open;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="1210" y="320">
+            <mxPoint x="1210" y="320" as="sourcePoint" />
+            <mxPoint x="430" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-5" value="6: Input Nominal Setoran (&gt;= Rp5.000)" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="170" y="380">
+            <mxPoint x="170" y="380" as="sourcePoint" />
+            <mxPoint x="430" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-6" value="7: Submit Form: POST /teller/deposits/{account}" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="430" y="430">
+            <mxPoint x="430" y="430" as="sourcePoint" />
+            <mxPoint x="950" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-7" value="8: DB::transaction -&gt; Lock Account FOR UPDATE" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="490">
+            <mxPoint x="950" y="490" as="sourcePoint" />
+            <mxPoint x="1210" y="490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-8" value="9: INSERT INTO transactions (receipt_number, amount, status='success')" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="550">
+            <mxPoint x="950" y="550" as="sourcePoint" />
+            <mxPoint x="1210" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-9" value="10: UPDATE accounts SET balance = balance + amount" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="610">
+            <mxPoint x="950" y="610" as="sourcePoint" />
+            <mxPoint x="1210" y="610" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-10" value="11: INSERT INTO jurnal_akuntansi (Debet 101 Kas Teller, Kredit 201 Simpanan)" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="670">
+            <mxPoint x="950" y="670" as="sourcePoint" />
+            <mxPoint x="1210" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-11" value="12: INSERT INTO audit_logs (deposit_completed)" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="730">
+            <mxPoint x="950" y="730" as="sourcePoint" />
+            <mxPoint x="1210" y="730" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-12" value="13: DB::commit() Transaksi Final" style="endArrow=open;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="1210" y="780">
+            <mxPoint x="1210" y="780" as="sourcePoint" />
+            <mxPoint x="950" y="780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-13" value="14: Return Respons Sukses &amp; Data Struk" style="endArrow=open;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="950" y="830">
+            <mxPoint x="950" y="830" as="sourcePoint" />
+            <mxPoint x="430" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-14" value="15: Kirim Data Cetak Thermal ESC/POS" style="endArrow=block;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="430" y="890">
+            <mxPoint x="430" y="890" as="sourcePoint" />
+            <mxPoint x="1470" y="890" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq-e-15" value="16: Cetak Kertas Struk Bukti Resmi" style="endArrow=open;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontColor=#000000;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" x="1470" y="950">
+            <mxPoint x="1470" y="950" as="sourcePoint" />
+            <mxPoint x="170" y="950" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-class" name="04 Class Diagram">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t-4" value="DIAGRAM KELAS: STRUKTUR DATA TRANSAKSIONAL BANK MINI SEKOLAH v2.2" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="1150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-user" value="&lt;b&gt;User&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- full_name: String&lt;br/&gt;- username: String (UK)&lt;br/&gt;- email: String (UK)&lt;br/&gt;- password: String (hash)&lt;br/&gt;- role: Enum['admin', 'teller']&lt;br/&gt;- status: Enum['active', 'blocked']&lt;hr/&gt;+ authenticate()&lt;br/&gt;+ updatePassword()&lt;br/&gt;+ hasRole(role)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="240" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-member" value="&lt;b&gt;Member&lt;/b&gt;&lt;hr/&gt;- nis: String (PK)&lt;br/&gt;- full_name: String&lt;br/&gt;- class_name: String&lt;br/&gt;- graduation_year: String&lt;br/&gt;- status: Enum['active', 'graduated']&lt;hr/&gt;+ promoteClass()&lt;br/&gt;+ graduate()" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="230" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-saver" value="&lt;b&gt;Saver&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- student_number: String (UK)&lt;br/&gt;- member_id: BigInt (FK)&lt;br/&gt;- full_name: String&lt;br/&gt;- pin_hash: String&lt;br/&gt;- password_hash: String&lt;br/&gt;- qr_code_value: String (UK)&lt;br/&gt;- status: Enum['active', 'blocked', 'graduated']&lt;br/&gt;- failed_pin_attempts: Int&lt;hr/&gt;+ verifyPin(pin)&lt;br/&gt;+ verifyPassword(pass)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="650" y="80" width="260" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-account" value="&lt;b&gt;Account&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- customer_id: BigInt (FK)&lt;br/&gt;- account_number: String (UK)&lt;br/&gt;- balance: BigInt&lt;br/&gt;- minimum_balance: BigInt (10000)&lt;br/&gt;- status: Enum['active', 'closed']&lt;hr/&gt;+ hasSufficientBalance(amount)&lt;br/&gt;+ deposit(amount)&lt;br/&gt;+ withdraw(amount)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="970" y="80" width="250" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-tx" value="&lt;b&gt;Transaction&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- receipt_number: String (UK)&lt;br/&gt;- slip_number: String&lt;br/&gt;- account_id: BigInt (FK)&lt;br/&gt;- teller_id: BigInt (FK)&lt;br/&gt;- type: Enum['deposit', 'withdrawal', 'transfer', 'reversal']&lt;br/&gt;- amount: BigInt&lt;br/&gt;- balance_before: BigInt&lt;br/&gt;- balance_after: BigInt&lt;br/&gt;- status: Enum['success', 'reversed']&lt;br/&gt;- reversal_of_transaction_id: BigInt (FK)&lt;hr/&gt;+ processAtomic()&lt;br/&gt;+ generateReceipt()&lt;br/&gt;+ reverse(admin_id, reason)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="650" y="360" width="260" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-cashreq" value="&lt;b&gt;CashRequest&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- request_number: String (UK)&lt;br/&gt;- teller_id: BigInt (FK)&lt;br/&gt;- amount: BigInt&lt;br/&gt;- status: Enum['pending', 'approved', 'rejected']&lt;br/&gt;- approved_by: BigInt (FK)&lt;br/&gt;- decision_notes: String&lt;hr/&gt;+ approve(admin_id, notes)&lt;br/&gt;+ reject(admin_id, notes)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="360" width="240" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-dailyrep" value="&lt;b&gt;DailyReport&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- report_number: String (UK)&lt;br/&gt;- report_date: Date&lt;br/&gt;- teller_id: BigInt (FK)&lt;br/&gt;- opening_balance: BigInt&lt;br/&gt;- total_deposit: BigInt&lt;br/&gt;- total_cash_received: BigInt&lt;br/&gt;- total_withdrawal: BigInt&lt;br/&gt;- closing_balance_system: BigInt&lt;br/&gt;- status: Enum['submitted', 'approved', 'rejected']&lt;hr/&gt;+ recapSystem()&lt;br/&gt;+ approve(admin_id)&lt;br/&gt;+ sweepToVault()" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="360" y="360" width="240" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-journal" value="&lt;b&gt;JurnalAkuntansi&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- journal_number: String (UK)&lt;br/&gt;- transaction_id: BigInt (FK)&lt;br/&gt;- cash_request_id: BigInt (FK)&lt;br/&gt;- account_code: String ('101', '102', '201')&lt;br/&gt;- debit_amount: BigInt&lt;br/&gt;- credit_amount: BigInt&lt;br/&gt;- description: String&lt;hr/&gt;+ postDoubleEntry()&lt;br/&gt;+ isBalanced()" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="970" y="360" width="250" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-closure" value="&lt;b&gt;AccountClosure&lt;/b&gt;&lt;hr/&gt;- id: BigInt (PK)&lt;br/&gt;- account_id: BigInt (FK)&lt;br/&gt;- saver_id: BigInt (FK)&lt;br/&gt;- requested_by: BigInt (FK)&lt;br/&gt;- payout_transaction_id: BigInt (FK)&lt;br/&gt;- payout_amount: BigInt&lt;br/&gt;- status: Enum['pending', 'approved', 'rejected']&lt;hr/&gt;+ requestClosure(pin)&lt;br/&gt;+ approve(admin_id)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="650" y="660" width="260" height="200" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

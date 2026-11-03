@@ -3,9 +3,10 @@
 return [
 
     /*
-     * Alasan: admin punya 10 tujuan. Dikelompokkan supaya bilah tab tetap satu baris tanpa
-     * geser ke kanan. "Data" = pengelolaan orang dan rekening, "Laporan" = keluaran angka.
-     * Penutupan rekening diputuskan di halaman Kelulusan, jadi tidak punya menu sendiri.
+     * Alasan: admin punya 11 tujuan. Dikelompokkan supaya bilah tab tetap satu baris tanpa
+     * geser ke kanan. "Data" = pengelolaan orang dan rekening, "Laporan" = keluaran angka
+     * dan keputusan kas. Penutupan rekening diputuskan di halaman Kelulusan, jadi tidak
+     * punya menu sendiri.
      * Neraca Saldo dan Buku Besar kini satu halaman, jadi Laporan cukup satu item untuknya.
      * Konfigurasi dibiarkan tautan langsung karena hanya satu tujuan; dropdown berisi satu
      * item menambah satu klik tanpa membantu.
@@ -25,6 +26,7 @@ return [
             'label' => 'Laporan',
             'items' => [
                 ['label' => 'Laporan Harian', 'route' => 'admin.daily-reports.index', 'routes' => ['admin.daily-reports.*']],
+                ['label' => 'Permintaan Kas', 'route' => 'admin.cash-requests.index', 'routes' => ['admin.cash-requests.*']],
                 ['label' => 'Laporan Bulanan', 'route' => 'admin.reports.monthly', 'routes' => ['admin.reports.monthly']],
                 ['label' => 'Buku Besar & Neraca Saldo', 'route' => 'admin.reports.general-ledger', 'routes' => ['admin.reports.general-ledger', 'admin.reports.trial-balance']],
                 ['label' => 'Audit Jurnal', 'route' => 'admin.journals.index', 'routes' => ['admin.journals.*']],
@@ -36,13 +38,8 @@ return [
     'teller' => [
         ['label' => 'Pencarian Penabung', 'route' => 'teller.members.search', 'routes' => ['teller.members.search', 'teller.members.lookup', 'teller.members.show', 'teller.members.activate', 'teller.members.activate.store', 'teller.deposits.*', 'teller.withdrawals.*', 'teller.transfers.*', 'teller.passbook.*', 'teller.transactions.*']],
         ['label' => 'Registrasi Anggota', 'route' => 'teller.members.register', 'routes' => ['teller.members.register', 'teller.members.register.store']],
+        ['label' => 'Permintaan Kas', 'route' => 'teller.cash-requests.index', 'routes' => ['teller.cash-requests.*']],
         ['label' => 'Penutupan Kas', 'route' => 'teller.closing.index', 'routes' => ['teller.closing.*']],
-    ],
-
-    'nasabah' => [
-        ['label' => 'Riwayat Mutasi', 'route' => 'nasabah.mutasi', 'routes' => ['nasabah.mutasi']],
-        ['label' => 'Rekening Koran', 'route' => 'nasabah.statement', 'routes' => ['nasabah.statement']],
-        ['label' => 'Ubah PIN Transaksi', 'route' => 'nasabah.pin', 'routes' => ['nasabah.pin', 'nasabah.pin.update']],
     ],
 
 ];

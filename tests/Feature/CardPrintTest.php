@@ -32,15 +32,6 @@ class CardPrintTest extends TellerTestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_nasabah_can_view_own_card_print_page(): void
-    {
-        $this->actingAs($this->nasabah, 'nasabah')
-            ->get(route('nasabah.card.print'))
-            ->assertOk()
-            ->assertSee('BANK MINI SEKOLAH')
-            ->assertSee($this->nasabah->full_name);
-    }
-
     public function test_card_print_page_contains_qr_image(): void
     {
         $response = $this->actingAs($this->admin, 'web')

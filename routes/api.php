@@ -15,8 +15,6 @@ use App\Http\Controllers\Mobile\AuthController as MobileAuthController;
 use App\Http\Controllers\Mobile\DashboardController as MobileDashboardController;
 use App\Http\Controllers\Mobile\MutasiController as MobileMutasiController;
 use App\Http\Controllers\MonthlyReportController;
-use App\Http\Controllers\Nasabah\DashboardController as NasabahDashboardController;
-use App\Http\Controllers\Nasabah\MutasiController;
 use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
 use App\Http\Controllers\Teller\ClosingController;
 use App\Http\Controllers\Teller\MemberActivationController;
@@ -110,10 +108,4 @@ Route::middleware(['role:teller'])->prefix('teller')->group(function () {
     Route::get('/closing', [ClosingController::class, 'index']);
     Route::post('/closing', [ClosingController::class, 'store']);
     Route::get('/closing/reports/{report}/print', [ClosingController::class, 'print']);
-});
-
-Route::middleware(['role:nasabah'])->prefix('nasabah')->group(function () {
-    Route::get('/dashboard', [NasabahDashboardController::class, 'index']);
-    Route::get('/mutasi', [MutasiController::class, 'index']);
-    Route::get('/statement', [MutasiController::class, 'statement']);
 });

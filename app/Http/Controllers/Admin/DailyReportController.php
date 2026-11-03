@@ -93,13 +93,13 @@ class DailyReportController extends Controller
         if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
-                'message' => 'Laporan berhasil disetujui dan kas dipindahkan ke brankas utama.',
+                'message' => 'Laporan berhasil disetujui dan kas dipindahkan ke kas utama.',
                 'data' => $report->fresh(['teller', 'approver', 'cashTransfer.approvedBy']),
             ]);
         }
 
         return redirect()->route('admin.daily-reports.show', $report)
-            ->with('success', 'Laporan berhasil disetujui dan kas dipindahkan ke brankas utama.');
+            ->with('success', 'Laporan berhasil disetujui dan kas dipindahkan ke kas utama.');
     }
 
     public function reject(RejectReportRequest $request, DailyReport $report)

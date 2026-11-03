@@ -54,7 +54,7 @@ FASE 4 — Penutupan Kas dan Approval Administrator
 - [x] Implementasikan pencatatan catatan approval, waktu approval, dan identitas Administrator.
 - [x] Buat endpoint penolakan laporan dengan catatan wajib beserta penerbitan ulang dengan nomor laporan yang sama.
 - [x] Tolak approval bila arus kas tanggal tersebut berubah setelah laporan dibuat.
-- [x] Implementasikan penyapuan seluruh kas laci ke brankas utama saat approval, dengan jurnal Debet 102 Kas Brankas dan Kredit 101 Kas Teller.
+- [x] Implementasikan penyapuan seluruh kas laci ke kas utama saat approval, dengan jurnal Debet 102 Kas Utama dan Kredit 101 Kas Teller.
 - [x] Perbarui status laporan dan tampilan riwayat setelah approval atau penolakan.
 FASE 5 — Informasi Mandiri Nasabah dan Integritas Akuntansi
 - [x] Buat halaman dashboard Nasabah yang menampilkan saldo rekening miliknya.
@@ -78,7 +78,7 @@ FASE 6 — Transaksi Lanjutan dan Layanan Nasabah
 - [x] Buat fitur cetak/ekspor Rekening Koran resmi (e-Statement) untuk Nasabah dan Administrator.
 - [x] Buat tampilan Kartu Nasabah Virtual ber-QR Code di dasbor nasabah dan profil Administrator.
 FASE 7 — Modul Laporan Keuangan dan Akuntansi Lengkap
-- [x] Implementasikan auto-posting jurnal akuntansi saat approval pemindahan kas (Debet 102 Kas Brankas, Kredit 101 Kas Teller).
+- [x] Implementasikan auto-posting jurnal akuntansi saat approval pemindahan kas (Debet 102 Kas Utama, Kredit 101 Kas Teller).
 - [x] Buat modul Buku Besar (General Ledger) dengan filter per kode akun (101, 102, 201) dan rentang tanggal.
 - [x] Buat modul Neraca Saldo (Trial Balance) beserta indikator likuiditas kas.
 - [x] Buat endpoint ekspor laporan akuntansi (Jurnal, Buku Besar, Neraca Saldo) ke format CSV.
@@ -93,7 +93,7 @@ FASE 9 — Penyempurnaan Berbasis Riset Pengguna (Revisi Besar)
 - [x] Buat migration yang menambahkan kolom reversal_of_transaction_id, reversed_at, reversed_by, reversal_reason pada tabel transactions.
 - [x] Buat endpoint dan otorisasi koreksi transaksi yang hanya dapat dipanggil Administrator.
 - [x] Tambahkan tombol koreksi dan tampilan riwayat pembalik pada halaman transaksi dan mutasi.
-- [x] Tolak koreksi transaksi bila laporan harian tanggal tersebut sudah disetujui (kas sudah dipindah ke brankas).
+- [x] Tolak koreksi transaksi bila laporan harian tanggal tersebut sudah disetujui (kas sudah dipindah ke kas utama).
 - [x] Uji integritas koreksi: transfer, saldo tidak mencukupi, dampak rekap kas, dan tampilan mutasi/buku tabungan.
 - [x] Perbaiki down() migrasi daily_reports dan savers agar rollback berjalan (drop unique index sebelum kolom).
 - [x] Perluas pencarian nasabah berdasarkan nomor rekening, NIS, dan nama lengkap beserta halaman hasil pencarian ganda.
@@ -102,7 +102,7 @@ FASE 9 — Penyempurnaan Berbasis Riset Pengguna (Revisi Besar)
 - [x] Buat laporan Buku Besar dan Neraca Saldo (aset dan kewajiban saja, tanpa pendapatan/beban karena tidak mencari keuntungan) beserta indikator keseimbangan (is_balanced) untuk Administrator.
 - [x] Perluas konfigurasi sistem: nama bank, saldo mengendap, dan setoran minimal aktivasi anggota.
 - [x] Perbarui menu navigasi, dashboard Teller, dan halaman konfigurasi Administrator.
-- [x] Tambahkan pengujian integritas koreksi & Kas (brankas), struk, pencarian, registrasi, laporan keuangan, JSON, dan matriks otorisasi.
+- [x] Tambahkan pengujian integritas koreksi & Kas (kas utama), struk, pencarian, registrasi, laporan keuangan, JSON, dan matriks otorisasi.
 - [x] Verifikasi migrate:fresh, migrate:reset (semua down), dan migrate (semua up) pada database uji.
 FASE 10 — Aplikasi Nasabah Mobile (Laravel API + aplikasi Flutter)
 - [x] Buat tabel mobile_tokens dengan MobileTokenService: token disimpan sebagai hash, punya kedaluwarsa, dan mencatat last_used_at.
@@ -135,6 +135,16 @@ FASE 12 — Restrukturisasi Peran dan Model Kas
 - [x] Hapus kolom admin fee dari tabel terkait.
 - [x] Hapus kolom closing_balance_physical, closing_breakdown, dan cash_difference dari daily_reports; hapus physical_cash_amount dan denomination_breakdown dari transactions.
 - [x] Hapus konfigurasi jam operasional dan batas penarikan dari system_configs; konfigurasi tinggal bank_name, minimum_balance (saldo mengendap), dan min_deposit_to_activate (setoran minimal aktivasi).
-- [x] Atur endpoint DailyReportController (Admin): approve dan reject laporan; approval menyapu seluruh kas laci ke Brankas Utama (Debet 102 Kas Brankas, Kredit 101 Kas Teller) dan menolak bila arus kas tanggalnya berubah setelah laporan dibuat.
+- [x] Atur endpoint DailyReportController (Admin): approve dan reject laporan; approval menyapu seluruh kas laci ke Kas Utama (Debet 102 Kas Utama, Kredit 101 Kas Teller) dan menolak bila arus kas tanggalnya berubah setelah laporan dibuat.
 - [x] Perbarui halaman penutupan kas Teller: tanpa input uang fisik dan rincian pecahan, hanya rekap sistem dan pembuatan laporan berstatus menunggu validasi.
 - [x] Perbarui navigasi, dashboard, dan matriks otorisasi untuk struktur role baru (admin, teller, nasabah).
+FASE 13 — Permintaan Kas Modal Teller dan Penamaan Kas Utama
+- [x] Buat tabel cash_requests (pengajuan kas teller: teller_id, amount, reason, request_number, status pending/approved/rejected, approved_by, approved_at, decision_notes) beserta kolom cash_request_id pada jurnal_akuntansi dan total_cash_received pada daily_reports.
+- [x] Ganti penamaan "brankas utama (khazanah)" menjadi "kas utama" pada copy aplikasi, label jurnal, halaman, dan data destination_location pada cash_transfers.
+- [x] Buat CashRequestService: pengajuan teller tanpa pembatasan permintaan aktif, approval langsung cair dengan jurnal Debet 101 Kas Teller dan Kredit 102 Kas Utama dalam DB::transaction, penolakan dengan catatan wajib, dan audit log (cash_request_created, cash_request_approved, cash_request_rejected).
+- [x] Buat halaman Teller: formulir permintaan kas, saldo laci hari ini, dan riwayat status permintaan.
+- [x] Buat panel Administrator: saldo pos kas dari jurnal (akun 101 dan 102), daftar permintaan menunggu dengan keputusan setujui/tolak menyertai catatan wajib, dan riwayat keputusan.
+- [x] Rebita rekap laporan harian (DailyReportService::recap) agar kas yang cair dari kas utama ikut masuk saldo laci, laporan harian, dan penyapuan akhir hari.
+- [x] Tampilkan saldo kas laci di dashboard Teller beserta tautan menu Permintaan Kas.
+- [x] Tutup pengajuan dan persetujuan permintaan kas setelah laporan penutupan kas hari itu dikirim; laporan yang ditolak membuka kembali pengajuan.
+- [x] Tambahkan CashRequestTest (pengajuan, validasi, approval jurnal 101/102, penolakan, otorisasi, banyak permintaan aktif, rekap, dan penyapuan laporan) dan perbarui assertion penamaan lama pada test terdahulu.

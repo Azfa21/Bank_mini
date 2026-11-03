@@ -25,7 +25,7 @@
             <span aria-hidden="true" class="mt-0.5 font-bold">{{ $report->status === 'approved' ? '●' : ($report->status === 'rejected' ? '■' : '▲') }}</span>
             <p>
                 @if ($report->status === 'approved')
-                    Laporan <strong>{{ $report->report_number }}</strong> sudah disetujui dan kas pindah ke brankas utama.
+                    Laporan <strong>{{ $report->report_number }}</strong> sudah disetujui dan kas pindah ke kas utama.
                 @elseif ($report->status === 'rejected')
                     Laporan <strong>{{ $report->report_number }}</strong> ditolak: {{ $report->approval_notes }}. Periksa ulang lalu kirim kembali.
                 @else
@@ -51,6 +51,10 @@
                         <dd class="tnum font-semibold text-brand-900">+ Rp {{ number_format($recap['total_deposit'], 0, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-4 px-5 py-3">
+                        <dt class="text-stone-600">Kas diterima dari kas utama</dt>
+                        <dd class="tnum font-semibold text-brand-900">+ Rp {{ number_format($recap['total_cash_received'], 0, ',', '.') }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-5 py-3">
                         <dt class="text-stone-600">Total penarikan</dt>
                         <dd class="tnum font-semibold text-red-800">− Rp {{ number_format($recap['total_withdrawal'], 0, ',', '.') }}</dd>
                     </div>
@@ -62,7 +66,7 @@
 
                 <div class="border-t border-stone-100 px-5 py-5">
                     <h3 class="text-[15px] font-bold text-stone-900">Kirim laporan harian</h3>
-                    <p class="text-[13px] text-stone-600 mt-1 mb-3">Laporan memakai saldo akhir sistem di atas. Administrator memvalidasi sebelum kas dipindah ke brankas.</p>
+                    <p class="text-[13px] text-stone-600 mt-1 mb-3">Laporan memakai saldo akhir sistem di atas. Administrator memvalidasi sebelum kas dipindah ke kas utama.</p>
                     <form method="POST" action="{{ route('teller.closing.store') }}" class="space-y-4" id="closing-form">
                         @csrf
                         <input type="hidden" name="report_date" value="{{ $date }}">

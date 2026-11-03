@@ -109,7 +109,7 @@ class CashSweepIntegrityTest extends TellerTestCase
             'amount' => 50000,
             'debit_amount' => 0,
             'credit_amount' => 50000,
-            'description' => 'Pemindahan kas ke brankas',
+            'description' => 'Pemindahan kas ke Kas Utama',
             'status' => 'posted',
             'journal_at' => now(),
         ]);
