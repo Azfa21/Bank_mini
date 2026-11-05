@@ -53,6 +53,12 @@ flutter test      # test aplikasi
 flutter run --dart-define=API_BASE_URL=http://<host>:<port>/api
 ```
 
+### Tautan APK di Halaman Awal
+Halaman awal menampilkan tombol unduh aplikasi nasabah hanya jika tautannya tersedia.
+Letakkan berkas APK di `public/unduhan/bank-mini-nasabah.apk`, atau isi
+`BANKMINI_APK_URL` di `.env` dengan URL unduhan eksternal. Bila keduanya kosong,
+halaman menampilkan keterangan bahwa APK dapat diminta ke petugas loket, bukan tombol mati.
+
 ### Perintah Artisan Khusus Bank Mini
 ```bash
 # Menyiapkan arsip satu angkatan siswa untuk kelulusan (ada konfirmasi; --dry-run hanya melihat rencana)

@@ -29,6 +29,8 @@ use App\Services\DailyReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::view('/', 'landing')->name('home');
+
 Route::middleware(['role:admin,teller'])->group(function () {
     Route::get('/qr', [QrCodeController::class, 'show'])->name('qr.show');
     Route::get('/qr/download', [QrCodeController::class, 'download'])->name('qr.download');

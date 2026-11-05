@@ -69,6 +69,24 @@ body {
     border-top: 3px solid var(--color-brand-800);
 }
 
+/* Alasan: bilah menu desktop merapat saat tidak dipakai agar ruang halaman lebih luas;
+   area atas dan fokus keyboard tetap membuka akses ke seluruh tujuan navigasi. */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+    [data-auto-hide-nav] {
+        max-height: 8rem;
+        opacity: 1;
+        transform: translateY(0);
+        transition: max-height 220ms ease, opacity 180ms ease, transform 220ms ease;
+    }
+
+    [data-auto-hide-nav].is-collapsed {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-0.5rem);
+        pointer-events: none;
+    }
+}
+
 /* Alasan: hormati pengguna yang mematikan animasi, gerak hanya hover. */
 @media (prefers-reduced-motion: reduce) {
     *,

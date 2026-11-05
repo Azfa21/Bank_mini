@@ -95,7 +95,7 @@
         }
     @endphp
 
-    <header class="bg-white border-b border-stone-200">
+    <header class="bg-white border-b border-stone-200 md:sticky md:top-0 md:z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between gap-3 min-h-[64px] py-2">
                 <div class="flex items-center gap-3 min-w-0">
@@ -145,7 +145,7 @@
                      supaya bilah tab tetap satu baris di semua lebar layar dan semua tujuan, termasuk
                      Konfigurasi dan Audit Jurnal, terlihat tanpa menggeser halaman ke kanan. flex-wrap
                      tetap dipasang sebagai jaring pengaman kalau label bertambah panjang. --}}
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden md:flex md:flex-wrap items-center gap-x-1">
+                <div data-auto-hide-nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden md:flex md:flex-wrap items-center gap-x-1">
                     @foreach ($menuItems as $index => $item)
                         @if (isset($item['children']))
                             <div class="relative" data-nav-group>

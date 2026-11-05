@@ -138,6 +138,54 @@ function bindNavGroups() {
     });
 }
 
+function bindAutoHideNav() {
+    var nav = document.querySelector('[data-auto-hide-nav]');
+    var desktopPointer = window.matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)');
+    if (!nav || !desktopPointer.matches) return;
+
+    var hideTimer;
+
+    function hasOpenGroup() {
+        return Array.prototype.some.call(nav.querySelectorAll('[data-nav-toggle]'), function (button) {
+            return button.getAttribute('aria-expanded') === 'true';
+        });
+    }
+
+    function show() {
+        window.clearTimeout(hideTimer);
+        nav.classList.remove('is-collapsed');
+    }
+
+    function scheduleHide(delay) {
+        window.clearTimeout(hideTimer);
+        hideTimer = window.setTimeout(function () {
+            if (!nav.contains(document.activeElement) && !hasOpenGroup()) {
+                nav.classList.add('is-collapsed');
+            }
+        }, delay);
+    }
+
+    document.addEventListener('pointermove', function (event) {
+        if (event.pointerType !== 'mouse') return;
+        if (event.clientY <= 108 || nav.contains(event.target)) {
+            show();
+            return;
+        }
+        if (!nav.classList.contains('is-collapsed')) scheduleHide(1100);
+    });
+
+    nav.addEventListener('pointerenter', show);
+    nav.addEventListener('pointerleave', function () { scheduleHide(1100); });
+    nav.addEventListener('focusin', show);
+    nav.addEventListener('focusout', function () {
+        window.setTimeout(function () {
+            if (!nav.contains(document.activeElement)) scheduleHide(2200);
+        }, 0);
+    });
+
+    scheduleHide(2400);
+}
+
 function bindLoginToggle() {
     var input = document.getElementById('secret');
     var toggle = document.getElementById('toggle-secret');
@@ -333,6 +381,7 @@ function bindPromotionPickers() {
 document.addEventListener('DOMContentLoaded', function () {
     bindMenuToggle();
     bindNavGroups();
+    bindAutoHideNav();
     bindLoginToggle();
     bindAuthTabs();
     bindPrintButtons();
