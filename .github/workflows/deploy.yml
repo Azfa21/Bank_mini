@@ -1,20 +1,33 @@
-
 name: Deploy Bank Mini
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: bankmini-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
 
     steps:
+      # ==========================================
+      # 1. CHECKOUT REPOSITORY
+      # ==========================================
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # ==========================================
+      # 2. SETUP PHP
+      # ==========================================
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -23,12 +36,18 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      # ==========================================
+      # 3. SETUP NODE.JS
+      # ==========================================
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
 
+      # ==========================================
+      # 4. INSTALL PHP DEPENDENCIES
+      # ==========================================
       - name: Install PHP dependencies
         run: |
           composer install \
@@ -38,17 +57,32 @@ jobs:
             --no-progress \
             --optimize-autoloader
 
+      # ==========================================
+      # 5. INSTALL NODE DEPENDENCIES
+      # ==========================================
       - name: Install Node dependencies
         run: npm ci
 
+      # ==========================================
+      # 6. BUILD FRONTEND
+      # ==========================================
       - name: Build frontend
         run: npm run build
 
+      # ==========================================
+      # 7. VALIDATE BUILD
+      # ==========================================
       - name: Validate build
         run: |
           test -f public/build/manifest.json
           test -f vendor/autoload.php
 
+          echo "Build frontend berhasil."
+          echo "Dependensi Laravel tersedia."
+
+      # ==========================================
+      # 8. PACKAGE APPLICATION
+      # ==========================================
       - name: Package application
         run: |
           tar -czf /tmp/bankmini-app.tar.gz \
@@ -67,6 +101,9 @@ jobs:
           tar -czf /tmp/bankmini-build.tar.gz \
             -C public/build .
 
+      # ==========================================
+      # 9. CONFIGURE SSH
+      # ==========================================
       - name: Configure SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_KEY }}
@@ -81,6 +118,9 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      # ==========================================
+      # 10. UPLOAD DEPLOYMENT FILES
+      # ==========================================
       - name: Upload deployment files
         env:
           SSH_HOST: ${{ secrets.CPANEL_HOST }}
@@ -95,6 +135,9 @@ jobs:
             /tmp/bankmini-build.tar.gz \
             "$SSH_USERNAME@$SSH_HOST:/home/bankmini/"
 
+      # ==========================================
+      # 11. DEPLOY TO CPANEL
+      # ==========================================
       - name: Deploy to cPanel
         env:
           SSH_HOST: ${{ secrets.CPANEL_HOST }}
@@ -106,24 +149,52 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$SSH_USERNAME@$SSH_HOST" \
-            "GITHUB_SHA='$GITHUB_SHA' bash -s" <<'REMOTE'
+            "GITHUB_SHA='$GITHUB_SHA' GITHUB_RUN_ID='$GITHUB_RUN_ID' GITHUB_RUN_ATTEMPT='$GITHUB_RUN_ATTEMPT' bash -s" <<'REMOTE'
 
           set -euo pipefail
 
+          # ======================================
+          # PATH CONFIGURATION
+          # ======================================
+
           APP="/home/bankmini/bankmini"
           PUBLIC="/home/bankmini/public_html"
-          SHORT_SHA="${GITHUB_SHA:0:12}"
 
-          STAGE="/home/bankmini/bankmini-staging-$SHORT_SHA"
-          OLD_APP="/home/bankmini/bankmini-previous-$SHORT_SHA"
-          BUILD_NEXT="$PUBLIC/build_next"
-          OLD_BUILD="/home/bankmini/build-previous-$SHORT_SHA"
+          SHORT_SHA="${GITHUB_SHA:0:12}"
+          RUN_SUFFIX="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          STAGE="/home/bankmini/bankmini-staging-$SHORT_SHA-$RUN_SUFFIX"
+          OLD_APP="/home/bankmini/bankmini-previous-$SHORT_SHA-$RUN_SUFFIX"
+
+          BUILD_NEXT="$PUBLIC/build_next-$RUN_SUFFIX"
+          OLD_BUILD="/home/bankmini/build-previous-$SHORT_SHA-$RUN_SUFFIX"
+
+          FAILED_APP="/home/bankmini/bankmini-failed-$SHORT_SHA-$RUN_SUFFIX"
+
+          echo "=========================================="
+          echo "DEPLOY BANK MINI"
+          echo "Commit: $SHORT_SHA"
+          echo "=========================================="
+
+          # ======================================
+          # 1. VALIDATE OLD APPLICATION
+          # ======================================
 
           echo "===== VALIDASI APLIKASI LAMA ====="
 
           test -f "$APP/.env"
           test -d "$APP/storage"
           test -f "$APP/artisan"
+          test -d "$PUBLIC/build"
+
+          echo "Aplikasi lama ditemukan."
+          echo "File .env ditemukan."
+          echo "Storage ditemukan."
+          echo "Frontend lama ditemukan."
+
+          # ======================================
+          # 2. PREPARE NEW APPLICATION
+          # ======================================
 
           echo "===== PERSIAPAN APLIKASI BARU ====="
 
@@ -133,23 +204,48 @@ jobs:
           tar -xzf /home/bankmini/bankmini-app.tar.gz \
             -C "$STAGE"
 
+          # Pertahankan konfigurasi environment
           cp -a "$APP/.env" "$STAGE/.env"
 
+          # Pertahankan storage lama
           rm -rf "$STAGE/storage"
           cp -a "$APP/storage" "$STAGE/storage"
 
+          # Pertahankan storage symbolic link
           if [ -L "$APP/public/storage" ]; then
             cp -a "$APP/public/storage" "$STAGE/public/storage"
           fi
 
+          # Validasi aplikasi baru
           test -f "$STAGE/artisan"
           test -f "$STAGE/vendor/autoload.php"
+          test -f "$STAGE/.env"
+
+          echo "Aplikasi baru berhasil disiapkan."
+
+          # ======================================
+          # 3. CLEAR LARAVEL CACHE
+          # ======================================
 
           echo "===== MEMBERSIHKAN CACHE ====="
 
           php "$STAGE/artisan" config:clear
           php "$STAGE/artisan" route:clear
           php "$STAGE/artisan" view:clear
+
+          # ======================================
+          # 4. DATABASE MIGRATION
+          # ======================================
+
+          echo "===== MENJALANKAN MIGRASI DATABASE ====="
+
+          php "$STAGE/artisan" migrate --force --no-interaction
+
+          echo "Migrasi database berhasil."
+
+          # ======================================
+          # 5. PREPARE FRONTEND
+          # ======================================
 
           echo "===== PERSIAPAN FRONTEND ====="
 
@@ -161,46 +257,96 @@ jobs:
 
           test -f "$BUILD_NEXT/manifest.json"
 
-          echo "===== MENGGANTI APLIKASI ====="
+          echo "Frontend baru berhasil disiapkan."
 
-          if [ -e "$OLD_APP" ]; then
-            echo "Direktori backup sudah ada. Deploy dihentikan."
+          # ======================================
+          # 6. VALIDATE BACKUP DESTINATIONS
+          # ======================================
+
+          echo "===== VALIDASI FOLDER BACKUP ====="
+
+          if [ -e "$OLD_APP" ] || \
+             [ -e "$OLD_BUILD" ] || \
+             [ -e "$FAILED_APP" ]; then
+
+            echo "Folder backup sudah ada."
+            echo "Deployment dihentikan untuk mencegah penimpaan."
             exit 1
           fi
+
+          # ======================================
+          # 7. REPLACE APPLICATION
+          # ======================================
+
+          echo "===== MENGGANTI APLIKASI ====="
 
           mv "$APP" "$OLD_APP"
 
           if ! mv "$STAGE" "$APP"; then
+
+            echo "Gagal mengaktifkan aplikasi baru."
+            echo "Memulihkan aplikasi lama."
+
             mv "$OLD_APP" "$APP"
+
             exit 1
           fi
 
+          echo "Aplikasi baru berhasil diaktifkan."
+
+          # ======================================
+          # 8. REPLACE FRONTEND
+          # ======================================
+
           echo "===== MENGGANTI FRONTEND ====="
 
-          if [ -d "$PUBLIC/build" ]; then
-            mv "$PUBLIC/build" "$OLD_BUILD"
-          fi
+          if ! mv "$PUBLIC/build" "$OLD_BUILD"; then
 
-          if ! mv "$BUILD_NEXT" "$PUBLIC/build"; then
-            if [ -d "$OLD_BUILD" ]; then
-              mv "$OLD_BUILD" "$PUBLIC/build"
-            fi
+            echo "Gagal memindahkan frontend lama."
+            echo "Memulihkan aplikasi lama."
 
-            FAILED_APP="/home/bankmini/bankmini-failed-$SHORT_SHA"
             mv "$APP" "$FAILED_APP"
             mv "$OLD_APP" "$APP"
 
             exit 1
           fi
 
+          if ! mv "$BUILD_NEXT" "$PUBLIC/build"; then
+
+            echo "Gagal mengaktifkan frontend baru."
+            echo "Memulai rollback."
+
+            mv "$OLD_BUILD" "$PUBLIC/build"
+
+            mv "$APP" "$FAILED_APP"
+            mv "$OLD_APP" "$APP"
+
+            exit 1
+          fi
+
+          echo "Frontend baru berhasil diaktifkan."
+
+          # ======================================
+          # 9. CLEANUP TEMPORARY ARCHIVES
+          # ======================================
+
           echo "===== MEMBERSIHKAN ARSIP ====="
 
           rm -f /home/bankmini/bankmini-app.tar.gz
           rm -f /home/bankmini/bankmini-build.tar.gz
 
-          echo "===== DEPLOY SELESAI ====="
+          # ======================================
+          # 10. DEPLOYMENT SUMMARY
+          # ======================================
+
+          echo "=========================================="
+          echo "DEPLOY SELESAI"
+          echo "=========================================="
+
           echo "Commit: $SHORT_SHA"
           echo "Backup aplikasi: $OLD_APP"
           echo "Backup frontend: $OLD_BUILD"
+
+          echo "=========================================="
 
           REMOTE
