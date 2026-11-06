@@ -75,9 +75,11 @@ jobs:
       - name: Validate build
         run: |
           test -f public/build/manifest.json
+          test -f public/images/bank-mini-logo.svg
           test -f vendor/autoload.php
 
           echo "Build frontend berhasil."
+          echo "Logo publik tersedia."
           echo "Dependensi Laravel tersedia."
 
       # ==========================================
@@ -220,6 +222,7 @@ jobs:
           test -f "$STAGE/artisan"
           test -f "$STAGE/vendor/autoload.php"
           test -f "$STAGE/.env"
+          test -f "$STAGE/public/images/bank-mini-logo.svg"
 
           echo "Aplikasi baru berhasil disiapkan."
 
@@ -327,7 +330,25 @@ jobs:
           echo "Frontend baru berhasil diaktifkan."
 
           # ======================================
-          # 9. CLEANUP TEMPORARY ARCHIVES
+          # 9. SYNC PUBLIC IMAGES
+          # ======================================
+
+          echo "===== SINKRONISASI GAMBAR PUBLIK ====="
+
+          SOURCE_IMAGES="$APP/public/images"
+
+          test -d "$SOURCE_IMAGES"
+
+          mkdir -p "$PUBLIC/images"
+
+          cp -a "$SOURCE_IMAGES/." "$PUBLIC/images/"
+
+          test -f "$PUBLIC/images/bank-mini-logo.svg"
+
+          echo "Seluruh gambar publik berhasil disinkronkan."
+
+          # ======================================
+          # 10. CLEANUP TEMPORARY ARCHIVES
           # ======================================
 
           echo "===== MEMBERSIHKAN ARSIP ====="
@@ -336,7 +357,7 @@ jobs:
           rm -f /home/bankmini/bankmini-build.tar.gz
 
           # ======================================
-          # 10. DEPLOYMENT SUMMARY
+          # 11. DEPLOYMENT SUMMARY
           # ======================================
 
           echo "=========================================="
