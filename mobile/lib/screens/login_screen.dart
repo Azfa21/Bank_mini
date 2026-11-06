@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -207,13 +208,13 @@ class _BrandBlock extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.brand800,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(
-            Icons.account_balance_rounded,
-            color: AppColors.white,
-            size: 26,
+          clipBehavior: Clip.antiAlias,
+          child: SvgPicture.asset(
+            'assets/images/bank-mini-logo.svg',
+            width: 48,
+            height: 48,
           ),
         ),
         const SizedBox(width: 12),

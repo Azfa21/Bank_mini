@@ -91,10 +91,18 @@ class ForgotPasswordTest extends TestCase
     {
         Mail::fake();
 
-        $this->post('/forgot-password/request-otp', [
+        $payload = [
             'account_type' => $accountType,
             'identifier' => $identifier,
-        ])->assertSessionHasNoErrors();
+        ];
+
+        if ($accountType === 'nasabah') {
+            $this->postJson('/api/mobile/forgot-password/request-otp', $payload)
+                ->assertOk()
+                ->assertJson(['success' => true]);
+        } else {
+            $this->post('/forgot-password/request-otp', $payload)->assertSessionHasNoErrors();
+        }
 
         $code = null;
 
@@ -115,8 +123,8 @@ class ForgotPasswordTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Lupa password');
-        $response->assertSee('Pegawai');
-        $response->assertSee('Nasabah');
+        $response->assertSee('Username Akun');
+        $response->assertDontSee('Nasabah');
     }
 
     public function test_recovery_page_asks_for_login_identifier_not_email(): void
@@ -124,7 +132,8 @@ class ForgotPasswordTest extends TestCase
         $response = $this->get('/forgot-password');
 
         $response->assertSee('Username Akun');
-        $response->assertSee('Nomor Siswa');
+        $response->assertSee('username pegawai');
+        $response->assertDontSee('Nomor Siswa');
         $response->assertDontSee('Email Terdaftar');
     }
 
@@ -167,18 +176,30 @@ class ForgotPasswordTest extends TestCase
         $this->assertDatabaseMissing('password_reset_otps', ['account_type' => 'staff']);
     }
 
-    public function test_nasabah_number_is_enough_to_start_recovery(): void
+    public function test_nasabah_recovery_is_rejected_from_web(): void
     {
         Mail::fake();
 
-        $this->post('/forgot-password/request-otp', [
+        $response = $this->post('/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
-        ])->assertSessionHas('otp_sent', true);
+        ]);
 
-        Mail::assertSent(ResetOtpMail::class, fn (ResetOtpMail $mail): bool => $mail->hasTo('ani.pertiwi@example.test'));
+        $response->assertRedirect(route('password.request'));
+        $response->assertSessionHas('error');
 
-        $this->assertDatabaseHas('password_reset_otps', [
+        $resetResponse = $this->post('/forgot-password/reset', [
+            'account_type' => 'nasabah',
+            'identifier' => '2023001',
+            'otp' => '123456',
+            'password' => 'password-baru-123',
+            'password_confirmation' => 'password-baru-123',
+        ]);
+
+        $resetResponse->assertRedirect(route('password.request'));
+        $resetResponse->assertSessionHas('error');
+        Mail::assertNothingSent();
+        $this->assertDatabaseMissing('password_reset_otps', [
             'account_type' => 'nasabah',
             'account_id' => $this->nasabah->id,
         ]);
@@ -303,10 +324,10 @@ class ForgotPasswordTest extends TestCase
     {
         Mail::fake();
 
-        $this->post('/forgot-password/request-otp', [
+        $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
-        ])->assertSessionHas('otp_sent', true);
+        ])->assertOk()->assertJson(['success' => true]);
 
         Mail::assertSent(ResetOtpMail::class, fn (ResetOtpMail $mail): bool => $mail->hasTo('ani.pertiwi@example.test'));
 
@@ -329,7 +350,7 @@ class ForgotPasswordTest extends TestCase
                 ->assertOk();
         }
 
-        $response = $this->post('/forgot-password/reset', [
+        $response = $this->postJson('/api/mobile/forgot-password/reset', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
             'otp' => $code,
@@ -337,8 +358,7 @@ class ForgotPasswordTest extends TestCase
             'password_confirmation' => 'password-baru-123',
         ]);
 
-        $response->assertRedirect(route('login'));
-        $response->assertSessionHas('success');
+        $response->assertOk()->assertJson(['success' => true]);
 
         $fresh = $this->nasabah->fresh();
 
@@ -382,13 +402,13 @@ class ForgotPasswordTest extends TestCase
 
         $code = $this->requestOtpCode('nasabah', '2023005');
 
-        $this->post('/forgot-password/reset', [
+        $this->postJson('/api/mobile/forgot-password/reset', [
             'account_type' => 'nasabah',
             'identifier' => '2023005',
             'otp' => $code,
             'password' => 'password-pertama-123',
             'password_confirmation' => 'password-pertama-123',
-        ])->assertRedirect(route('login'));
+        ])->assertOk()->assertJson(['success' => true]);
 
         $this->assertTrue(Hash::check('password-pertama-123', $saver->fresh()->password_hash));
 
@@ -402,23 +422,23 @@ class ForgotPasswordTest extends TestCase
     {
         $code = $this->requestOtpCode('nasabah', '2023001');
 
-        $responseShort = $this->post('/forgot-password/reset', [
+        $responseShort = $this->postJson('/api/mobile/forgot-password/reset', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
             'otp' => $code,
             'password' => 'short',
             'password_confirmation' => 'short',
         ]);
-        $responseShort->assertSessionHasErrors('password');
+        $responseShort->assertUnprocessable()->assertJsonValidationErrors('password');
 
-        $responseMismatch = $this->post('/forgot-password/reset', [
+        $responseMismatch = $this->postJson('/api/mobile/forgot-password/reset', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
             'otp' => $code,
             'password' => 'password-baru-123',
             'password_confirmation' => 'nilai-lain-456',
         ]);
-        $responseMismatch->assertSessionHasErrors('password');
+        $responseMismatch->assertUnprocessable()->assertJsonValidationErrors('password');
     }
 
     public function test_api_staff_otp_and_reset_endpoints_return_json(): void
@@ -532,14 +552,13 @@ class ForgotPasswordTest extends TestCase
     {
         Mail::fake();
 
-        $response = $this->post('/forgot-password/request-otp', [
+        $response = $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023002',
         ]);
 
         Mail::assertNothingSent();
-        $response->assertSessionHasErrors('identifier');
-        $response->assertSessionMissing('otp_sent');
+        $response->assertForbidden()->assertJson(['success' => false]);
         $this->assertTrue(Hash::check('123456', $this->blockedNasabah->fresh()->pin_hash));
     }
 
@@ -560,14 +579,13 @@ class ForgotPasswordTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->post('/forgot-password/request-otp', [
+        $response = $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '17801',
         ]);
 
         Mail::assertNothingSent();
-        $response->assertSessionHasErrors('identifier');
-        $response->assertSessionMissing('otp_sent');
+        $response->assertNotFound()->assertJson(['success' => false]);
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'password_reset_otp_request_ignored',
@@ -589,14 +607,13 @@ class ForgotPasswordTest extends TestCase
             'email' => null,
         ]);
 
-        $response = $this->post('/forgot-password/request-otp', [
+        $response = $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023099',
         ]);
 
         Mail::assertNothingSent();
-        $response->assertSessionHasErrors('identifier');
-        $response->assertSessionMissing('otp_sent');
+        $response->assertUnprocessable()->assertJson(['success' => false]);
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'password_reset_otp_request_ignored',
@@ -608,19 +625,20 @@ class ForgotPasswordTest extends TestCase
     {
         Mail::fake();
 
-        $this->from(route('password.request'))->post('/forgot-password/request-otp', [
+        $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
-        ])->assertSessionHas('otp_sent', true);
+        ])->assertOk()->assertJson(['success' => true]);
 
-        $second = $this->from(route('password.request'))->post('/forgot-password/request-otp', [
+        $second = $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
         ]);
 
-        $second->assertSessionHasNoErrors();
-        $second->assertSessionHas('otp_sent', true);
-        $second->assertSessionHas('email', 'ani.pertiwi@example.test');
+        $second->assertOk()->assertJson([
+            'success' => true,
+            'email' => 'ani.pertiwi@example.test',
+        ]);
 
         Mail::assertSent(ResetOtpMail::class, 1);
         $this->assertDatabaseHas('audit_logs', ['action' => 'password_reset_otp_request_throttled']);
@@ -657,17 +675,19 @@ class ForgotPasswordTest extends TestCase
         $followUp->assertDontSee('Kode verifikasi dikirim ke', false);
     }
 
-    public function test_full_email_reaches_the_browser_on_step_two(): void
+    public function test_mobile_recovery_returns_the_registered_email(): void
     {
         Mail::fake();
 
-        $this->from(route('password.request'))->post('/forgot-password/request-otp', [
+        $response = $this->postJson('/api/mobile/forgot-password/request-otp', [
             'account_type' => 'nasabah',
             'identifier' => '2023001',
         ]);
 
-        $followUp = $this->get('/forgot-password');
-        $followUp->assertSee('ani.pertiwi@example.test', false);
+        $response->assertOk()->assertJson([
+            'success' => true,
+            'email' => 'ani.pertiwi@example.test',
+        ]);
     }
 
     public function test_email_survives_a_failed_otp_attempt(): void

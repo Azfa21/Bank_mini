@@ -1,27 +1,8 @@
-@extends('layouts.app')
-
 @php
-    $months = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    $periodLabel = $months[(int) $start->format('n')].' '.$start->format('Y');
-    $indexRoute = route('admin.reports.monthly');
-    $printRoute = route('admin.reports.monthly.print');
+    $indexRoute = route('admin.reports.index', ['period' => 'monthly']);
 @endphp
 
-@section('title', 'Laporan Bulanan | Bank Mini')
-@section('section', 'Administrator')
-
-@section('content')
-    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between print:hidden">
-        <div>
-            <p class="text-xs font-semibold text-brand-900">REKAP BULANAN</p>
-            <h1 class="text-2xl font-bold text-stone-900 mt-1">Laporan bulanan {{ $periodLabel }}</h1>
-            <p class="text-sm text-stone-600 mt-1">Rekap setoran, penarikan, dan status laporan harian.</p>
-        </div>
-        <a href="{{ $printRoute }}?month={{ $month }}" class="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900">
-            Cetak laporan
-        </a>
-    </div>
-
+    <p class="text-xs font-semibold text-brand-900 mb-3">REKAP BULANAN</p>
     <form method="GET" action="{{ $indexRoute }}" class="mb-5 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end print:hidden">
         <div class="sm:w-56">
             <x-input-label for="month">Bulan</x-input-label>
@@ -112,4 +93,3 @@
             </tbody>
         </table>
     </div>
-@endsection

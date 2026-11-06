@@ -102,12 +102,10 @@ class PinRateLimitTest extends TellerTestCase
 
         Mail::fake();
 
-        $this->from(route('password.request'))
-            ->post(route('password.otp.request'), [
-                'account_type' => 'nasabah',
-                'identifier' => $this->nasabah->student_number,
-            ])
-            ->assertSessionHas('otp_sent', true);
+        $this->postJson('/api/mobile/forgot-password/request-otp', [
+            'account_type' => 'nasabah',
+            'identifier' => $this->nasabah->student_number,
+        ])->assertOk()->assertJson(['success' => true]);
 
         $code = null;
         Mail::assertSent(ResetOtpMail::class, function (ResetOtpMail $mail) use (&$code): bool {
@@ -116,13 +114,13 @@ class PinRateLimitTest extends TellerTestCase
             return true;
         });
 
-        $this->post(route('password.reset.submit'), [
+        $this->postJson('/api/mobile/forgot-password/reset', [
             'account_type' => 'nasabah',
             'identifier' => $this->nasabah->student_number,
             'otp' => $code,
             'password' => 'password-baru-123',
             'password_confirmation' => 'password-baru-123',
-        ])->assertRedirect(route('login'));
+        ])->assertOk()->assertJson(['success' => true]);
 
         $customer = $this->nasabah->refresh();
 

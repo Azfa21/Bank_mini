@@ -98,17 +98,6 @@ body {
     }
 }
 
-/* Alasan: tab pemulihan kredensial butuh status aktif yang jelas tanpa inline style (CSP). */
-.tab-btn.active {
-    border-bottom: 2px solid var(--color-brand-700);
-    color: var(--color-brand-700);
-    font-weight: 600;
-}
-.tab-btn:not(.active) {
-    border-bottom: 2px solid transparent;
-    color: #78716c;
-}
-
 @media print {
     @page {
         size: A4;

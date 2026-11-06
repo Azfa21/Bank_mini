@@ -6,32 +6,10 @@ use Tests\Feature\Teller\TellerTestCase;
 
 class NavigationTest extends TellerTestCase
 {
-    public function test_root_url_shows_landing_page(): void
+    public function test_root_url_redirects_to_login(): void
     {
         $this->get('/')
-            ->assertOk()
-            ->assertSee('Tabungan siswa, tercatat dari loket sampai ponsel.')
-            ->assertSee(route('login'))
-            ->assertSee('Aplikasi nasabah untuk siswa.');
-    }
-
-    public function test_landing_shows_apk_download_link_when_configured(): void
-    {
-        config(['bankmini.apk_url' => 'https://contoh.test/bank-mini.apk']);
-
-        $this->get('/')
-            ->assertOk()
-            ->assertSee('https://contoh.test/bank-mini.apk')
-            ->assertSee('Buka tautan unduhan');
-    }
-
-    public function test_landing_shows_dashboard_link_for_authenticated_staff(): void
-    {
-        $this->actingAs($this->admin, 'web')
-            ->get('/')
-            ->assertOk()
-            ->assertSee('Buka dashboard')
-            ->assertSee(route('admin.dashboard'));
+            ->assertRedirect(route('login'));
     }
 
     public function test_admin_dashboard_shows_role_menu(): void
@@ -45,7 +23,7 @@ class NavigationTest extends TellerTestCase
             ->assertSee('Kelola Penabung')
             ->assertSee('Kelulusan')
             ->assertSee('Kenaikan Kelas')
-            ->assertSee('Laporan Harian')
+            ->assertSee('Laporan')
             ->assertSee('Konfigurasi')
             ->assertSee('Audit Jurnal');
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../core/theme/app_colors.dart';
@@ -65,10 +66,12 @@ class VirtualCard extends StatelessWidget {
                             color: AppColors.white.withValues(alpha: 0.15),
                             borderRadius: AppRadius.navAll,
                           ),
-                          child: const Icon(
-                            Icons.account_balance_rounded,
-                            color: AppColors.white,
-                            size: 16,
+                          padding: const EdgeInsets.all(4),
+                          clipBehavior: Clip.antiAlias,
+                          child: SvgPicture.asset(
+                            'assets/images/bank-mini-logo.svg',
+                            width: 20,
+                            height: 20,
                           ),
                         ),
                         const SizedBox(width: 8),

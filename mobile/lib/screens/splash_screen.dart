@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../core/config/app_config.dart';
 import '../core/theme/app_colors.dart';
@@ -63,10 +64,11 @@ class _LogoMark extends StatelessWidget {
         color: AppColors.paper,
         borderRadius: BorderRadius.circular(size * 0.28),
       ),
-      child: Icon(
-        Icons.account_balance_rounded,
-        color: AppColors.brand800,
-        size: size * 0.52,
+      padding: EdgeInsets.all(size * 0.08),
+      child: SvgPicture.asset(
+        'assets/images/bank-mini-logo.svg',
+        width: size,
+        height: size,
       ),
     );
   }

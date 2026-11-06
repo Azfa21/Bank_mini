@@ -20,7 +20,7 @@
                     <p class="text-sm text-stone-600 mt-1">Semua laporan harian teller sudah divalidasi. Antrean baru muncul setiap penutupan kas.</p>
                 @endif
             </div>
-            <a href="{{ route('admin.daily-reports.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors sm:shrink-0">
+            <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors sm:shrink-0">
                 {{ $waiting > 0 ? 'Periksa laporan' : 'Lihat semua laporan' }}
             </a>
         </div>

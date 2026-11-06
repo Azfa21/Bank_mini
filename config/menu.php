@@ -25,9 +25,8 @@ return [
         [
             'label' => 'Laporan',
             'items' => [
-                ['label' => 'Laporan Harian', 'route' => 'admin.daily-reports.index', 'routes' => ['admin.daily-reports.*']],
+                ['label' => 'Laporan', 'route' => 'admin.reports.index', 'routes' => ['admin.reports.index', 'admin.reports.monthly*', 'admin.daily-reports.*']],
                 ['label' => 'Permintaan Kas', 'route' => 'admin.cash-requests.index', 'routes' => ['admin.cash-requests.*']],
-                ['label' => 'Laporan Bulanan', 'route' => 'admin.reports.monthly', 'routes' => ['admin.reports.monthly']],
                 ['label' => 'Buku Besar & Neraca Saldo', 'route' => 'admin.reports.general-ledger', 'routes' => ['admin.reports.general-ledger', 'admin.reports.trial-balance']],
                 ['label' => 'Audit Jurnal', 'route' => 'admin.journals.index', 'routes' => ['admin.journals.*']],
             ],

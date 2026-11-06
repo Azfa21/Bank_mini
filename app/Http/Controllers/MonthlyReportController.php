@@ -21,7 +21,9 @@ class MonthlyReportController extends Controller
             ]);
         }
 
-        return view('reports.monthly', $data);
+        $data['period'] = 'monthly';
+
+        return view('reports.index', $data);
     }
 
     public function print(Request $request)

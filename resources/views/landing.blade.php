@@ -33,14 +33,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between gap-3 min-h-[68px] py-2">
                 <a href="{{ route('home') }}" class="flex items-center gap-3 min-w-0 min-h-[44px]" aria-label="Bank Mini Sekolah, halaman awal">
-                    <span class="inline-flex items-center justify-center w-10 h-10 bg-brand-800 rounded-xl shrink-0" aria-hidden="true">
-                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-6 9 6M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9m-4 6H8"/>
-                        </svg>
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0 overflow-hidden" aria-hidden="true">
+                        <img src="{{ asset('images/bank-mini-logo.svg') }}" alt="" width="40" height="40" class="w-10 h-10 object-contain">
                     </span>
                     <span class="min-w-0">
-                        <span class="block text-[15px] font-semibold text-stone-900 leading-tight truncate">Bank Mini Sekolah</span>
-                        <span class="block text-xs text-stone-600 leading-tight truncate">Loket dan tabungan siswa</span>
+                        <span class="block text-[15px] font-semibold text-stone-900 leading-tight truncate">Bank Mini Skansaba</span>
+                        <span class="block text-xs text-stone-600 leading-tight truncate">SMKN 1 Bantul</span>
                     </span>
                 </a>
 
@@ -51,7 +49,7 @@
                         </a>
                     @else
                         <a href="{{ route('login') }}" class="inline-flex items-center justify-center min-h-[44px] px-4 rounded-lg bg-brand-800 text-sm font-semibold text-white transition-colors hover:bg-brand-900">
-                            Masuk loket
+                            Masuk Layanan Loket
                         </a>
                     @endif
                 </div>
@@ -65,10 +63,10 @@
                 <div>
                     <div class="w-12 border-t-[3px] border-brand-800" aria-hidden="true"></div>
                     <h1 id="hero-title" class="mt-5 text-[34px] leading-[1.08] font-bold tracking-tight text-stone-900 text-balance sm:text-[44px] lg:text-[52px]">
-                        Tabungan siswa, tercatat dari loket sampai ponsel.
+                        Menabung Lebih Mudah, Transaksi Lebih Praktis.
                     </h1>
                     <p class="mt-4 max-w-xl text-base leading-relaxed text-stone-600 sm:text-lg">
-                        Setoran, penarikan, dan transfer dilayani di loket sekolah. Siswa memantau saldo, mutasi, dan kartu tabungan lewat aplikasi Bank Mini.
+                        Layanan perbankan sekolah yang memudahkan siswa dalam mengelola tabungan secara aman, tertib, dan transparan. Nikmati layanan setoran, penarikan, dan transfer melalui loket sekolah, serta pantau saldo dan riwayat transaksi kapan saja melalui aplikasi Bank Mini.
                     </p>
 
                     <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -78,7 +76,7 @@
                             </a>
                         @else
                             <a href="{{ route('login') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 rounded-lg bg-brand-800 text-sm font-semibold text-white transition-colors hover:bg-brand-900">
-                                Masuk ke loket
+                                Masuk Layanan Loket
                             </a>
                         @endif
 
@@ -93,7 +91,7 @@
 
                     @if (! $apkUrl)
                         <p class="mt-4 text-xs text-stone-600 sm:text-sm">
-                            Aplikasi nasabah untuk siswa. Berkas APK dapat diminta ke petugas loket.
+                            Download Aplikasi
                         </p>
                     @endif
                 </div>
@@ -105,7 +103,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <p class="text-sm font-semibold text-stone-900">Bank Mini Sekolah</p>
-                <p class="mt-0.5 text-xs text-stone-600">&copy; {{ date('Y') }} Bank Mini Sekolah</p>
+                <p class="mt-0.5 text-xs text-stone-600">&copy; {{ date('Y') }} Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
             </div>
         </div>
     </footer>

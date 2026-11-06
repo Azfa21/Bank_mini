@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DailyReportController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GraduationController;
 use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SaverController;
 use App\Http\Controllers\Admin\SystemConfigController;
 use App\Http\Controllers\Admin\UserController;
@@ -29,7 +30,7 @@ use App\Services\DailyReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'landing')->name('home');
+Route::get('/', fn () => redirect()->route('login'))->name('home');
 
 Route::middleware(['role:admin,teller'])->group(function () {
     Route::get('/qr', [QrCodeController::class, 'show'])->name('qr.show');
@@ -90,6 +91,7 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::post('cash-requests/{cashRequest}/approve', [AdminCashRequestController::class, 'approve'])->name('cash-requests.approve');
     Route::post('cash-requests/{cashRequest}/reject', [AdminCashRequestController::class, 'reject'])->name('cash-requests.reject');
 
+    Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::get('reports/monthly', [MonthlyReportController::class, 'index'])->name('reports.monthly');
     Route::get('reports/monthly/print', [MonthlyReportController::class, 'print'])->name('reports.monthly.print');
     Route::get('reports/general-ledger', [AccountingReportController::class, 'generalLedger'])->name('reports.general-ledger');

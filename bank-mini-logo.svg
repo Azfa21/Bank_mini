@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bank emblem</title>
+  <desc id="desc">A minimalist bank building inside a symmetrical shield, in warm brown and cream.</desc>
+  <rect width="512" height="512" fill="#FFFFFF"/>
+  <!-- Shield silhouette -->
+  <path d="M256 38 438 112v147c0 105-69 177-182 216C143 436 74 364 74 259V112L256 38Z" fill="#743722"/>
+  <path d="M256 68 408 130v128c0 87-55 148-152 185-97-37-152-98-152-185V130l152-62Z" fill="#F7F1E8"/>
+  <!-- Roof / pediment -->
+  <path d="M145 190 256 125l111 65c5 3 3 11-3 11H148c-6 0-8-8-3-11Z" fill="#743722"/>
+  <path d="M158 211h196v17H158z" rx="8" fill="#743722"/>
+  <!-- Three architectural pillars -->
+  <rect x="169" y="242" width="38" height="112" rx="8" fill="#743722"/>
+  <rect x="237" y="242" width="38" height="112" rx="8" fill="#743722"/>
+  <rect x="305" y="242" width="38" height="112" rx="8" fill="#743722"/>
+  <!-- Foundation -->
+  <path d="M145 365h222v18H145z" rx="9" fill="#743722"/>
+  <path d="M166 394h180v13H166z" rx="6.5" fill="#743722"/>
+</svg>

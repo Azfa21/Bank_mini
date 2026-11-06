@@ -79,7 +79,9 @@
                 if (isset($entry['items'])) {
                     foreach ($entry['items'] as $child) {
                         if ($isActive($child)) {
-                            $breadcrumb = [$entry['label'], $child['label']];
+                            $breadcrumb = $entry['label'] === $child['label']
+                                ? [$entry['label']]
+                                : [$entry['label'], $child['label']];
                             break 2;
                         }
                     }
@@ -99,10 +101,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between gap-3 min-h-[64px] py-2">
                 <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center shrink-0" aria-hidden="true">
-                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-6 9 6M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9m-4 6H8"/>
-                        </svg>
+                    <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0" aria-hidden="true">
+                        <img src="{{ asset('images/bank-mini-logo.svg') }}" alt="" width="40" height="40" class="w-10 h-10 object-contain">
                     </div>
                     <div class="min-w-0">
                         <p class="text-[15px] font-semibold text-stone-900 leading-tight truncate">Bank Mini Sekolah</p>

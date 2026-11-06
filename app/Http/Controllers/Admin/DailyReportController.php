@@ -39,7 +39,10 @@ class DailyReportController extends Controller
             ]);
         }
 
-        return view('admin.daily-reports.index', compact('reports'));
+        return view('reports.index', [
+            'reports' => $reports,
+            'period' => 'daily',
+        ]);
     }
 
     public function show(DailyReport $report)

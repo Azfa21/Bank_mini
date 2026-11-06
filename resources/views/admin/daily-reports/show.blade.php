@@ -10,7 +10,7 @@
             <h1 class="text-2xl font-bold text-stone-900 mt-1">Laporan {{ $report->report_number }}</h1>
             <p class="text-sm text-stone-600 mt-1">Tanggal {{ $report->report_date->format('d/m/Y') }} · Teller {{ $report->teller->full_name }}</p>
         </div>
-        <a href="{{ route('admin.daily-reports.index') }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline">&larr; Kembali ke daftar</a>
+        <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline">&larr; Kembali ke daftar</a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">

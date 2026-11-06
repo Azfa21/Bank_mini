@@ -1,16 +1,5 @@
-@extends('layouts.app')
-
-@section('title', 'Laporan Harian | Bank Mini')
-@section('section', 'Administrator')
-
-@section('content')
-    <div class="mb-5">
-        <p class="text-xs font-semibold text-brand-900">VALIDASI KAS</p>
-        <h1 class="text-2xl font-bold text-stone-900 mt-1">Laporan harian Teller</h1>
-        <p class="text-sm text-stone-600 mt-1">Dahulukan status menunggu. Periksa arus kas sebelum menyetujui.</p>
-    </div>
-
-    <form method="GET" action="{{ route('admin.daily-reports.index') }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end">
+    <form method="GET" action="{{ route('admin.reports.index') }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end">
+        <input type="hidden" name="period" value="daily">
         <div class="sm:w-48">
             <x-input-label for="status">Status</x-input-label>
             <x-select id="status" name="status">
@@ -55,4 +44,3 @@
     <div class="mt-4">
         {{ $reports->links() }}
     </div>
-@endsection

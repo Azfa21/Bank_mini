@@ -203,38 +203,6 @@ function bindLoginToggle() {
     });
 }
 
-function bindAuthTabs() {
-    var staffBtn = document.getElementById('tab-btn-staff');
-    var nasabahBtn = document.getElementById('tab-btn-nasabah');
-    var staffForm = document.getElementById('form-staff');
-    var nasabahForm = document.getElementById('form-nasabah');
-    if (!staffBtn || !nasabahBtn || !staffForm || !nasabahForm) return;
-
-    function switchTab(tab, focus) {
-        var isStaff = tab === 'staff';
-        staffBtn.classList.toggle('active', isStaff);
-        nasabahBtn.classList.toggle('active', !isStaff);
-        staffBtn.setAttribute('aria-selected', isStaff ? 'true' : 'false');
-        nasabahBtn.setAttribute('aria-selected', !isStaff ? 'true' : 'false');
-        staffBtn.tabIndex = isStaff ? 0 : -1;
-        nasabahBtn.tabIndex = !isStaff ? 0 : -1;
-        staffForm.classList.toggle('hidden', !isStaff);
-        nasabahForm.classList.toggle('hidden', isStaff);
-        if (focus) (isStaff ? staffBtn : nasabahBtn).focus();
-    }
-
-    staffBtn.addEventListener('click', function () { switchTab('staff'); });
-    nasabahBtn.addEventListener('click', function () { switchTab('nasabah'); });
-    staffBtn.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowRight') switchTab('nasabah', true);
-    });
-    nasabahBtn.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') switchTab('staff', true);
-    });
-
-    if (nasabahForm.dataset.autoActive === '1') switchTab('nasabah');
-}
-
 function bindPrintButtons() {
     document.querySelectorAll('[data-print]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -383,7 +351,6 @@ document.addEventListener('DOMContentLoaded', function () {
     bindNavGroups();
     bindAutoHideNav();
     bindLoginToggle();
-    bindAuthTabs();
     bindPrintButtons();
     bindPromotionPickers();
     // bindDisableOnSubmit harus lebih dulu dari bindConfirmForms: tombol dinonaktifkan

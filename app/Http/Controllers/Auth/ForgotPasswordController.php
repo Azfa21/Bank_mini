@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\ResetCredentialRequest;
 use App\Services\CredentialRecoveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ForgotPasswordController extends Controller
@@ -23,8 +24,14 @@ class ForgotPasswordController extends Controller
 
     public function requestOtp(RequestResetOtpRequest $request): JsonResponse|RedirectResponse
     {
+        $accountType = (string) $request->validated('account_type');
+
+        if ($response = $this->rejectSaverRecoveryOutsideMobile($request, $accountType)) {
+            return $response;
+        }
+
         $result = $this->recovery->requestOtp(
-            $request->validated('account_type'),
+            $accountType,
             $request->validated('identifier'),
         );
 
@@ -54,8 +61,14 @@ class ForgotPasswordController extends Controller
 
     public function resetCredential(ResetCredentialRequest $request): JsonResponse|RedirectResponse
     {
+        $accountType = (string) $request->validated('account_type');
+
+        if ($response = $this->rejectSaverRecoveryOutsideMobile($request, $accountType)) {
+            return $response;
+        }
+
         $result = $this->recovery->verifyAndReset(
-            $request->validated('account_type'),
+            $accountType,
             $request->validated('identifier'),
             $request->validated('otp'),
             $request->validated('password'),
@@ -83,5 +96,24 @@ class ForgotPasswordController extends Controller
         }
 
         return redirect()->route('login')->with('success', $result['message']);
+    }
+
+    private function rejectSaverRecoveryOutsideMobile(Request $request, string $accountType): JsonResponse|RedirectResponse|null
+    {
+        if ($accountType !== CredentialRecoveryService::TYPE_NASABAH || $request->routeIs('api.mobile.forgot-password.*')) {
+            return null;
+        }
+
+        $message = 'Pemulihan password penabung hanya tersedia di aplikasi mobile Bank Mini.';
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'email' => null,
+            ], 403);
+        }
+
+        return redirect()->route('password.request')->with('error', $message);
     }
 }

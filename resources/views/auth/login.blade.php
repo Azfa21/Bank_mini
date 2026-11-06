@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk Loket &middot; Bank Mini Sekolah</title>
+    <title>Masuk Layanan Loket &middot; Bank Mini Skansaba</title>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
@@ -12,19 +12,16 @@
     <main class="w-full max-w-md">
         <div class="mb-6">
             <div class="flex items-center gap-3">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-brand-800 rounded-xl shrink-0" aria-hidden="true">
-                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-6 9 6M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9m-4 6H8"/>
-                    </svg>
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl shrink-0 overflow-hidden" aria-hidden="true">
+                    <img src="{{ asset('images/bank-mini-logo.svg') }}" alt="" width="48" height="48" class="w-12 h-12 object-contain">
                 </div>
                 <div>
-                    <p class="text-[15px] font-semibold text-stone-900 leading-tight">Bank Mini Sekolah</p>
-                    <p class="text-[13px] text-stone-600 leading-tight">Loket teller dan tabungan siswa</p>
+                    <p class="text-[15px] font-semibold text-stone-900 leading-tight">Bank Mini Skansaba</p>
+                    <p class="text-[13px] text-stone-600 leading-tight">SMKN 1 Bantul</p>
                 </div>
             </div>
 
             <h1 class="text-[26px] leading-tight font-bold text-stone-900 mt-5">Masuk untuk melayani transaksi</h1>
-            <p class="text-sm text-stone-600 mt-1.5">Pegawai memakai username dan password. Penabung memakai nomor siswa dan password yang dibuat saat aktivasi rekening di loket.</p>
         </div>
 
         <div class="bg-white rounded-2xl border border-stone-200 ledger-rule shadow-sm p-6 sm:p-7">
@@ -46,11 +43,10 @@
                 @csrf
 
                 <div>
-                    <x-input-label for="identifier">Username atau nomor siswa</x-input-label>
+                    <x-input-label for="identifier">Username</x-input-label>
                     <x-input id="identifier" name="identifier" required autofocus autocomplete="username"
                         aria-describedby="identifier-help"
-                        placeholder="Contoh: teller1 atau 2023001" />
-                    <p id="identifier-help" class="text-[13px] text-stone-600 mt-1.5">Administrator dan teller memakai username.</p>
+                        placeholder="" />
                 </div>
 
                 <div>
@@ -63,12 +59,11 @@
                     <div class="relative">
                         <x-input id="secret" name="secret" type="password" required autocomplete="current-password"
                             aria-describedby="secret-help" class="pr-24"
-                            placeholder="Password pegawai atau penabung" />
+                            placeholder="" />
                         <button type="button" id="toggle-secret" aria-pressed="false" aria-controls="secret" class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-20 min-h-[44px] text-[13px] font-semibold text-stone-700 rounded-lg hover:bg-stone-100">
                             Tampil
                         </button>
                     </div>
-                    <p id="secret-help" class="text-[13px] text-stone-600 mt-1.5">PIN transaksi tidak dipakai untuk masuk. Jangan bagikan password ke siapa pun.</p>
                 </div>
 
                 <x-primary-button id="login-submit" data-loading-text="Memeriksa akun..." class="w-full">
@@ -77,7 +72,7 @@
             </form>
         </div>
 
-        <p class="text-[13px] text-stone-600 mt-5">&copy; {{ date('Y') }} Bank Mini Sekolah</p>
+        <p class="text-[13px] text-stone-600 mt-5">&copy; {{ date('Y') }} Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
     </main>
 
 </body>
