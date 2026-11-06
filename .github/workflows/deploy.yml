@@ -1,0 +1,206 @@
+
+name: Deploy Bank Mini
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, bcmath, pdo_mysql, pdo_sqlite, gd, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-interaction \
+            --no-progress \
+            --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Validate build
+        run: |
+          test -f public/build/manifest.json
+          test -f vendor/autoload.php
+
+      - name: Package application
+        run: |
+          tar -czf /tmp/bankmini-app.tar.gz \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./.env' \
+            --exclude='./.env.backup' \
+            --exclude='./.env.production' \
+            --exclude='./node_modules' \
+            --exclude='./storage' \
+            --exclude='./public/build' \
+            --exclude='./public/storage' \
+            --exclude='./database/*.sqlite' \
+            -C "$GITHUB_WORKSPACE" .
+
+          tar -czf /tmp/bankmini-build.tar.gz \
+            -C public/build .
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload deployment files
+        env:
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+          SSH_USERNAME: ${{ secrets.CPANEL_USERNAME }}
+        run: |
+          scp -i ~/.ssh/id_ed25519 \
+            -P "$SSH_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            /tmp/bankmini-app.tar.gz \
+            /tmp/bankmini-build.tar.gz \
+            "$SSH_USERNAME@$SSH_HOST:/home/bankmini/"
+
+      - name: Deploy to cPanel
+        env:
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+          SSH_USERNAME: ${{ secrets.CPANEL_USERNAME }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -p "$SSH_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USERNAME@$SSH_HOST" \
+            "GITHUB_SHA='$GITHUB_SHA' bash -s" <<'REMOTE'
+
+          set -euo pipefail
+
+          APP="/home/bankmini/bankmini"
+          PUBLIC="/home/bankmini/public_html"
+          SHORT_SHA="${GITHUB_SHA:0:12}"
+
+          STAGE="/home/bankmini/bankmini-staging-$SHORT_SHA"
+          OLD_APP="/home/bankmini/bankmini-previous-$SHORT_SHA"
+          BUILD_NEXT="$PUBLIC/build_next"
+          OLD_BUILD="/home/bankmini/build-previous-$SHORT_SHA"
+
+          echo "===== VALIDASI APLIKASI LAMA ====="
+
+          test -f "$APP/.env"
+          test -d "$APP/storage"
+          test -f "$APP/artisan"
+
+          echo "===== PERSIAPAN APLIKASI BARU ====="
+
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+
+          tar -xzf /home/bankmini/bankmini-app.tar.gz \
+            -C "$STAGE"
+
+          cp -a "$APP/.env" "$STAGE/.env"
+
+          rm -rf "$STAGE/storage"
+          cp -a "$APP/storage" "$STAGE/storage"
+
+          if [ -L "$APP/public/storage" ]; then
+            cp -a "$APP/public/storage" "$STAGE/public/storage"
+          fi
+
+          test -f "$STAGE/artisan"
+          test -f "$STAGE/vendor/autoload.php"
+
+          echo "===== MEMBERSIHKAN CACHE ====="
+
+          php "$STAGE/artisan" config:clear
+          php "$STAGE/artisan" route:clear
+          php "$STAGE/artisan" view:clear
+
+          echo "===== PERSIAPAN FRONTEND ====="
+
+          rm -rf "$BUILD_NEXT"
+          mkdir -p "$BUILD_NEXT"
+
+          tar -xzf /home/bankmini/bankmini-build.tar.gz \
+            -C "$BUILD_NEXT"
+
+          test -f "$BUILD_NEXT/manifest.json"
+
+          echo "===== MENGGANTI APLIKASI ====="
+
+          if [ -e "$OLD_APP" ]; then
+            echo "Direktori backup sudah ada. Deploy dihentikan."
+            exit 1
+          fi
+
+          mv "$APP" "$OLD_APP"
+
+          if ! mv "$STAGE" "$APP"; then
+            mv "$OLD_APP" "$APP"
+            exit 1
+          fi
+
+          echo "===== MENGGANTI FRONTEND ====="
+
+          if [ -d "$PUBLIC/build" ]; then
+            mv "$PUBLIC/build" "$OLD_BUILD"
+          fi
+
+          if ! mv "$BUILD_NEXT" "$PUBLIC/build"; then
+            if [ -d "$OLD_BUILD" ]; then
+              mv "$OLD_BUILD" "$PUBLIC/build"
+            fi
+
+            FAILED_APP="/home/bankmini/bankmini-failed-$SHORT_SHA"
+            mv "$APP" "$FAILED_APP"
+            mv "$OLD_APP" "$APP"
+
+            exit 1
+          fi
+
+          echo "===== MEMBERSIHKAN ARSIP ====="
+
+          rm -f /home/bankmini/bankmini-app.tar.gz
+          rm -f /home/bankmini/bankmini-build.tar.gz
+
+          echo "===== DEPLOY SELESAI ====="
+          echo "Commit: $SHORT_SHA"
+          echo "Backup aplikasi: $OLD_APP"
+          echo "Backup frontend: $OLD_BUILD"
+
+          REMOTE
