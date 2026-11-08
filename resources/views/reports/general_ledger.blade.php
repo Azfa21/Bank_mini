@@ -18,7 +18,7 @@
         $exportUrl = route('admin.reports.export', 'general_ledger').(count($filterQuery) ? '?'.http_build_query($filterQuery) : '');
         $dateSummary = $dateFromLabel && $dateToLabel
             ? $dateFromLabel.'–'.$dateToLabel
-            : ($dateFromLabel ? 'Sejak '.$dateFromLabel : ($dateToLabel ? 'Sampai '.$dateToLabel : 'Seluruh riwayat'));
+            : ($dateFromLabel ? 'Sejak '.$dateFromLabel : ($dateToLabel ? 'Sampai '.$dateToLabel : ''));
     @endphp
 
     <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -60,7 +60,6 @@
         <div class="min-w-0">
             <div class="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <h2 class="text-lg font-semibold text-stone-900">Saldo akun kas</h2>
-                <p class="text-xs text-stone-600">{{ $dateSummary }} · klik baris untuk melihat mutasi</p>
             </div>
 
             <x-data-table caption="Ringkasan saldo akun kas" :headers="[

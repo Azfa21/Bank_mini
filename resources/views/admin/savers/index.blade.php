@@ -1,17 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Penabung | Bank Mini')
-@section('section', 'Administrator · Penabung')
+@section('title', 'Data Anggota & Penabung | Bank Mini')
+@section('section', 'Administrator · Data Anggota & Penabung')
 
 @section('content')
-    <div class="flex items-center justify-between mb-6">
+    @include('admin.member-data.selector')
+
+    <div class="mb-6">
         <div>
-            <h1 class="text-xl font-semibold text-stone-900">Daftar Penabung</h1>
+            <h2 class="text-lg font-semibold text-stone-900">Penabung</h2>
             <p class="text-sm text-stone-500 mt-1">Penabung otomatis aktif setelah anggota menyetor uang di Teller.</p>
         </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.savers.index') }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end sm:flex-wrap">
+    <form method="GET" action="{{ route('admin.member-data.index') }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end sm:flex-wrap">
+        <input type="hidden" name="type" value="savers">
         <div class="sm:w-72">
             <x-input-label for="search">Cari penabung</x-input-label>
             <x-input id="search" name="search" type="search" :value="request('search')" placeholder="Nama, no. siswa, atau kelas" />
@@ -27,14 +30,14 @@
         </div>
         <x-primary-button>Tampilkan</x-primary-button>
         @if (request('search') || request('status'))
-            <a href="{{ route('admin.savers.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-4 text-sm font-medium text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors">Reset</a>
+            <a href="{{ route('admin.member-data.index', ['type' => 'savers']) }}" class="inline-flex items-center justify-center min-h-[48px] px-4 text-sm font-medium text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors">Reset</a>
         @endif
     </form>
 
     @php
         // Alasan: tautan ke detail rekening membawa filter daftar ini supaya tombol kembali
         // di halaman detail mengembalikan administrator ke daftar yang sama, bukan ke daftar penuh.
-        $listUrl = route('admin.savers.index').(request()->getQueryString() ? '?'.request()->getQueryString() : '');
+        $listUrl = route('admin.member-data.index', ['type' => 'savers'] + request()->query());
 
         // Alasan: kolom "Aksi" ditempel di kanan supaya tombolnya tetap terjangkau saat tabel
         // digeser ke samping di layar sempit; kolom Angkatan dan Email dilepas karena keduanya

@@ -50,7 +50,7 @@
                 <div class="text-sm text-stone-500">Penabung aktif</div>
                 <div class="text-2xl font-semibold text-stone-900 mt-1">{{ $summary['total_savers'] }}</div>
             </a>
-            <a href="{{ route('admin.graduations.index') }}" class="text-xs font-medium text-brand-900 hover:underline mt-1.5 inline-block">
+            <a href="{{ route('admin.student-lifecycle.index', ['section' => 'graduations']) }}" class="text-xs font-medium text-brand-900 hover:underline mt-1.5 inline-block">
                 {{ $summary['total_alumni'] }} alumni diarsipkan
             </a>
         </div>

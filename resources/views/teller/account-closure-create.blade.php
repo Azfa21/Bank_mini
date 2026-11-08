@@ -8,7 +8,7 @@
         <div>
             <p class="text-xs font-semibold text-brand-900">PENUTUPAN REKENING</p>
             <h1 class="text-2xl font-bold text-stone-900 mt-1">Tutup rekening karena lulus</h1>
-            <p class="text-sm text-stone-600 mt-1">Saldo di atas saldo mengendap dicairkan di loket, lalu Administrator memutuskan dari halaman Kelulusan.</p>
+            <p class="text-sm text-stone-600 mt-1">Saldo di atas saldo mengendap dicairkan di loket, lalu Administrator memutuskan dari bagian Kelulusan.</p>
         </div>
         <a href="{{ route('teller.members.show', $account) }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline">&larr; Kembali ke profil</a>
     </div>
@@ -65,7 +65,7 @@
                     <x-primary-button variant="danger" data-loading-text="Mencairkan saldo...">
                         Cairkan saldo & ajukan penutupan
                     </x-primary-button>
-                    <p class="text-[13px] text-stone-600 text-center">Saldo langsung dicairkan ke penabung. Bila Administrator menolak lewat halaman Kelulusan, saldo dikembalikan ke rekening.</p>
+                    <p class="text-[13px] text-stone-600 text-center">Saldo langsung dicairkan ke penabung. Bila Administrator menolak dari bagian Kelulusan, saldo dikembalikan ke rekening.</p>
                 </form>
             </div>
         </section>

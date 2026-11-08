@@ -70,7 +70,7 @@ class ClassPromotionController extends Controller
             return response()->json(['success' => true, 'message' => $message, 'data' => $result]);
         }
 
-        return redirect()->route('admin.class-promotions.index')->with('success', $message);
+        return redirect()->route('admin.student-lifecycle.index', ['section' => 'promotions'])->with('success', $message);
     }
 
     /**

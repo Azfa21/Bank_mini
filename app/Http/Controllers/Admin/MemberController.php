@@ -28,7 +28,7 @@ class MemberController extends Controller
             // pernah dihapus (soft delete) ikut dikecualikan: sistem tetap melarang anggota
             // itu diaktivasi ulang, jadi menampilkannya di sini hanya menghasilkan baris buntu.
             ->whereNotIn('nis', Saver::withTrashed()->whereNotNull('member_nis')->select('member_nis'))
-            // Anggota yang sudah lulus diarsipkan di halaman Kelulusan, bukan di daftar kerja harian.
+            // Anggota yang sudah lulus diarsipkan pada bagian Kelulusan, bukan di daftar kerja harian.
             ->whereNull('graduated_at')
             ->when(request('search'), function ($query, $search) {
                 $search = trim($search);
@@ -55,6 +55,7 @@ class MemberController extends Controller
 
         return view('admin.members.index', [
             'members' => $members,
+            'dataType' => 'members',
             // Dipakai empty state untuk membedakan "belum ada anggota" dari
             // "semua anggota sudah jadi penabung".
             'hasMembers' => $members->isNotEmpty() || Member::query()->exists(),

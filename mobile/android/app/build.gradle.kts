@@ -42,3 +42,29 @@ android {
 flutter {
     source = "../.."
 }
+
+val flutterApkDirectory = layout.buildDirectory.dir("outputs/flutter-apk")
+val copyReleaseApks = tasks.register("copyReleaseApks") {
+    doLast {
+        val outputDirectory = flutterApkDirectory.get().asFile
+        val releaseApk = outputDirectory.resolve("app-release.apk")
+        if (releaseApk.isFile) {
+            releaseApk.copyTo(
+                target = outputDirectory.resolve("Bank Mini Skansaba.apk"),
+                overwrite = true,
+            )
+
+            val landingApk = rootProject.file(
+                "../../public/unduhan/bank-mini-nasabah.apk",
+            )
+            landingApk.parentFile.mkdirs()
+            releaseApk.copyTo(target = landingApk, overwrite = true)
+        }
+    }
+}
+
+tasks.configureEach {
+    if (name == "assembleRelease") {
+        finalizedBy(copyReleaseApks)
+    }
+}

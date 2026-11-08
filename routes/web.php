@@ -9,8 +9,10 @@ use App\Http\Controllers\Admin\DailyReportController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GraduationController;
 use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\MemberDataController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SaverController;
+use App\Http\Controllers\Admin\StudentLifecycleController;
 use App\Http\Controllers\Admin\SystemConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -53,6 +55,7 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('members/import', [MemberController::class, 'importForm'])->name('members.import.form');
     Route::get('members/import/template', [MemberController::class, 'importTemplate'])->name('members.import.template');
     Route::post('members/import', [MemberController::class, 'import'])->name('members.import');
+    Route::get('member-data', [MemberDataController::class, 'index'])->name('member-data.index');
     Route::resource('members', MemberController::class)->except(['show']);
 
     Route::get('savers', [SaverController::class, 'index'])->name('savers.index');
@@ -63,7 +66,14 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('accounts/{account}/card/print', [AccountController::class, 'printCard'])->name('accounts.card-print');
     Route::get('accounts/{account}', [AccountController::class, 'show'])->name('accounts.show');
 
-    Route::get('graduations', [GraduationController::class, 'index'])->name('graduations.index');
+    Route::get('student-lifecycle', [StudentLifecycleController::class, 'index'])->name('student-lifecycle.index');
+    Route::get('graduations', function (Request $request, GraduationController $controller) {
+        if ($request->expectsJson()) {
+            return $controller->index();
+        }
+
+        return redirect()->route('admin.student-lifecycle.index', array_merge($request->query(), ['section' => 'graduations']));
+    })->name('graduations.index');
     Route::get('graduations/export', [GraduationController::class, 'export'])->name('graduations.export');
     Route::post('graduations', [GraduationController::class, 'store'])->name('graduations.store');
     Route::post('graduations/closures/{closure}/approve', [GraduationController::class, 'approveClosure'])->name('graduations.closures.approve');
@@ -71,7 +81,13 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::post('graduations/{member}/not-graduate', [GraduationController::class, 'notGraduate'])->name('graduations.not-graduate');
     Route::post('graduations/{member}', [GraduationController::class, 'graduateMember'])->name('graduations.member');
 
-    Route::get('class-promotions', [ClassPromotionController::class, 'index'])->name('class-promotions.index');
+    Route::get('class-promotions', function (Request $request, ClassPromotionController $controller) {
+        if ($request->expectsJson()) {
+            return $controller->index($request);
+        }
+
+        return redirect()->route('admin.student-lifecycle.index', array_merge($request->query(), ['section' => 'promotions']));
+    })->name('class-promotions.index');
     Route::post('class-promotions', [ClassPromotionController::class, 'store'])->name('class-promotions.store');
 
     Route::get('config', [SystemConfigController::class, 'edit'])->name('config.edit');

@@ -1,14 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Kenaikan Kelas | Bank Mini')
-@section('section', 'Administrator · Kenaikan Kelas')
+@section('title', 'Kenaikan & Kelulusan Siswa | Bank Mini')
+@section('section', 'Administrator · Data Siswa')
 
 @section('content')
-    <div class="mb-5">
-        <p class="text-xs font-semibold text-brand-900">AKHIR TAHUN AJARAN</p>
-        <h1 class="text-2xl font-bold text-stone-900 mt-1">Kenaikan kelas</h1>
-        <p class="text-sm text-stone-600 mt-1">Naikkan kelas anggota dan penabung sekali setahun. Kalau hanya sebagian siswa yang tinggal kelas, buka daftar siswa pada baris kelasnya lalu centang satu per satu.</p>
-    </div>
+    @include('admin.student-lifecycle.switcher', ['activeSection' => 'promotions'])
 
     <x-form-errors />
 
@@ -30,9 +26,9 @@
         <div class="mb-4 p-4 bg-white border border-stone-200 rounded-2xl text-sm text-stone-700 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 sm:justify-between">
             <p>
                 {{ implode(' dan ', $finalYearParts) }} kelas XII tidak ikut dinaikkan.
-                Kelas XII diselesaikan lewat halaman Kelulusan.
+                Kelas XII diselesaikan melalui bagian Kelulusan pada halaman ini.
             </p>
-            <a href="{{ route('admin.graduations.index') }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline shrink-0">Buka Kelulusan</a>
+            <a href="{{ route('admin.student-lifecycle.index', ['section' => 'graduations']) }}" class="inline-flex items-center min-h-[44px] text-sm font-semibold text-brand-900 hover:underline shrink-0">Buka kelulusan</a>
         </div>
     @endif
 
@@ -70,7 +66,7 @@
 
                     @if ($group['kind'] === 'final')
                         <td class="px-5 py-3 text-xs text-stone-600">
-                            Tidak dinaikkan. Arsipkan angkatan ini di halaman Kelulusan.
+                            Tidak dinaikkan. Arsipkan angkatan ini pada bagian Kelulusan.
                         </td>
                     @elseif ($group['kind'] === 'ready')
                         @php

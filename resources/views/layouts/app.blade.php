@@ -141,8 +141,8 @@
 
         @if ($currentUser && count($menuItems))
             <nav aria-label="Navigasi utama" class="border-t border-stone-100">
-                {{-- Alasan: 10 tujuan admin dikelompokkan jadi 4 entri (Dashboard, Data, Laporan, Konfigurasi)
-                     agar seluruh tujuan, termasuk laporan kas, tetap terlihat tanpa menggeser halaman. --}}
+                {{-- Alasan: menu Data mengelompokkan pengelolaan siswa dan proses akhir tahun
+                     agar seluruh tujuan tetap terjangkau tanpa memenuhi bilah navigasi. --}}
                 <div data-auto-hide-nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden md:flex md:flex-wrap items-center gap-x-1">
                     @foreach ($menuItems as $index => $item)
                         @if (isset($item['children']))

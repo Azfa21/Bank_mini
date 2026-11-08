@@ -117,7 +117,7 @@ class GraduationController extends Controller
 
         if ($year !== '' && ! $knownYears->contains($year)) {
             return redirect()
-                ->route('admin.graduations.index')
+                ->route('admin.student-lifecycle.index', ['section' => 'graduations'])
                 ->with('error', "Tidak ada angkatan {$year} pada data anggota.");
         }
 
@@ -137,7 +137,7 @@ class GraduationController extends Controller
                 : 'Belum ada alumni untuk diarsipkan.';
 
             return redirect()
-                ->route('admin.graduations.index', $year !== '' ? ['year' => $year] : [])
+                ->route('admin.student-lifecycle.index', $year !== '' ? ['section' => 'graduations', 'year' => $year] : ['section' => 'graduations'])
                 ->with('error', $message);
         }
 
@@ -208,7 +208,7 @@ class GraduationController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.graduations.index', ['year' => $year])->with('success', $message);
+        return redirect()->route('admin.student-lifecycle.index', ['section' => 'graduations', 'year' => $year])->with('success', $message);
     }
 
     public function graduateMember(GraduateMemberRequest $request, Member $member)
@@ -223,7 +223,7 @@ class GraduationController extends Controller
             }
 
             return redirect()
-                ->route('admin.graduations.index', ['year' => $member->graduation_year])
+                ->route('admin.student-lifecycle.index', ['section' => 'graduations', 'year' => $member->graduation_year])
                 ->with('error', $message);
         }
 
@@ -234,7 +234,7 @@ class GraduationController extends Controller
         }
 
         return redirect()
-            ->route('admin.graduations.index', ['year' => $member->graduation_year])
+            ->route('admin.student-lifecycle.index', ['section' => 'graduations', 'year' => $member->graduation_year])
             ->with('success', $message);
     }
 
@@ -278,7 +278,7 @@ class GraduationController extends Controller
         }
 
         return redirect()
-            ->route('admin.graduations.index', $year !== null ? ['year' => $year] : [])
+            ->route('admin.student-lifecycle.index', $year !== null ? ['section' => 'graduations', 'year' => $year] : ['section' => 'graduations'])
             ->with('success', $message);
     }
 
@@ -340,6 +340,6 @@ class GraduationController extends Controller
     {
         $year = $closure->saver?->member?->graduation_year;
 
-        return redirect()->route('admin.graduations.index', $year ? ['year' => $year] : []);
+        return redirect()->route('admin.student-lifecycle.index', $year ? ['section' => 'graduations', 'year' => $year] : ['section' => 'graduations']);
     }
 }

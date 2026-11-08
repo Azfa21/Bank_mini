@@ -98,24 +98,7 @@ class VirtualCard extends StatelessWidget {
               ),
               if (qrValue != null) ...[
                 const SizedBox(width: 16),
-                Semantics(
-                  label: 'Kode QR milik $fullName',
-                  excludeSemantics: true,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: AppRadius.controlAll,
-                    ),
-                    child: QrImageView(
-                      data: qrValue,
-                      version: QrVersions.auto,
-                      size: 88,
-                      gapless: true,
-                      backgroundColor: AppColors.white,
-                    ),
-                  ),
-                ),
+                _expandableQr(context, qrValue),
               ],
             ],
           ),
@@ -184,5 +167,128 @@ class VirtualCard extends StatelessWidget {
 
   Widget _label(String text) {
     return Text(text, style: AppText.micro.copyWith(color: AppColors.brand100));
+  }
+
+  Widget _expandableQr(BuildContext context, String qrValue) {
+    void showExpandedQr() {
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          final screen = MediaQuery.sizeOf(dialogContext);
+          final qrSize = (screen.width - 80).clamp(120.0, 320.0).toDouble();
+
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 20,
+            ),
+            constraints: const BoxConstraints(maxWidth: 400),
+            backgroundColor: AppColors.paper,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Kode QR rekening',
+                          style: AppText.sectionTitle,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        tooltip: 'Tutup kode QR',
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    fullName,
+                    textAlign: TextAlign.center,
+                    style: AppText.action,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: AppRadius.cardAll,
+                    ),
+                    child: Semantics(
+                      label: 'Kode QR rekening milik $fullName',
+                      child: QrImageView(
+                        data: qrValue,
+                        version: QrVersions.auto,
+                        size: qrSize,
+                        gapless: true,
+                        backgroundColor: AppColors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tunjukkan kode ini kepada teller untuk dipindai.',
+                    textAlign: TextAlign.center,
+                    style: AppText.body.copyWith(color: AppColors.stone600),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return Semantics(
+      button: true,
+      label: 'Perbesar kode QR milik $fullName',
+      onTap: showExpandedQr,
+      child: ExcludeSemantics(
+        child: Material(
+          color: AppColors.white,
+          borderRadius: AppRadius.controlAll,
+          child: InkWell(
+            onTap: showExpandedQr,
+            borderRadius: AppRadius.controlAll,
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  QrImageView(
+                    data: qrValue,
+                    version: QrVersions.auto,
+                    size: 88,
+                    gapless: true,
+                    backgroundColor: AppColors.white,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.open_in_full,
+                        size: 12,
+                        color: AppColors.brand800,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Perbesar',
+                        style: AppText.caption.copyWith(
+                          color: AppColors.brand800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

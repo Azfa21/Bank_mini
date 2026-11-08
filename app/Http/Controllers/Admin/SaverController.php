@@ -38,7 +38,10 @@ class SaverController extends Controller
             ]);
         }
 
-        return view('admin.savers.index', compact('savers'));
+        return view('admin.savers.index', [
+            'savers' => $savers,
+            'dataType' => 'savers',
+        ]);
     }
 
     public function edit(Saver $saver): View|RedirectResponse

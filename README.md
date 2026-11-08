@@ -53,6 +53,26 @@ flutter test      # test aplikasi
 flutter run --dart-define=API_BASE_URL=http://<host>:<port>/api
 ```
 
+### Membuat APK Release
+Dari PowerShell di root proyek, jalankan:
+```powershell
+Set-Location .\mobile
+
+# Jalankan jika menambah atau mengubah dependensi di pubspec.yaml
+flutter pub get
+
+flutter build apk --release
+```
+
+Build menghasilkan APK untuk pemasangan langsung di
+`mobile/build/app/outputs/flutter-apk/Bank Mini Skansaba.apk`.
+
+Build juga menyalin APK ke `public/unduhan/bank-mini-nasabah.apk`, nama dan lokasi
+yang dideteksi landing page. Untuk memperbarui unduhan pada hosting, unggah berkas
+tersebut ke folder `unduhan/bank-mini-nasabah.apk` di dalam document root hosting
+(misalnya `public_html/unduhan/bank-mini-nasabah.apk`). Jangan unggah APK bermerek
+langsung ke akar document root karena landing page tidak mencari nama itu.
+
 ### Tautan APK di Halaman Awal
 Halaman awal menampilkan tombol unduh aplikasi nasabah hanya jika tautannya tersedia.
 Letakkan berkas APK di `public/unduhan/bank-mini-nasabah.apk`, atau isi

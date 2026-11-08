@@ -3,11 +3,9 @@
 return [
 
     /*
-     * Alasan: admin punya 10 tujuan. Dikelompokkan supaya bilah tab tetap satu baris tanpa
-     * geser ke kanan. "Data" = pengelolaan orang dan rekening, "Laporan" = keluaran angka
-     * dan keputusan kas. Penutupan rekening diputuskan di halaman Kelulusan, jadi tidak
-     * punya menu sendiri.
-     * Buku Besar, Neraca Saldo, dan Audit Jurnal kini ada di satu halaman.
+     * Alasan: satu tautan Data memuat pengelolaan siswa serta proses kenaikan dan kelulusan.
+     * Laporan mengelompokkan keluaran angka dan keputusan kas; penutupan rekening diputuskan
+     * dari alur kelulusan. Buku Besar, Neraca Saldo, dan Audit Jurnal ada di satu halaman.
      * Konfigurasi dibiarkan tautan langsung karena hanya satu tujuan; dropdown berisi satu
      * item menambah satu klik tanpa membantu.
      */
@@ -16,10 +14,8 @@ return [
             'label' => 'Data',
             'items' => [
                 ['label' => 'Kelola Pengguna', 'route' => 'admin.users.index', 'routes' => ['admin.users.*']],
-                ['label' => 'Kelola Anggota', 'route' => 'admin.members.index', 'routes' => ['admin.members.*']],
-                ['label' => 'Kelola Penabung', 'route' => 'admin.savers.index', 'routes' => ['admin.savers.*', 'admin.accounts.*']],
-                ['label' => 'Kelulusan', 'route' => 'admin.graduations.index', 'routes' => ['admin.graduations.*']],
-                ['label' => 'Kenaikan Kelas', 'route' => 'admin.class-promotions.index', 'routes' => ['admin.class-promotions.*']],
+                ['label' => 'Data Anggota & Penabung', 'route' => 'admin.member-data.index', 'routes' => ['admin.member-data.*', 'admin.members.*', 'admin.savers.*', 'admin.accounts.*']],
+                ['label' => 'Kenaikan & Kelulusan Siswa', 'route' => 'admin.student-lifecycle.index', 'routes' => ['admin.student-lifecycle.*', 'admin.graduations.*', 'admin.class-promotions.*']],
             ],
         ],
         [
