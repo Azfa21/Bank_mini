@@ -172,7 +172,6 @@
             </a>
             <a href="{{ route('admin.config.edit') }}" class="block rounded-lg border border-stone-200 p-4 hover:border-brand-300 transition-colors">
                 <div class="text-sm font-medium text-stone-900">Konfigurasi Sistem</div>
-                <div class="text-xs text-stone-500 mt-1">Saldo minimum dan pengaturan QR Code.</div>
             </a>
         </div>
     </div>
