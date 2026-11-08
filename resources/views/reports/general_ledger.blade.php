@@ -56,7 +56,7 @@
         <a href="{{ $exportUrl }}" class="inline-flex min-h-[44px] w-fit cursor-pointer items-center justify-center justify-self-end rounded-xl border border-olive-700 bg-olive-600 px-3 text-[13px] font-semibold text-white transition-colors hover:bg-olive-700" title="Berkas CSV dapat dibuka di Excel">Ekspor CSV</a>
     </form>
 
-    <section aria-label="Ringkasan saldo kas" class="mb-5 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.8fr)_minmax(15rem,.8fr)]">
+    <section aria-label="Ringkasan saldo kas" class="mb-5 space-y-3">
         <div class="min-w-0">
             <div class="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <h2 class="text-lg font-semibold text-stone-900">Saldo akun kas</h2>
@@ -93,7 +93,7 @@
             </x-data-table>
         </div>
 
-        <dl aria-label="Total periode" class="grid grid-cols-1 gap-2.5 sm:grid-cols-3 xl:grid-cols-1">
+        <dl aria-label="Total periode" class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             <div class="ledger-rule rounded-xl border border-stone-200 bg-white px-4 py-3">
                 <dt class="text-xs font-medium text-stone-600">Total debit periode</dt>
                 <dd class="mt-1 text-lg font-bold text-stone-900 tnum">Rp {{ number_format($totalDebit, 0, ',', '.') }}</dd>

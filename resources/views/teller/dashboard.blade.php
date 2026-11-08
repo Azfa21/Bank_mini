@@ -22,7 +22,7 @@
         <div class="flex flex-col lg:flex-row lg:items-center gap-4">
             <div class="flex-1">
                 <h2 class="text-lg font-bold text-stone-900">Mulai dari pencarian penabung</h2>
-                <p class="text-sm text-stone-600 mt-1">Cari memakai nomor rekening, NIS, nama, atau pindai QR. Profil dan saldo tampil sebelum transaksi diproses.</p>
+                <p class="text-sm text-stone-600 mt-1">Cari memakai nomor rekening, NIS, nama, atau pindai QR.</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2.5 lg:shrink-0">
                 <a href="{{ route('teller.members.search') }}" class="inline-flex items-center justify-center gap-2 min-h-[48px] px-5 text-[15px] font-semibold text-white bg-brand-800 rounded-xl hover:bg-brand-900 transition-colors">
@@ -43,7 +43,6 @@
             <p class="text-[13px] font-medium text-stone-600">Kas di laci hari ini</p>
             <p class="tnum text-xl font-bold text-stone-900 mt-0.5">Rp {{ number_format($recap['closing_balance_system'], 0, ',', '.') }}</p>
         </div>
-        <p class="text-[13px] text-stone-600 flex-1 sm:max-w-md">Uang tunai penarikan disiapkan dari modal awal yang diminta ke Administrator. Bila saldo belum memadai, ajukan permintaan kas.</p>
         <a href="{{ route('teller.cash-requests.index') }}" class="inline-flex items-center justify-center min-h-[48px] px-5 text-[15px] font-semibold text-stone-700 border border-stone-300 rounded-xl hover:bg-stone-100 transition-colors sm:shrink-0">
             Minta kas
         </a>
