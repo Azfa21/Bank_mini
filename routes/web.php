@@ -30,7 +30,7 @@ use App\Services\DailyReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('login'))->name('home');
+Route::get('/', fn () => view('landing'))->name('home');
 
 Route::middleware(['role:admin,teller'])->group(function () {
     Route::get('/qr', [QrCodeController::class, 'show'])->name('qr.show');
