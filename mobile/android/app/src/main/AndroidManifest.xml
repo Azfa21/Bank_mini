@@ -3,7 +3,7 @@
     <application
         android:label="Bank Mini Nasabah"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/bank_mini_launcher"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
