@@ -3,11 +3,11 @@
 return [
 
     /*
-     * Alasan: admin punya 11 tujuan. Dikelompokkan supaya bilah tab tetap satu baris tanpa
+     * Alasan: admin punya 10 tujuan. Dikelompokkan supaya bilah tab tetap satu baris tanpa
      * geser ke kanan. "Data" = pengelolaan orang dan rekening, "Laporan" = keluaran angka
      * dan keputusan kas. Penutupan rekening diputuskan di halaman Kelulusan, jadi tidak
      * punya menu sendiri.
-     * Neraca Saldo dan Buku Besar kini satu halaman, jadi Laporan cukup satu item untuknya.
+     * Buku Besar, Neraca Saldo, dan Audit Jurnal kini ada di satu halaman.
      * Konfigurasi dibiarkan tautan langsung karena hanya satu tujuan; dropdown berisi satu
      * item menambah satu klik tanpa membantu.
      */
@@ -27,8 +27,7 @@ return [
             'items' => [
                 ['label' => 'Laporan', 'route' => 'admin.reports.index', 'routes' => ['admin.reports.index', 'admin.reports.monthly*', 'admin.daily-reports.*']],
                 ['label' => 'Permintaan Kas', 'route' => 'admin.cash-requests.index', 'routes' => ['admin.cash-requests.*']],
-                ['label' => 'Buku Besar & Neraca Saldo', 'route' => 'admin.reports.general-ledger', 'routes' => ['admin.reports.general-ledger', 'admin.reports.trial-balance']],
-                ['label' => 'Audit Jurnal', 'route' => 'admin.journals.index', 'routes' => ['admin.journals.*']],
+                ['label' => 'Buku Besar & Mutasi Kas', 'route' => 'admin.reports.general-ledger', 'routes' => ['admin.reports.general-ledger', 'admin.reports.trial-balance', 'admin.journals.*']],
             ],
         ],
         ['label' => 'Konfigurasi', 'route' => 'admin.config.edit', 'routes' => ['admin.config.*']],

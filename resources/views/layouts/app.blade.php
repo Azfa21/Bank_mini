@@ -141,10 +141,8 @@
 
         @if ($currentUser && count($menuItems))
             <nav aria-label="Navigasi utama" class="border-t border-stone-100">
-                {{-- Alasan: 11 tujuan admin dikelompokkan jadi 4 entri (Dashboard, Data, Laporan, Konfigurasi)
-                     supaya bilah tab tetap satu baris di semua lebar layar dan semua tujuan, termasuk
-                     Konfigurasi dan Audit Jurnal, terlihat tanpa menggeser halaman ke kanan. flex-wrap
-                     tetap dipasang sebagai jaring pengaman kalau label bertambah panjang. --}}
+                {{-- Alasan: 10 tujuan admin dikelompokkan jadi 4 entri (Dashboard, Data, Laporan, Konfigurasi)
+                     agar seluruh tujuan, termasuk laporan kas, tetap terlihat tanpa menggeser halaman. --}}
                 <div data-auto-hide-nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden md:flex md:flex-wrap items-center gap-x-1">
                     @foreach ($menuItems as $index => $item)
                         @if (isset($item['children']))
@@ -248,8 +246,7 @@
 
     <footer class="border-t border-stone-200 bg-white mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-stone-600">
-            <p class="font-medium text-stone-800">Bank Mini Sekolah</p>
-            <p class="sm:ml-auto">Simpan slip dan struk sebagai bukti transaksi.</p>
+            <p class="font-medium text-stone-800">&copy; 2026 Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
         </div>
     </footer>
 

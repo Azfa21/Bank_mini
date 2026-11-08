@@ -72,7 +72,7 @@
             </form>
         </div>
 
-        <p class="text-[13px] text-stone-600 mt-5">&copy; {{ date('Y') }} Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
+        <p class="text-[13px] text-stone-600 mt-5">&copy; 2026 Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
     </main>
 
 </body>

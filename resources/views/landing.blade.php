@@ -103,7 +103,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <p class="text-sm font-semibold text-stone-900">Bank Mini Sekolah</p>
-                <p class="mt-0.5 text-xs text-stone-600">&copy; {{ date('Y') }} Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
+                <p class="mt-0.5 text-xs text-stone-600">&copy; 2026 Bank Mini Skansaba. Seluruh hak cipta dilindungi.</p>
             </div>
         </div>
     </footer>

@@ -6,7 +6,7 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-stone-900">Dashboard Administrator</h1>
-        <p class="text-sm text-stone-500 mt-1">Validasi kas teller dan ringkasan operasional.</p>
+        <p class="text-sm text-stone-500 mt-1">Ringkasan operasional.</p>
     </div>
 
     <section aria-label="Antrean validasi laporan" class="bg-white rounded-xl border {{ $waiting > 0 ? 'border-amber-300' : 'border-stone-200' }} ledger-rule p-5 mb-6">
@@ -167,7 +167,7 @@
                 <div class="text-xs text-stone-500 mt-1">Profil siswa, rekening, dan saldo.</div>
             </a>
             <a href="{{ route('admin.reports.general-ledger') }}" class="block rounded-lg border border-stone-200 p-4 hover:border-brand-300 transition-colors">
-                <div class="text-sm font-medium text-stone-900">Buku Besar &amp; Neraca Saldo</div>
+                <div class="text-sm font-medium text-stone-900">Buku Besar &amp; Mutasi Kas</div>
                 <div class="text-xs text-stone-500 mt-1">Saldo akun kas dan mutasi per akun.</div>
             </a>
             <a href="{{ route('admin.config.edit') }}" class="block rounded-lg border border-stone-200 p-4 hover:border-brand-300 transition-colors">

@@ -15,7 +15,6 @@ use App\Http\Controllers\Admin\SystemConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\JournalController;
 use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
@@ -78,7 +77,7 @@ Route::middleware(['role:admin'])->prefix('admin')->as('admin.')->group(function
     Route::get('config', [SystemConfigController::class, 'edit'])->name('config.edit');
     Route::put('config', [SystemConfigController::class, 'update'])->name('config.update');
 
-    Route::get('journals', [JournalController::class, 'index'])->name('journals.index');
+    Route::get('journals', [AccountingReportController::class, 'generalLedger'])->name('journals.index');
 
     Route::get('daily-reports', [DailyReportController::class, 'index'])->name('daily-reports.index');
     Route::get('daily-reports/{report}', [DailyReportController::class, 'show'])->name('daily-reports.show');

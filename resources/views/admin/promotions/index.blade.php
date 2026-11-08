@@ -7,7 +7,7 @@
     <div class="mb-5">
         <p class="text-xs font-semibold text-brand-900">AKHIR TAHUN AJARAN</p>
         <h1 class="text-2xl font-bold text-stone-900 mt-1">Kenaikan kelas</h1>
-        <p class="text-sm text-stone-600 mt-1">Naikkan tingkat anggota dan penabung sekali setahun: X menjadi XI, XI menjadi XII. Jurusan dan nomor rombel mengikuti kelas asal, jadi tidak ada siswa pindah jurusan lewat halaman ini. Kalau hanya sebagian siswa yang tinggal kelas, buka daftar siswa pada baris kelasnya lalu centang satu per satu.</p>
+        <p class="text-sm text-stone-600 mt-1">Naikkan kelas anggota dan penabung sekali setahun. Kalau hanya sebagian siswa yang tinggal kelas, buka daftar siswa pada baris kelasnya lalu centang satu per satu.</p>
     </div>
 
     <x-form-errors />

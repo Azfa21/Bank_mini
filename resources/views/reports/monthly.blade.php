@@ -1,5 +1,5 @@
 @php
-    $indexRoute = route('admin.reports.index', ['period' => 'monthly']);
+    $indexRoute = route('admin.reports.monthly');
 @endphp
 
     <p class="text-xs font-semibold text-brand-900 mb-3">REKAP BULANAN</p>

@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-semibold text-stone-900">Daftar Penabung</h1>
-            <p class="text-sm text-stone-500 mt-1">Penabung lahir otomatis saat anggota menyetor aktivasi di Teller.</p>
+            <p class="text-sm text-stone-500 mt-1">Penabung otomatis aktif setelah anggota menyetor uang di Teller.</p>
         </div>
     </div>
 

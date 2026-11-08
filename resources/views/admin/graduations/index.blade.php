@@ -7,7 +7,7 @@
     <div class="mb-5">
         <p class="text-xs font-semibold text-brand-900">ARSIP KELULUSAN</p>
         <h1 class="text-2xl font-bold text-stone-900 mt-1">Kelulusan angkatan</h1>
-        <p class="text-sm text-stone-600 mt-1">Satu tempat untuk meluluskan siswa, menyetujui pencairan di loket, dan menandai siswa yang tidak lulus. Tandai siswa yang tidak lulus sebelum memproses angkatan.</p>
+        <p class="text-sm text-stone-600 mt-1">Form untuk meluluskan siswa. Tandai siswa yang tidak lulus sebelum memproses kelulusan.</p>
 
         @php
             $pendingTotal = $pendingByYear->sum() + $unassignedClosures->count();

@@ -23,36 +23,39 @@ class AccountingReportController extends Controller
     {
         $this->authorize('viewAny', JurnalAkuntansi::class);
 
-        // Alasan: daftar akun tampil dipakai untuk memvalidasi URL, bukan hanya untuk
-        // mengisi dropdown. Tanpa ini akun tersembunyi masih bisa dibuka lewat bookmark
-        // lama `?account_code=201`.
         $accounts = AccountingService::presentedAccounts();
-        $requestedAccountCode = (string) $request->input('account_code', AccountingService::ACCOUNT_CODE_CASH_TELLER);
-        $accountCode = AccountingService::isPresented($requestedAccountCode)
+        $requestedAccountCode = trim((string) $request->input('account_code', ''));
+        $accountCode = $requestedAccountCode !== '' && AccountingService::isPresented($requestedAccountCode)
             ? $requestedAccountCode
-            : AccountingService::ACCOUNT_CODE_CASH_TELLER;
+            : '';
+        $apiAccountCode = $accountCode ?: AccountingService::ACCOUNT_CODE_CASH_TELLER;
 
-        $dateFrom = $request->input('date_from');
-        $dateTo = $request->input('date_to');
+        $dateFrom = $request->input('date_from') ?: null;
+        $dateTo = $request->input('date_to') ?: null;
+        $search = trim((string) $request->input('search', $request->input('transaction_number', '')));
 
-        $query = JurnalAkuntansi::query()
-            ->when($accountCode, fn ($q) => $q->where('account_code', $accountCode))
-            ->when($dateFrom, fn ($q) => $q->whereDate('journal_at', '>=', $dateFrom))
-            ->when($dateTo, fn ($q) => $q->whereDate('journal_at', '<=', $dateTo))
+        $queryAccountCode = $this->wantsJson($request) ? $apiAccountCode : $accountCode;
+        $makeQuery = fn () => $this->cashJournalQuery(
+            $queryAccountCode,
+            $dateFrom,
+            $dateTo,
+            $search,
+        );
+
+        $entries = $makeQuery()
+            ->with(['transaction', 'cashTransfer', 'cashRequest'])
             ->orderBy('journal_at')
-            ->orderBy('id');
+            ->orderBy('id')
+            ->paginate(25)
+            ->withQueryString()
+            ->fragment('mutasi');
 
-        $entries = $query->paginate(25)->withQueryString()->fragment('mutasi');
+        $totalDebit = (int) $makeQuery()->sum('debit_amount');
+        $totalCredit = (int) $makeQuery()->sum('credit_amount');
 
-        $totalDebit = (int) (clone $query)->sum('debit_amount');
-        $totalCredit = (int) (clone $query)->sum('credit_amount');
-
-        // Saldo kumulatif sampai batas atas rentang; tanpa filter berarti sampai hari ini.
         $balanceDate = $dateTo ?: now()->toDateString();
         $trialBalance = $this->accounting->trialBalance($balanceDate);
 
-        // Alasan: hanya akun tampil yang dijumlahkan ke total halaman ini. Memakai grand
-        // total milik seluruh akun akan membuat baris tabel tidak cocok dengan footernya.
         $balances = array_intersect_key($trialBalance['balances'], $accounts);
         $grandDebit = 0;
         $grandCredit = 0;
@@ -62,28 +65,48 @@ class AccountingReportController extends Controller
             $grandCredit += $balance['net_credit'];
         }
 
-        // Alasan: indikator seimbang tetap dihitung dari seluruh akun, termasuk akun yang
-        // tidak ditampilkan, supaya statusnya tidak pernah berbohong.
         $isBalanced = $trialBalance['is_balanced'];
 
-        $normalBalance = $accounts[$accountCode]['normal'] ?? 'debit';
+        $periodTotals = $makeQuery()
+            ->selectRaw('account_code, COALESCE(SUM(debit_amount), 0) as total_debit, COALESCE(SUM(credit_amount), 0) as total_credit')
+            ->groupBy('account_code')
+            ->get()
+            ->keyBy('account_code');
+
+        $visibleBalances = $accountCode === ''
+            ? $balances
+            : array_intersect_key($balances, [$accountCode => true]);
+        $summaryBalances = [];
+        $cashEndingBalance = 0;
+
+        foreach ($visibleBalances as $code => $balance) {
+            $period = $periodTotals->get($code);
+            $ending = $balance['net_debit'] - $balance['net_credit'];
+
+            $summaryBalances[$code] = [
+                'name' => $balance['name'],
+                'total_debit' => (int) ($period->total_debit ?? 0),
+                'total_credit' => (int) ($period->total_credit ?? 0),
+                'ending_balance' => $ending,
+            ];
+            $cashEndingBalance += $ending;
+        }
+
+        $normalBalance = $accounts[$apiAccountCode]['normal'];
         $toNormalSide = fn (int $debitSign): int => $normalBalance === 'debit' ? $debitSign : -$debitSign;
 
-        // Saldo awal hanya berarti saat ada batas bawah; tanpa itu seluruh riwayat tampil.
         $openingBalance = $dateFrom
-            ? $toNormalSide($this->cumulativeBalance($accountCode, Carbon::parse($dateFrom)->subDay()->toDateString()))
+            ? $toNormalSide($this->cumulativeBalance($apiAccountCode, Carbon::parse($dateFrom)->subDay()->toDateString()))
             : 0;
 
-        // Saldo akhir mengikuti neraca saldo (kumulatif), bukan hanya mutasi rentang,
-        // supaya baris akun di tabel atas dan angka di bawah selalu sama.
-        $endingBalance = $toNormalSide($this->cumulativeBalance($accountCode, $balanceDate));
+        $endingBalance = $toNormalSide($this->cumulativeBalance($apiAccountCode, $balanceDate));
 
         if ($this->wantsJson($request)) {
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'account_code' => $accountCode,
-                    'account_name' => $this->accounting->accountName($accountCode),
+                    'account_code' => $apiAccountCode,
+                    'account_name' => $this->accounting->accountName($apiAccountCode),
                     'total_debit' => $totalDebit,
                     'total_credit' => $totalCredit,
                     'opening_balance' => $openingBalance,
@@ -104,16 +127,13 @@ class AccountingReportController extends Controller
             'entries',
             'accountCode',
             'accounts',
-            'normalBalance',
-            'openingBalance',
             'totalDebit',
             'totalCredit',
-            'endingBalance',
             'dateFrom',
             'dateTo',
-            'balances',
-            'grandDebit',
-            'grandCredit',
+            'search',
+            'summaryBalances',
+            'cashEndingBalance',
             'isBalanced',
             'balanceDate'
         ));
@@ -205,21 +225,16 @@ class AccountingReportController extends Controller
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for Excel
 
             if ($type === 'general_ledger') {
-                fputcsv($handle, ['No. Jurnal', 'Tanggal', 'Kode Akun', 'Nama Akun', 'Debit (Rp)', 'Kredit (Rp)', 'Keterangan', 'Status']);
+                fputcsv($handle, ['No. Jurnal', 'Referensi', 'Tanggal & Waktu', 'Kode Akun', 'Nama Akun', 'Debit (Rp)', 'Kredit (Rp)', 'Keterangan']);
 
-                // Alasan: ekspor mengikuti filter halaman. Kode akun yang tidak tampil
-                // dikembalikan ke akun kas supaya berkasnya tidak pernah memuat akun itu.
-                $requestedCode = (string) $request->input('account_code');
-                $code = AccountingService::isPresented($requestedCode)
-                    ? $requestedCode
-                    : AccountingService::ACCOUNT_CODE_CASH_TELLER;
+                $requestedCode = trim((string) $request->input('account_code', ''));
+                $code = AccountingService::isPresented($requestedCode) ? $requestedCode : '';
                 $dateFrom = $request->input('date_from');
                 $dateTo = $request->input('date_to');
+                $search = trim((string) $request->input('search', $request->input('transaction_number', '')));
 
-                $query = JurnalAkuntansi::query()
-                    ->where('account_code', $code)
-                    ->when($dateFrom, fn ($q) => $q->whereDate('journal_at', '>=', $dateFrom))
-                    ->when($dateTo, fn ($q) => $q->whereDate('journal_at', '<=', $dateTo))
+                $query = $this->cashJournalQuery($code, $dateFrom ?: null, $dateTo ?: null, $search)
+                    ->with(['transaction', 'cashTransfer', 'cashRequest'])
                     ->orderBy('journal_at')
                     ->orderBy('id');
 
@@ -227,13 +242,13 @@ class AccountingReportController extends Controller
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $row->journal_number,
+                            $row->transaction?->receipt_number ?? $row->cashRequest?->request_number ?? ($row->cash_transfer_id ? 'TRF-'.$row->cash_transfer_id : ''),
                             $row->journal_at->format('Y-m-d H:i:s'),
                             $row->account_code,
                             $accounting->accountName($row->account_code),
                             $row->debit_amount,
                             $row->credit_amount,
                             $row->description,
-                            $row->status,
                         ]);
                     }
                 });
@@ -294,5 +309,30 @@ class AccountingReportController extends Controller
 
             fclose($handle);
         }, 200, $headers);
+    }
+
+    private function cashJournalQuery(string $accountCode, ?string $dateFrom, ?string $dateTo, string $search)
+    {
+        return JurnalAkuntansi::query()
+            ->whereIn('account_code', array_keys(AccountingService::presentedAccounts()))
+            ->when($accountCode !== '', fn ($query) => $query->where('account_code', $accountCode))
+            ->when($dateFrom, fn ($query) => $query->whereDate('journal_at', '>=', $dateFrom))
+            ->when($dateTo, fn ($query) => $query->whereDate('journal_at', '<=', $dateTo))
+            ->when($search !== '', function ($query) use ($search) {
+                $transferReference = (string) preg_replace('/^TRF[-\\s]*/i', '', $search);
+
+                $query->where(function ($matches) use ($search, $transferReference) {
+                    $matches
+                        ->where('journal_number', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas('transaction', fn ($transaction) => $transaction->where('receipt_number', 'like', "%{$search}%"))
+                        ->orWhereHas('cashTransfer', fn ($transfer) => $transfer->where('notes', 'like', "%{$search}%"))
+                        ->orWhereHas('cashRequest', fn ($cashRequest) => $cashRequest->where('request_number', 'like', "%{$search}%"));
+
+                    if ($transferReference !== '' && ctype_digit($transferReference)) {
+                        $matches->orWhere('cash_transfer_id', 'like', "%{$transferReference}%");
+                    }
+                });
+            });
     }
 }

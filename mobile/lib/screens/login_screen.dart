@@ -183,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    '© ${DateTime.now().year} ${AppConfig.bankName}',
+                    '© 2026 Bank Mini Skansaba. Seluruh hak cipta dilindungi.',
                     textAlign: TextAlign.center,
                     style: AppText.meta,
                   ),

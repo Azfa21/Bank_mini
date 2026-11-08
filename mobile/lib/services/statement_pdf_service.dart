@@ -185,6 +185,11 @@ class StatementPdfService {
           'Halaman ${context.pageNumber} dari ${context.pagesCount}',
           style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
         ),
+        pw.SizedBox(height: 3),
+        pw.Text(
+          '© 2026 Bank Mini Skansaba. Seluruh hak cipta dilindungi.',
+          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+        ),
       ],
     );
   }
