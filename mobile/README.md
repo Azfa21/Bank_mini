@@ -18,3 +18,23 @@ flutter test      # test aplikasi
 flutter run --dart-define=API_BASE_URL=http://<host>:<port>/api
 ```
 Konfigurasi API dan nama bank ada di `lib/core/config/app_config.dart`.
+
+## Membuat APK Release
+Pastikan Flutter menggunakan JDK versi 17–24 (hindari JBR 25 karena incompatibilitas dengan plugin Kotlin):
+```powershell
+flutter config --jdk-dir "C:\Program Files\Java\jdk-24"
+```
+
+Build APK:
+```powershell
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --release
+
+# Opsi kustomisasi alamat API:
+# flutter build apk --release --dart-define=API_BASE_URL=https://<domain>/api
+```
+Hasil build berada di:
+- `build/app/outputs/flutter-apk/Bank Mini Skansaba.apk`
+- Otomatis disalin ke web di `../public/unduhan/bank-mini-nasabah.apk`.

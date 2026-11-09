@@ -53,25 +53,52 @@ flutter test      # test aplikasi
 flutter run --dart-define=API_BASE_URL=http://<host>:<port>/api
 ```
 
-### Membuat APK Release
-Dari PowerShell di root proyek, jalankan:
+### Membuat APK Release (Aplikasi Nasabah)
+
+#### 1. Lokasi Berkas Perubahan
+Sebelum melakukan build ulang, berkas-berkas konfigurasi dan tampilan utama berada di:
+- **Konfigurasi API & Nama Aplikasi**: `mobile/lib/core/config/app_config.dart` (default URL: `https://bankmini-skansaba.my.id/api`).
+- **Nomor Versi Aplikasi**: `mobile/pubspec.yaml` pada baris `version: 1.0.1+2` (`versionName+versionCode`).
+- **Token Desain & Warna**: `mobile/lib/core/theme/app_colors.dart` (salinan token dari `resources/css/app.css`).
+- **Layar & Logika**: `mobile/lib/screens/`, `mobile/lib/widgets/`, `mobile/lib/providers/`.
+
+#### 2. Prasyarat Toolchain Java
+Kompiler Kotlin di Gradle membutuhkan JDK versi 17–24. Jangan gunakan JBR 25 bawaan Android Studio versi terbaru karena akan memunculkan error `25.0.4`.
+Pastikan Flutter dikonfigurasi ke JDK yang sesuai:
+```powershell
+flutter config --jdk-dir "C:\Program Files\Java\jdk-24"
+```
+
+#### 3. Langkah Pengujian & Kompilasi
+Dari PowerShell di root proyek:
 ```powershell
 Set-Location .\mobile
 
-# Jalankan jika menambah atau mengubah dependensi di pubspec.yaml
+# Unduh dependensi (wajib jika pubspec.yaml berubah)
 flutter pub get
 
+# Jalankan pemeriksaan kode dan pengujian
+flutter analyze
+flutter test
+
+# Build APK Release standar (menggunakan URL API default dari app_config.dart)
+flutter build apk --release
+
+# ATAU: Build dengan URL API kustom
+flutter build apk --release --dart-define=API_BASE_URL=https://domain-anda.com/api
+
+# Jika build mengalami masalah cache lama, bersihkan terlebih dahulu:
+flutter clean
+flutter pub get
 flutter build apk --release
 ```
 
-Build menghasilkan APK untuk pemasangan langsung di
-`mobile/build/app/outputs/flutter-apk/Bank Mini Skansaba.apk`.
+#### 4. Hasil Kompilasi & Penyaluran ke Web
+Build menghasilkan APK di dua lokasi:
+1. `mobile/build/app/outputs/flutter-apk/Bank Mini Skansaba.apk` (pemasangan langsung).
+2. `public/unduhan/bank-mini-nasabah.apk` (otomatis disalin oleh Gradle task `copyReleaseApks`).
 
-Build juga menyalin APK ke `public/unduhan/bank-mini-nasabah.apk`, nama dan lokasi
-yang dideteksi landing page. Untuk memperbarui unduhan pada hosting, unggah berkas
-tersebut ke folder `unduhan/bank-mini-nasabah.apk` di dalam document root hosting
-(misalnya `public_html/unduhan/bank-mini-nasabah.apk`). Jangan unggah APK bermerek
-langsung ke akar document root karena landing page tidak mencari nama itu.
+Untuk memperbarui unduhan pada hosting production, unggah berkas tersebut ke folder `unduhan/bank-mini-nasabah.apk` di dalam document root hosting (misalnya `public_html/unduhan/bank-mini-nasabah.apk`). Jangan unggah APK bermerek langsung ke akar document root karena landing page mendeteksi jalur `public/unduhan/bank-mini-nasabah.apk`.
 
 ### Tautan APK di Halaman Awal
 Halaman awal menampilkan tombol unduh aplikasi nasabah hanya jika tautannya tersedia.
