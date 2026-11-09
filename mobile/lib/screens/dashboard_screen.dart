@@ -169,6 +169,16 @@ class _AccountSummary extends StatelessWidget {
             child: const Text('Lihat riwayat mutasi'),
           ),
           const SizedBox(height: 10),
+          if (isActive) ...[
+            OutlinedButton(
+              onPressed: () => context.push(AppRouter.withdrawalBooking),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              child: const Text('Booking penarikan di atas Rp 1.000.000'),
+            ),
+            const SizedBox(height: 10),
+          ],
           OutlinedButton(
             onPressed: () => context.push(AppRouter.statement),
             style: OutlinedButton.styleFrom(

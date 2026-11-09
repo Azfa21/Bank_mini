@@ -17,6 +17,7 @@ class TransactionService
 {
     public function __construct(
         protected SequenceService $sequences,
+        protected WithdrawalBookingService $withdrawalBookings,
     ) {}
 
     public const ACCOUNT_CODE_CASH = AccountingService::ACCOUNT_CODE_CASH_TELLER;
@@ -85,6 +86,13 @@ class TransactionService
             if ($amount <= 0) {
                 throw new TransactionValidationException('Nominal harus lebih besar dari nol.');
             }
+
+            $booking = $this->withdrawalBookings->authorizeWithdrawal(
+                $locked,
+                $amount,
+                isset($data['withdrawal_booking_id']) ? (int) $data['withdrawal_booking_id'] : null,
+            );
+            $data['withdrawal_booking_id'] = $booking?->id;
 
             $minimumBalance = $this->minimumBalanceFor($locked);
 
@@ -160,6 +168,12 @@ class TransactionService
             // Pencairan mengeluarkan kas, jadi laporan harian teller harus masih terbuka.
             $this->assertTellerDayOpen($teller);
 
+            $booking = $this->withdrawalBookings->authorizeWithdrawal(
+                $locked,
+                $amount,
+                $this->withdrawalBookings->dailyStatus($locked)['booking']?->id,
+            );
+
             $transaction = $this->createTransaction(
                 $locked,
                 $teller,
@@ -167,7 +181,10 @@ class TransactionService
                 $amount,
                 $balanceBefore,
                 $minimumBalance,
-                ['notes' => $reason],
+                [
+                    'notes' => $reason,
+                    'withdrawal_booking_id' => $booking?->id,
+                ],
             );
 
             $locked->update(['balance' => $minimumBalance]);
@@ -342,6 +359,7 @@ class TransactionService
     ): Transaction {
         return Transaction::create([
             'account_id' => $account->id,
+            'withdrawal_booking_id' => $data['withdrawal_booking_id'] ?? null,
             'teller_id' => $teller->id,
             'type' => $type,
             'amount' => $amount,

@@ -14,6 +14,7 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\Mobile\AuthController as MobileAuthController;
 use App\Http\Controllers\Mobile\DashboardController as MobileDashboardController;
 use App\Http\Controllers\Mobile\MutasiController as MobileMutasiController;
+use App\Http\Controllers\Mobile\WithdrawalBookingController as MobileWithdrawalBookingController;
 use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\Teller\AccountClosureController as TellerAccountClosureController;
 use App\Http\Controllers\Teller\ClosingController;
@@ -43,6 +44,8 @@ Route::prefix('mobile')->group(function () {
         Route::get('/card', [MobileDashboardController::class, 'card'])->name('api.mobile.card');
         Route::get('/mutasi', [MobileMutasiController::class, 'index'])->name('api.mobile.mutasi');
         Route::get('/statement', [MobileMutasiController::class, 'statement'])->name('api.mobile.statement');
+        Route::get('/withdrawal-bookings', [MobileWithdrawalBookingController::class, 'index'])->name('api.mobile.withdrawal-bookings.index');
+        Route::post('/withdrawal-bookings', [MobileWithdrawalBookingController::class, 'store'])->name('api.mobile.withdrawal-bookings.store');
     });
 });
 

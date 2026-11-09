@@ -63,6 +63,12 @@ class Account extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /** @return HasMany<WithdrawalBooking, $this> */
+    public function withdrawalBookings(): HasMany
+    {
+        return $this->hasMany(WithdrawalBooking::class);
+    }
+
     /** @return HasMany<AccountClosure, $this> */
     public function closures(): HasMany
     {

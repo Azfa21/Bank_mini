@@ -11,6 +11,7 @@ import '../screens/mutasi_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/statement_screen.dart';
+import '../screens/withdrawal_booking_screen.dart';
 
 class AppRouter {
   AppRouter(this._auth);
@@ -23,6 +24,7 @@ class AppRouter {
   static const String changePin = '/change-pin';
   static const String home = '/home';
   static const String statement = '/statement';
+  static const String withdrawalBooking = '/withdrawal-booking';
 
   late final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -69,6 +71,10 @@ class AppRouter {
       GoRoute(
         path: statement,
         builder: (context, state) => const StatementScreen(),
+      ),
+      GoRoute(
+        path: withdrawalBooking,
+        builder: (context, state) => const WithdrawalBookingScreen(),
       ),
     ],
   );

@@ -31,6 +31,7 @@ return [
 
     'teller' => [
         ['label' => 'Pencarian Penabung', 'route' => 'teller.members.search', 'routes' => ['teller.members.search', 'teller.members.lookup', 'teller.members.show', 'teller.members.activate', 'teller.members.activate.store', 'teller.deposits.*', 'teller.withdrawals.*', 'teller.transfers.*', 'teller.passbook.*', 'teller.transactions.*']],
+        ['label' => 'Booking Penarikan', 'route' => 'teller.withdrawal-bookings.index', 'routes' => ['teller.withdrawal-bookings.*']],
         ['label' => 'Registrasi Anggota', 'route' => 'teller.members.register', 'routes' => ['teller.members.register', 'teller.members.register.store']],
         ['label' => 'Permintaan Kas', 'route' => 'teller.cash-requests.index', 'routes' => ['teller.cash-requests.*']],
         ['label' => 'Penutupan Kas', 'route' => 'teller.closing.index', 'routes' => ['teller.closing.*']],

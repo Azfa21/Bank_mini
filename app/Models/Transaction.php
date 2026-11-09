@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property int $account_id
+ * @property int|null $withdrawal_booking_id
  * @property int|null $recipient_account_id
  * @property int $teller_id
  * @property string $type
@@ -36,6 +37,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'account_id',
+        'withdrawal_booking_id',
         'recipient_account_id',
         'teller_id',
         'type',
@@ -68,6 +70,12 @@ class Transaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    /** @return BelongsTo<WithdrawalBooking, $this> */
+    public function withdrawalBooking(): BelongsTo
+    {
+        return $this->belongsTo(WithdrawalBooking::class);
     }
 
     /** @return BelongsTo<Account, $this> */

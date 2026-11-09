@@ -11,11 +11,13 @@ use App\Models\Account;
 use App\Models\Transaction;
 use App\Services\AuditLogService;
 use App\Services\TransactionService;
+use App\Services\WithdrawalBookingService;
 
 class TransactionController extends Controller
 {
     public function __construct(
         protected TransactionService $transactions,
+        protected WithdrawalBookingService $withdrawalBookings,
     ) {}
 
     public function createDeposit(Account $account)
@@ -78,7 +80,9 @@ class TransactionController extends Controller
             ]);
         }
 
-        return view('teller.withdrawal-create', compact('account'));
+        $withdrawalDaily = $this->withdrawalBookings->dailyStatus($account);
+
+        return view('teller.withdrawal-create', compact('account', 'withdrawalDaily'));
     }
 
     public function storeWithdrawal(StoreWithdrawalRequest $request, Account $account)

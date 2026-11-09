@@ -18,6 +18,7 @@ class StoreWithdrawalRequest extends FormRequest
             'slip_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'amount' => ['required', 'integer', 'min:1'],
             'pin' => ['required', 'digits:6'],
+            'withdrawal_booking_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

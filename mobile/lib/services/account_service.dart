@@ -3,6 +3,7 @@ import '../models/card_info.dart';
 import '../models/dashboard_data.dart';
 import '../models/statement.dart';
 import '../models/transaction.dart';
+import '../models/withdrawal_booking.dart';
 
 class AccountService {
   AccountService(this._api);
@@ -52,5 +53,30 @@ class AccountService {
     );
 
     return StatementData.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<WithdrawalBookingOverview> withdrawalBookings() async {
+    final response = await _api.getJson('/mobile/withdrawal-bookings');
+
+    return WithdrawalBookingOverview.fromJson(
+      response['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<WithdrawalBooking> requestWithdrawalBooking({
+    required String withdrawalDate,
+    required int amount,
+    String? notes,
+  }) async {
+    final response = await _api.postJson(
+      '/mobile/withdrawal-bookings',
+      data: {
+        'withdrawal_date': withdrawalDate,
+        'amount': amount,
+        if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+      },
+    );
+
+    return WithdrawalBooking.fromJson(response['data'] as Map<String, dynamic>);
   }
 }

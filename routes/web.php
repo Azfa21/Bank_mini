@@ -27,6 +27,7 @@ use App\Http\Controllers\Teller\MemberRegistrationController;
 use App\Http\Controllers\Teller\MemberSearchController;
 use App\Http\Controllers\Teller\PassbookController;
 use App\Http\Controllers\Teller\TransactionController;
+use App\Http\Controllers\Teller\WithdrawalBookingController;
 use App\Services\DailyReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -150,6 +151,9 @@ Route::middleware(['role:teller'])->prefix('teller')->as('teller.')->group(funct
 
     Route::get('/withdrawals/{account}', [TransactionController::class, 'createWithdrawal'])->name('withdrawals.create');
     Route::post('/withdrawals/{account}', [TransactionController::class, 'storeWithdrawal'])->name('withdrawals.store');
+    Route::get('/withdrawal-bookings', [WithdrawalBookingController::class, 'index'])->name('withdrawal-bookings.index');
+    Route::post('/withdrawal-bookings/{booking}/approve', [WithdrawalBookingController::class, 'approve'])->name('withdrawal-bookings.approve');
+    Route::post('/withdrawal-bookings/{booking}/reject', [WithdrawalBookingController::class, 'reject'])->name('withdrawal-bookings.reject');
 
     Route::get('/transfers/{account}', [TransactionController::class, 'createTransfer'])->name('transfers.create');
     Route::post('/transfers/{account}', [TransactionController::class, 'storeTransfer'])->name('transfers.store');
