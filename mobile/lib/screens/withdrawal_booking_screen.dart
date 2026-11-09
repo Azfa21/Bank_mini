@@ -156,7 +156,7 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
                   const SizedBox(height: 16),
                   _dailySummary(overview),
                   const SizedBox(height: 16),
-                  _bookingForm(),
+                  _bookingForm(overview),
                   const SizedBox(height: 24),
                   Text('Riwayat booking', style: AppText.sectionTitle),
                   const SizedBox(height: 10),
@@ -186,23 +186,58 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Penarikan hari ini', style: AppText.metaStrong),
-          const SizedBox(height: 5),
-          Text(
-            '${Formatters.rupiah(overview.todayWithdrawn)} dari ${Formatters.rupiah(overview.todayLimit)}',
-            style: AppText.tnum(AppText.sectionTitle),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Sisa batas hari ini ${Formatters.rupiah(overview.todayRemaining)}. Batas biasa ${Formatters.rupiah(overview.dailyLimit)}.',
-            style: AppText.meta,
+          Text('Saldo dan penarikan hari ini', style: AppText.metaStrong),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Saldo rekening', style: AppText.meta),
+                    const SizedBox(height: 2),
+                    Text(
+                      Formatters.rupiah(overview.balance),
+                      style: AppText.tnum(AppText.sectionTitle),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Saldo mengendap ${Formatters.rupiah(overview.minimumBalance)}',
+                      style: AppText.meta,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Maksimal dapat ditarik', style: AppText.meta),
+                    const SizedBox(height: 2),
+                    Text(
+                      Formatters.rupiah(overview.maxWithdrawable),
+                      style: AppText.tnum(AppText.sectionTitle),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Sisa batas hari ini ${Formatters.rupiah(overview.todayRemaining)}',
+                      style: AppText.meta,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _bookingForm() {
+  Widget _bookingForm(WithdrawalBookingOverview overview) {
+    final bool canBook = overview.maxWithdrawable > _dailyLimit;
+    final bool isFormEnabled = !_submitting && canBook;
+
     return LedgerCard(
       child: Form(
         key: _formKey,
@@ -215,11 +250,20 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
               'Nominal yang diminta adalah total rencana penarikan pada tanggal tersebut. Teller perlu menyetujui booking sebelum batas harian bertambah.',
               style: AppText.body.copyWith(color: AppColors.stone600),
             ),
+            if (!canBook) ...[
+              const SizedBox(height: 12),
+              AlertCard(
+                tone: AlertTone.warning,
+                title: 'Saldo belum mencukupi',
+                message:
+                    'Saldo yang dapat ditarik saat ini ${Formatters.rupiah(overview.maxWithdrawable)} (saldo ${Formatters.rupiah(overview.balance)} dikurangi saldo mengendap ${Formatters.rupiah(overview.minimumBalance)}). Booking hanya dapat diajukan jika saldo mencukupi untuk penarikan di atas Rp 1.000.000.',
+              ),
+            ],
             const SizedBox(height: 16),
             Text('Tanggal penarikan', style: AppText.fieldLabel),
             const SizedBox(height: 6),
             OutlinedButton.icon(
-              onPressed: _submitting ? null : _chooseDate,
+              onPressed: isFormEnabled ? _chooseDate : null,
               icon: const Icon(Icons.calendar_today_outlined, size: 18),
               label: Text(Formatters.date(_withdrawalDate)),
               style: OutlinedButton.styleFrom(
@@ -230,11 +274,13 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
             const SizedBox(height: 14),
             TextFormField(
               controller: _amountController,
-              enabled: !_submitting,
+              enabled: isFormEnabled,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Total rencana penarikan (Rp)',
-                helperText: 'Masukkan total harian di atas Rp 1.000.000.',
+                helperText: canBook
+                    ? 'Batas booking saat ini: Rp 1.000.001 s.d. ${Formatters.rupiah(overview.maxWithdrawable)}.'
+                    : 'Saldo belum mencukupi untuk penarikan di atas Rp 1.000.000.',
               ),
               validator: (value) {
                 final amount = int.tryParse(value?.trim() ?? '');
@@ -244,13 +290,19 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
                 if (amount <= _dailyLimit) {
                   return 'Booking hanya untuk total harian di atas Rp 1.000.000.';
                 }
+                if (amount > overview.balance) {
+                  return 'Saldo tidak mencukupi untuk nominal penarikan ini.';
+                }
+                if (overview.balance - amount < overview.minimumBalance) {
+                  return 'Sisa saldo setelah penarikan tidak boleh kurang dari saldo mengendap (${Formatters.rupiah(overview.minimumBalance)}).';
+                }
                 return null;
               },
             ),
             const SizedBox(height: 14),
             TextFormField(
               controller: _notesController,
-              enabled: !_submitting,
+              enabled: isFormEnabled,
               maxLength: 500,
               maxLines: 3,
               decoration: const InputDecoration(
@@ -268,7 +320,7 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
             ],
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: _submitting ? null : _submit,
+              onPressed: isFormEnabled ? _submit : null,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
@@ -278,7 +330,11 @@ class _WithdrawalBookingScreenState extends State<WithdrawalBookingScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Kirim untuk persetujuan'),
+                  : Text(
+                      canBook
+                          ? 'Kirim untuk persetujuan'
+                          : 'Saldo belum mencukupi untuk booking',
+                    ),
             ),
           ],
         ),

@@ -30,6 +30,10 @@ class WithdrawalBookingController extends Controller
         }
 
         $daily = $this->bookings->dailyStatus($account);
+        $minimumBalance = $this->bookings->minimumBalanceFor($account);
+        $balance = (int) $account->balance;
+        $maxWithdrawable = max(0, $balance - $minimumBalance);
+
         $bookings = WithdrawalBooking::query()
             ->where('account_id', $account->id)
             ->latest('withdrawal_date')
@@ -46,6 +50,9 @@ class WithdrawalBookingController extends Controller
                 'today_limit' => $daily['limit'],
                 'today_remaining' => $daily['remaining'],
                 'today_booking' => $daily['booking'] ? $this->present($daily['booking']) : null,
+                'balance' => $balance,
+                'minimum_balance' => $minimumBalance,
+                'max_withdrawable' => $maxWithdrawable,
                 'bookings' => $bookings,
             ],
         ]);

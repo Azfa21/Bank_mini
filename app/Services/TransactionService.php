@@ -7,7 +7,6 @@ use App\Models\Account;
 use App\Models\DailyReport;
 use App\Models\JurnalAkuntansi;
 use App\Models\Saver;
-use App\Models\SystemConfig;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -139,9 +138,7 @@ class TransactionService
      */
     public function minimumBalanceFor(Account $account): int
     {
-        $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
-
-        return max((int) $account->minimum_balance, $globalMinimumBalance);
+        return $account->effectiveMinimumBalance();
     }
 
     /**

@@ -36,6 +36,18 @@ class WithdrawalBookingService
                 throw new TransactionValidationException('Rekening tidak aktif dan tidak dapat mengajukan booking penarikan.');
             }
 
+            $currentBalance = (int) $locked->balance;
+            if ($amount > $currentBalance) {
+                throw new TransactionValidationException('Saldo tidak mencukupi untuk mengajukan booking penarikan ini.');
+            }
+
+            $minimumBalance = $this->minimumBalanceFor($locked);
+            if (($currentBalance - $amount) < $minimumBalance) {
+                throw new TransactionValidationException(
+                    'Saldo setelah penarikan tidak boleh kurang dari saldo mengendap (Rp '.number_format($minimumBalance, 0, ',', '.').').'
+                );
+            }
+
             $existing = WithdrawalBooking::query()
                 ->where('account_id', $locked->id)
                 ->whereDate('withdrawal_date', $date->toDateString())
@@ -61,9 +73,8 @@ class WithdrawalBookingService
         $this->assertTeller($teller);
 
         return DB::transaction(function () use ($booking, $teller) {
-            $locked = WithdrawalBooking::query()->findOrFail($booking->id);
-            Account::query()->lockForUpdate()->findOrFail($locked->account_id);
             $locked = WithdrawalBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            $account = Account::query()->lockForUpdate()->findOrFail($locked->account_id);
 
             if ($locked->status !== WithdrawalBooking::STATUS_PENDING) {
                 throw new TransactionValidationException('Booking ini sudah diputuskan.');
@@ -83,6 +94,18 @@ class WithdrawalBookingService
 
             if ($anotherApproved) {
                 throw new TransactionValidationException('Booking lain untuk tanggal tersebut sudah disetujui.');
+            }
+
+            $accountBalance = (int) $account->balance;
+            $minimumBalance = $this->minimumBalanceFor($account);
+            if ($accountBalance < (int) $locked->amount) {
+                throw new TransactionValidationException('Saldo rekening nasabah saat ini tidak mencukupi untuk nominal booking ini.');
+            }
+
+            if (($accountBalance - (int) $locked->amount) < $minimumBalance) {
+                throw new TransactionValidationException(
+                    'Saldo rekening setelah penarikan akan kurang dari saldo mengendap (Rp '.number_format($minimumBalance, 0, ',', '.').').'
+                );
             }
 
             $locked->update([
@@ -141,7 +164,7 @@ class WithdrawalBookingService
             ->whereDate('withdrawal_date', $today->toDateString())
             ->where('status', WithdrawalBooking::STATUS_APPROVED)
             ->first();
-        $limit = max(self::DAILY_LIMIT, (int) ($booking?->amount ?? 0));
+        $limit = max(self::DAILY_LIMIT, $booking ? (int) $booking->amount : 0);
 
         return [
             'withdrawn' => $withdrawn,
@@ -149,6 +172,11 @@ class WithdrawalBookingService
             'remaining' => max(0, $limit - $withdrawn),
             'booking' => $booking,
         ];
+    }
+
+    public function minimumBalanceFor(Account $account): int
+    {
+        return $account->effectiveMinimumBalance();
     }
 
     public function authorizeWithdrawal(Account $account, int $amount, ?int $bookingId): ?WithdrawalBooking

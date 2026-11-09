@@ -24,6 +24,9 @@
                         'approved' => 'border-olive-200 bg-olive-50 text-olive-700',
                         default => 'border-red-200 bg-red-50 text-red-800',
                     };
+                    $accountBalance = (int) $booking->account->balance;
+                    $minBalance = $booking->account->effectiveMinimumBalance();
+                    $isBalanceSufficient = ($accountBalance >= (int) $booking->amount) && (($accountBalance - (int) $booking->amount) >= $minBalance);
                 @endphp
                 <article class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6">
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -34,7 +37,7 @@
                         <span class="inline-flex self-start rounded-full border px-3 py-1 text-[13px] font-semibold {{ $statusStyle }}">{{ $booking->statusLabel() }}</span>
                     </div>
 
-                    <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 border-t border-stone-100 pt-4">
+                    <dl class="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-4 border-t border-stone-100 pt-4">
                         <div>
                             <dt class="text-[13px] text-stone-600">Tanggal penarikan</dt>
                             <dd class="tnum font-semibold text-stone-900 mt-1">{{ $booking->withdrawal_date->format('d/m/Y') }}</dd>
@@ -44,6 +47,13 @@
                             <dd class="tnum font-semibold text-stone-900 mt-1">Rp {{ number_format($booking->amount, 0, ',', '.') }}</dd>
                         </div>
                         <div>
+                            <dt class="text-[13px] text-stone-600">Saldo saat ini</dt>
+                            <dd class="tnum font-semibold {{ $isBalanceSufficient ? 'text-stone-900' : 'text-red-700' }} mt-1">
+                                Rp {{ number_format($accountBalance, 0, ',', '.') }}
+                            </dd>
+                            <p class="text-xs text-stone-500 mt-0.5">Mengendap Rp {{ number_format($minBalance, 0, ',', '.') }}</p>
+                        </div>
+                        <div>
                             <dt class="text-[13px] text-stone-600">Diajukan</dt>
                             <dd class="tnum font-semibold text-stone-900 mt-1">{{ $booking->created_at?->format('d/m/Y H:i') }}</dd>
                         </div>
@@ -51,6 +61,10 @@
 
                     @if ($booking->notes)
                         <p class="mt-4 text-sm text-stone-700"><span class="font-semibold">Keterangan nasabah:</span> {{ $booking->notes }}</p>
+                    @endif
+
+                    @if ($booking->status === 'pending' && ! $isBalanceSufficient)
+                        <p class="mt-3 text-[13px] font-medium text-red-700">Perhatian: Saldo rekening saat ini tidak mencukupi untuk memenuhi nominal penarikan dan saldo mengendap.</p>
                     @endif
 
                     @if ($booking->status === 'pending')

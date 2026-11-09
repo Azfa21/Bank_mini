@@ -87,4 +87,11 @@ class Account extends Model
             ? $this->pendingClosure !== null
             : $this->pendingClosure()->exists();
     }
+
+    public function effectiveMinimumBalance(): int
+    {
+        $globalMinimumBalance = (int) SystemConfig::integer('minimum_balance', 10000);
+
+        return max((int) $this->minimum_balance, $globalMinimumBalance);
+    }
 }

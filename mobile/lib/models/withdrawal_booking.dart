@@ -36,6 +36,9 @@ class WithdrawalBookingOverview {
     required this.todayWithdrawn,
     required this.todayLimit,
     required this.todayRemaining,
+    required this.balance,
+    required this.minimumBalance,
+    required this.maxWithdrawable,
     required this.bookings,
   });
 
@@ -43,6 +46,9 @@ class WithdrawalBookingOverview {
   final int todayWithdrawn;
   final int todayLimit;
   final int todayRemaining;
+  final int balance;
+  final int minimumBalance;
+  final int maxWithdrawable;
   final List<WithdrawalBooking> bookings;
 
   factory WithdrawalBookingOverview.fromJson(Map<String, dynamic> json) {
@@ -53,6 +59,9 @@ class WithdrawalBookingOverview {
       todayWithdrawn: (json['today_withdrawn'] as num?)?.toInt() ?? 0,
       todayLimit: (json['today_limit'] as num?)?.toInt() ?? 1000000,
       todayRemaining: (json['today_remaining'] as num?)?.toInt() ?? 1000000,
+      balance: (json['balance'] as num?)?.toInt() ?? 0,
+      minimumBalance: (json['minimum_balance'] as num?)?.toInt() ?? 10000,
+      maxWithdrawable: (json['max_withdrawable'] as num?)?.toInt() ?? 0,
       bookings: rows
           .whereType<Map<String, dynamic>>()
           .map(WithdrawalBooking.fromJson)
