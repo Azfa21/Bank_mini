@@ -19,7 +19,6 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $summary = $this->analytics->summary();
-        $trend = $this->analytics->trend(7);
         $topDepositors = $this->analytics->topDepositors(5);
         $tellerPerformance = $this->analytics->tellerPerformance(5);
 
@@ -32,7 +31,6 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'summary',
-            'trend',
             'topDepositors',
             'tellerPerformance',
             'waiting',
