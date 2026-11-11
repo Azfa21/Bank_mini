@@ -7,7 +7,7 @@
     <div class="mb-5">
         <p class="text-xs font-semibold text-brand-900">TUTUP LOKET</p>
         <h1 class="text-2xl font-bold text-stone-900 mt-1">Penutupan kas</h1>
-        <p class="text-sm text-stone-600 mt-1">Periksa saldo akhir sistem, lalu serahkan laporan ke Administrator.</p>
+        <p class="text-sm text-stone-600 mt-1">Periksa rekap transaksi, lalu serahkan laporan ke Administrator.</p>
     </div>
 
     <form method="GET" action="{{ route('teller.closing.index') }}" class="mb-4 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-end">
@@ -58,15 +58,11 @@
                         <dt class="text-stone-600">Total penarikan</dt>
                         <dd class="tnum font-semibold text-red-800">− Rp {{ number_format($recap['total_withdrawal'], 0, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between gap-4 px-5 py-3 bg-stone-50 font-bold">
-                        <dt class="text-stone-900">Saldo akhir sistem</dt>
-                        <dd class="tnum text-stone-900">Rp {{ number_format($recap['closing_balance_system'], 0, ',', '.') }}</dd>
-                    </div>
                 </dl>
 
                 <div class="border-t border-stone-100 px-5 py-5">
                     <h3 class="text-[15px] font-bold text-stone-900">Kirim laporan harian</h3>
-                    <p class="text-[13px] text-stone-600 mt-1 mb-3">Laporan memakai saldo akhir sistem di atas. Administrator memvalidasi sebelum kas dipindah ke kas utama.</p>
+                    <p class="text-[13px] text-stone-600 mt-1 mb-3">Saldo laporan dihitung otomatis dari transaksi dan kas yang diterima. Administrator memvalidasi sebelum kas dipindah ke kas utama.</p>
                     <form method="POST" action="{{ route('teller.closing.store') }}" class="space-y-4" id="closing-form">
                         @csrf
                         <input type="hidden" name="report_date" value="{{ $date }}">

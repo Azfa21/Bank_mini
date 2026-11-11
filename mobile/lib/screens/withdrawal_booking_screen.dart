@@ -392,6 +392,19 @@ class _BookingCard extends StatelessWidget {
             Formatters.rupiah(booking.amount),
             style: AppText.tnum(AppText.sectionTitle),
           ),
+          if (booking.status == 'approved') ...[
+            const SizedBox(height: 6),
+            Text(
+              'Datang ke loket teller pada tanggal booking untuk menarik tabungan. Nominal ini adalah batas total penarikan pada hari itu.',
+              style: AppText.body.copyWith(color: AppColors.stone600),
+            ),
+          ] else if (booking.status == 'pending') ...[
+            const SizedBox(height: 6),
+            Text(
+              'Tunggu persetujuan teller sebelum melakukan penarikan di atas Rp 1.000.000.',
+              style: AppText.body.copyWith(color: AppColors.stone600),
+            ),
+          ],
           if (booking.notes != null && booking.notes!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(booking.notes!, style: AppText.body),

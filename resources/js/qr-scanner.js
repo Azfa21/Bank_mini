@@ -6,8 +6,8 @@ const video = document.getElementById('qr-video');
 const stopButton = document.getElementById('qr-stop');
 const status = document.getElementById('qr-status');
 const fallbackHint = document.getElementById('qr-fallback');
-const input = document.getElementById('q');
-const form = document.querySelector('form[action*="lookup"]');
+const form = panel?.querySelector('form[action*="lookup"]');
+const input = form?.querySelector('input[name="q"]');
 
 let stream = null;
 let animationId = null;
@@ -41,8 +41,9 @@ function scanQRCode(canvas, context) {
 
             if (code && code.data) {
                 scanning = false;
-                setStatus('QR Code terdeteksi!');
                 input.value = code.data;
+                stopCamera();
+                setStatus('QR Code terdeteksi. Membuka data penabung...');
                 form.submit();
                 return;
             }
@@ -79,13 +80,19 @@ async function startCamera() {
         video.srcObject = stream;
         await video.play();
 
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) {
+            stopCamera();
+            setStatus('Pemindai QR tidak tersedia. Silakan pakai pencarian manual.');
+            return;
+        }
+
         scanning = true;
         scanArea.classList.remove('hidden');
         showFallbackHint(false);
         setStatus('Arahkan kamera ke QR Code nasabah...');
 
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d', { willReadFrequently: true });
         scanQRCode(canvas, context);
     } catch (err) {
         stopCamera();

@@ -27,6 +27,7 @@
                     $accountBalance = (int) $booking->account->balance;
                     $minBalance = $booking->account->effectiveMinimumBalance();
                     $isBalanceSufficient = ($accountBalance >= (int) $booking->amount) && (($accountBalance - (int) $booking->amount) >= $minBalance);
+                    $bookingDateIsToday = $booking->withdrawal_date->toDateString() === now(\App\Services\WithdrawalBookingService::BUSINESS_TIMEZONE)->toDateString();
                 @endphp
                 <article class="bg-white rounded-2xl border border-stone-200 ledger-rule p-5 sm:p-6">
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -87,6 +88,15 @@
                             <p>{{ $booking->statusLabel() }}{{ $booking->decider ? ' oleh '.$booking->decider->full_name : '' }}{{ $booking->decided_at ? ' pada '.$booking->decided_at->format('d/m/Y H:i') : '' }}.</p>
                             @if ($booking->decision_note)
                                 <p class="mt-1"><span class="font-semibold">Catatan teller:</span> {{ $booking->decision_note }}</p>
+                            @endif
+                            @if ($booking->status === 'approved')
+                                @if ($bookingDateIsToday)
+                                    <a href="{{ route('teller.withdrawals.create', $booking->account) }}" class="mt-3 inline-flex min-h-[44px] items-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-300">
+                                        Buka formulir penarikan
+                                    </a>
+                                @else
+                                    <p class="mt-2">Penarikan dapat diproses pada tanggal booking.</p>
+                                @endif
                             @endif
                         </div>
                     @endif

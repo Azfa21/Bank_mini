@@ -272,14 +272,30 @@ function bindWithdrawPage() {
     var amount = document.getElementById('amount');
     var preview = document.getElementById('amount-preview');
     var remain = document.getElementById('withdraw-preview');
+    var dailyPreview = document.getElementById('withdraw-daily-preview');
     var form = document.getElementById('withdraw-form');
     if (!amount || !form) return;
     var balance = toInt(form.getAttribute('data-balance'));
+    var withdrawn = toInt(form.getAttribute('data-withdrawn'));
+    var dailyLimit = toInt(form.getAttribute('data-limit'));
+    var hasApprovedBooking = form.getAttribute('data-booking-approved') === '1';
 
     function refresh() {
         var val = toInt(amount.value);
         if (preview) preview.textContent = 'Terbaca: ' + rupiah(val);
         if (remain) remain.textContent = 'Sisa sesudah penarikan: ' + rupiah(balance - val);
+        if (dailyPreview) {
+            var totalToday = withdrawn + val;
+            var dailyMessage = 'Total penarikan hari ini setelah transaksi: ' + rupiah(totalToday) + ' dari ' + rupiah(dailyLimit) + '.';
+            if (totalToday > dailyLimit) {
+                dailyMessage += hasApprovedBooking
+                    ? ' Melebihi batas booking yang disetujui.'
+                    : ' Perlu booking yang disetujui; sistem memeriksa persetujuan terbaru saat disimpan.';
+            } else {
+                dailyMessage += ' Sisa batas hari ini: ' + rupiah(dailyLimit - totalToday) + '.';
+            }
+            dailyPreview.textContent = dailyMessage;
+        }
     }
 
     amount.addEventListener('input', refresh);

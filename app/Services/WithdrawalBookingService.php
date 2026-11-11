@@ -199,13 +199,28 @@ class WithdrawalBookingService
             }
         }
 
+        // Form teller can remain open while a booking is approved in another tab.
+        // Resolve the approved booking for today when the submitted form has no ID.
+        if ($booking === null && $totalAfter > self::DAILY_LIMIT) {
+            $booking = WithdrawalBooking::query()
+                ->where('account_id', $account->id)
+                ->whereDate('withdrawal_date', $today->toDateString())
+                ->where('status', WithdrawalBooking::STATUS_APPROVED)
+                ->lockForUpdate()
+                ->first();
+        }
+
         if ($totalAfter > self::DAILY_LIMIT) {
             if ($booking === null) {
-                throw new TransactionValidationException('Total penarikan nasabah hari ini melebihi Rp 1.000.000. Gunakan booking yang telah disetujui teller.');
+                throw new TransactionValidationException(
+                    'Total penarikan hari ini akan menjadi Rp '.number_format($totalAfter, 0, ',', '.').'. Batas tanpa booking adalah Rp '.number_format(self::DAILY_LIMIT, 0, ',', '.').'. Minta teller memeriksa booking yang disetujui untuk hari ini.'
+                );
             }
 
             if ($totalAfter > $booking->amount) {
-                throw new TransactionValidationException('Total penarikan hari ini melebihi nominal booking yang disetujui teller.');
+                throw new TransactionValidationException(
+                    'Total penarikan hari ini akan menjadi Rp '.number_format($totalAfter, 0, ',', '.').', melebihi batas booking Rp '.number_format((int) $booking->amount, 0, ',', '.').'. Kurangi nominal penarikan.'
+                );
             }
         }
 

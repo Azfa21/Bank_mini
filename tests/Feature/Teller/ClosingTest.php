@@ -14,13 +14,13 @@ class ClosingTest extends TellerTestCase
         parent::setUp();
     }
 
-    public function test_closing_page_loads_with_recap(): void
+    public function test_closing_page_loads_without_final_balance_row(): void
     {
         $this->actingAsTeller()
             ->get(route('teller.closing.index'))
             ->assertOk()
             ->assertSee('Penutupan kas')
-            ->assertSee('Saldo akhir sistem');
+            ->assertDontSee('Saldo akhir sistem');
     }
 
     public function test_recap_shows_correct_totals(): void

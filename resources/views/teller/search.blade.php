@@ -31,20 +31,7 @@
                 </x-primary-button>
             </form>
 
-            <details id="qr-panel" class="mt-6 border-t border-stone-100 pt-5">
-                <summary class="inline-flex items-center min-h-[44px] cursor-pointer text-[15px] font-semibold text-stone-900">
-                    Pindai QR Code memakai kamera
-                </summary>
-                <div class="mt-3">
-                    <div id="qr-scan-area" class="hidden">
-                        <video id="qr-video" class="w-full rounded-xl border border-stone-200 bg-stone-900" playsinline muted aria-label="Pratinjau kamera pemindai QR"></video>
-                        <button type="button" id="qr-stop" class="mt-3 inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-semibold border border-stone-300 rounded-xl hover:bg-stone-100">Hentikan kamera</button>
-                    </div>
-
-                    <p id="qr-status" role="status" class="text-[13px] text-stone-600 mt-2.5"></p>
-                    <p id="qr-fallback" class="text-[13px] text-stone-600 mt-2.5">Kalau kamera tidak tersedia, tetap pakai pencarian manual di atas.</p>
-                </div>
-            </details>
+            @include('teller.partials.qr-scanner')
         </section>
 
         <aside aria-label="Alur pencarian" class="lg:col-span-2 bg-brand-50 rounded-2xl border border-brand-100 p-5 sm:p-6">

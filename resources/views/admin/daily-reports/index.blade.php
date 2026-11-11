@@ -14,7 +14,7 @@
             <x-input id="report_date" name="report_date" type="date" :value="request('report_date')" />
         </div>
         <x-primary-button>
-            Tampilkan laporan
+            Tampilkan laporan       
         </x-primary-button>
     </form>
 

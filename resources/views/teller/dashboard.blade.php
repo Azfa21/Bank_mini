@@ -36,6 +36,8 @@
                 </a>
             </div>
         </div>
+
+        @include('teller.partials.qr-scanner')
     </section>
 
     <section aria-label="Kas laci hari ini" class="mb-5 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
@@ -86,3 +88,7 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/qr-scanner.js'])
+@endpush

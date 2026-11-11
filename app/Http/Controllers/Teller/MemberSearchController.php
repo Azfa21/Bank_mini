@@ -41,7 +41,8 @@ class MemberSearchController extends Controller
             return back()->with('error', 'Masukkan nomor rekening, NIS, nama, atau nilai QR Code terlebih dahulu.');
         }
 
-        $account = Account::with('saver')->where('account_number', $q)->first();
+        $accountNumber = str_starts_with($q, 'BMS:') ? substr($q, 4) : $q;
+        $account = Account::with('saver')->where('account_number', $accountNumber)->first();
 
         if ($account) {
             return $this->redirectToAccount($request, $account);
