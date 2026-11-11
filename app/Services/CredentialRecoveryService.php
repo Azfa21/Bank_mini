@@ -26,6 +26,10 @@ class CredentialRecoveryService
 
     public const TYPE_NASABAH = 'nasabah';
 
+    public const PURPOSE_PASSWORD = PasswordResetOtp::PURPOSE_PASSWORD;
+
+    public const PURPOSE_PIN = PasswordResetOtp::PURPOSE_PIN;
+
     public function __construct(
         protected MobileTokenService $mobileTokens,
     ) {}
@@ -33,8 +37,9 @@ class CredentialRecoveryService
     /**
      * @return array{ok: bool, status: int, message: string, field: string, email: string|null}
      */
-    public function requestOtp(string $accountType, string $identifier): array
+    public function requestOtp(string $accountType, string $identifier, string $purpose = self::PURPOSE_PASSWORD): array
     {
+        $this->assertPurpose($accountType, $purpose);
         $identifier = $this->normalize($identifier);
         $account = $this->findAccount($accountType, $identifier);
 
@@ -42,7 +47,7 @@ class CredentialRecoveryService
             $this->record($accountType, '_otp_request_ignored', null, [
                 'identifier' => $identifier,
                 'reason' => 'not_found',
-            ]);
+            ], $purpose);
 
             return $this->result(false, 404, 'identifier', $this->notFoundMessage($accountType));
         }
@@ -51,7 +56,7 @@ class CredentialRecoveryService
             $this->record($accountType, '_otp_request_ignored', $account->id, [
                 'identifier' => $identifier,
                 'reason' => 'inactive',
-            ]);
+            ], $purpose);
 
             return $this->result(false, 403, 'identifier', 'Akun ini diblokir dan tidak dapat dipulihkan. Hubungi Administrator.');
         }
@@ -62,19 +67,19 @@ class CredentialRecoveryService
             $this->record($accountType, '_otp_request_ignored', $account->id, [
                 'identifier' => $identifier,
                 'reason' => 'no_email',
-            ]);
+            ], $purpose);
 
             return $this->result(false, 422, 'identifier', $this->missingEmailMessage($accountType), null);
         }
 
         $cooldown = (int) config('recovery.otp_resend_cooldown_seconds', 60);
-        $latest = $this->latestRecord($accountType, $account->id);
+        $latest = $this->latestRecord($accountType, $account->id, purpose: $purpose);
 
         if ($latest !== null && $latest->created_at !== null && $latest->created_at->gt(now()->subSeconds($cooldown))) {
             $this->record($accountType, '_otp_request_throttled', $account->id, [
                 'identifier' => $identifier,
                 'cooldown_seconds' => $cooldown,
-            ]);
+            ], $purpose);
 
             $readyAt = $latest->created_at->copy()->addSeconds($cooldown);
             $wait = max(1, $readyAt->getTimestamp() - now()->getTimestamp());
@@ -93,7 +98,7 @@ class CredentialRecoveryService
             $this->record($accountType, '_otp_request_throttled', $account->id, [
                 'identifier' => $identifier,
                 'reason' => 'hourly_limit',
-            ]);
+            ], $purpose);
 
             return $this->result(false, 429, 'identifier', 'Terlalu banyak permintaan kode verifikasi dalam satu jam terakhir. Coba lagi nanti.');
         }
@@ -101,16 +106,18 @@ class CredentialRecoveryService
         $code = $this->generateCode();
         $expiresAt = now()->addMinutes((int) config('recovery.otp_expire_minutes', 10));
 
-        DB::transaction(function () use ($accountType, $account, $code, $expiresAt, $email) {
+        DB::transaction(function () use ($accountType, $account, $code, $expiresAt, $email, $purpose) {
             PasswordResetOtp::query()
                 ->where('account_type', $accountType)
                 ->where('account_id', $account->id)
+                ->where('purpose', $purpose)
                 ->whereNull('consumed_at')
                 ->update(['consumed_at' => now(), 'updated_at' => now()]);
 
             PasswordResetOtp::create([
                 'account_type' => $accountType,
                 'account_id' => $account->id,
+                'purpose' => $purpose,
                 'email' => $email,
                 'otp_hash' => Hash::make($code),
                 'attempts' => 0,
@@ -121,12 +128,13 @@ class CredentialRecoveryService
         Mail::to($email)->send(new ResetOtpMail(
             code: $code,
             recipientName: $account->full_name,
+            purpose: $purpose,
         ));
 
         $this->record($accountType, '_otp_requested', $account->id, [
             'identifier' => $identifier,
             'expires_at' => $expiresAt->toIso8601String(),
-        ]);
+        ], $purpose);
 
         return $this->result(true, 200, 'identifier', 'Kode verifikasi telah dikirim ke email terdaftar.', $email);
     }
@@ -136,6 +144,25 @@ class CredentialRecoveryService
      */
     public function verifyAndReset(string $accountType, string $identifier, string $otp, string $newSecret): array
     {
+        return $this->verifyAndUpdate($accountType, $identifier, $otp, $newSecret, self::PURPOSE_PASSWORD);
+    }
+
+    /**
+     * Reset the transaction PIN without changing the mobile login password.
+     *
+     * @return array{ok: bool, status: int, message: string, field: string, email: string|null}
+     */
+    public function verifyAndResetPin(string $identifier, string $otp, string $newPin): array
+    {
+        return $this->verifyAndUpdate(self::TYPE_NASABAH, $identifier, $otp, $newPin, self::PURPOSE_PIN);
+    }
+
+    /**
+     * @return array{ok: bool, status: int, message: string, field: string, email: string|null}
+     */
+    protected function verifyAndUpdate(string $accountType, string $identifier, string $otp, string $newSecret, string $purpose): array
+    {
+        $this->assertPurpose($accountType, $purpose);
         $identifier = $this->normalize($identifier);
         $account = $this->findAccount($accountType, $identifier);
         $email = $account !== null ? $this->registeredEmail($account) : null;
@@ -144,7 +171,7 @@ class CredentialRecoveryService
             $this->record($accountType, '_failed', null, [
                 'identifier' => $identifier,
                 'reason' => 'not_found',
-            ]);
+            ], $purpose);
 
             return $this->result(false, 422, 'otp', 'Kode verifikasi salah atau sudah kedaluwarsa. Silakan minta kode baru.');
         }
@@ -152,7 +179,7 @@ class CredentialRecoveryService
         if ($account->status !== 'active') {
             $this->record($accountType, '_blocked', $account->id, [
                 'identifier' => $identifier,
-            ]);
+            ], $purpose);
 
             return $this->result(false, 403, 'otp', 'Akun ini tidak dapat dipulihkan. Hubungi Administrator.', $email);
         }
@@ -160,14 +187,14 @@ class CredentialRecoveryService
         $attempts = max(1, (int) config('recovery.transaction_attempts', 3));
 
         try {
-            $result = DB::transaction(function () use ($accountType, $identifier, $account, $otp, $newSecret, $email) {
-                $record = $this->latestRecord($accountType, $account->id, lockForUpdate: true);
+            $result = DB::transaction(function () use ($accountType, $identifier, $account, $otp, $newSecret, $email, $purpose) {
+                $record = $this->latestRecord($accountType, $account->id, lockForUpdate: true, purpose: $purpose);
 
                 if ($record === null || ! $record->isUsable()) {
                     $this->record($accountType, '_otp_failed', $account->id, [
                         'identifier' => $identifier,
                         'reason' => 'expired_or_missing',
-                    ]);
+                    ], $purpose);
 
                     return $this->result(false, 422, 'otp', 'Kode verifikasi salah atau sudah kedaluwarsa. Silakan minta kode baru.', $email);
                 }
@@ -184,7 +211,7 @@ class CredentialRecoveryService
                         $this->record($accountType, '_otp_failed', $account->id, [
                             'identifier' => $identifier,
                             'reason' => 'max_attempts',
-                        ]);
+                        ], $purpose);
 
                         return $this->result(false, 429, 'otp', 'Kode verifikasi salah. Batas percobaan tercapai, silakan minta kode baru.', $email);
                     }
@@ -195,7 +222,7 @@ class CredentialRecoveryService
                         'identifier' => $identifier,
                         'reason' => 'invalid_otp',
                         'attempts' => $record->attempts,
-                    ]);
+                    ], $purpose);
 
                     return $this->result(false, 422, 'otp', 'Kode verifikasi salah. Sisa percobaan: '.$remaining.'.', $email);
                 }
@@ -209,12 +236,18 @@ class CredentialRecoveryService
                     $this->record($accountType, '_otp_failed', $account->id, [
                         'identifier' => $identifier,
                         'reason' => 'already_used',
-                    ]);
+                    ], $purpose);
 
                     return $this->result(false, 422, 'otp', 'Kode verifikasi salah atau sudah kedaluwarsa. Silakan minta kode baru.', $email);
                 }
 
-                if ($accountType === self::TYPE_NASABAH) {
+                if ($account instanceof Saver && $purpose === self::PURPOSE_PIN) {
+                    $account->update([
+                        'pin_hash' => $newSecret,
+                        'failed_pin_attempts' => 0,
+                        'locked_until' => null,
+                    ]);
+                } elseif ($account instanceof Saver) {
                     // Pemulihan lewat OTP membuat password login baru, termasuk
                     // untuk penabung lama yang belum pernah punya password. PIN
                     // transaksi tidak disentuh: kredensial itu hanya di loket.
@@ -230,7 +263,7 @@ class CredentialRecoveryService
                     ]);
                 }
 
-                return $this->result(true, 200, 'otp', 'Password berhasil diperbarui. Silakan masuk memakai yang baru.', $email);
+                return $this->result(true, 200, 'otp', $this->successMessage($purpose), $email);
             }, $attempts);
         } catch (QueryException|DeadlockException $exception) {
             if (! app(ConcurrencyErrorDetector::class)->causedByConcurrencyError($exception)) {
@@ -240,7 +273,7 @@ class CredentialRecoveryService
             $this->record($accountType, '_otp_failed', $account->id, [
                 'identifier' => $identifier,
                 'reason' => 'lock_contention',
-            ]);
+            ], $purpose);
 
             return $this->result(false, 409, 'otp', 'Permintaan lain sedang diproses. Silakan coba lagi.', $email);
         }
@@ -251,9 +284,9 @@ class CredentialRecoveryService
 
         $this->record($accountType, '_success', $account->id, [
             'identifier' => $identifier,
-        ]);
+        ], $purpose);
 
-        return $this->result(true, 200, 'otp', 'Password berhasil diperbarui. Silakan masuk menggunakan password baru Anda.', $email);
+        return $this->result(true, 200, 'otp', $this->successMessage($purpose), $email);
     }
 
     /**
@@ -315,11 +348,12 @@ class CredentialRecoveryService
         return Saver::query()->where('student_number', $identifier)->first();
     }
 
-    protected function latestRecord(string $accountType, int $accountId, bool $lockForUpdate = false): ?PasswordResetOtp
+    protected function latestRecord(string $accountType, int $accountId, bool $lockForUpdate = false, string $purpose = self::PURPOSE_PASSWORD): ?PasswordResetOtp
     {
         return PasswordResetOtp::query()
             ->where('account_type', $accountType)
             ->where('account_id', $accountId)
+            ->where('purpose', $purpose)
             ->whereNull('consumed_at')
             ->latest('id')
             ->when($lockForUpdate, fn ($query) => $query->lockForUpdate())
@@ -334,14 +368,29 @@ class CredentialRecoveryService
         return str_pad((string) random_int(0, $max), $length, '0', STR_PAD_LEFT);
     }
 
-    protected function record(string $accountType, string $suffix, ?int $entityId, array $metadata): void
+    protected function record(string $accountType, string $suffix, ?int $entityId, array $metadata, string $purpose = self::PURPOSE_PASSWORD): void
     {
         AuditLogService::record(
-            'password_reset'.$suffix,
+            ($purpose === self::PURPOSE_PIN ? 'pin_reset' : 'password_reset').$suffix,
             $this->entityName($accountType),
             $entityId,
             $metadata,
         );
+    }
+
+    protected function assertPurpose(string $accountType, string $purpose): void
+    {
+        if (! in_array($purpose, [self::PURPOSE_PASSWORD, self::PURPOSE_PIN], true)
+            || ($purpose === self::PURPOSE_PIN && $accountType !== self::TYPE_NASABAH)) {
+            throw new \InvalidArgumentException('Jenis pemulihan kredensial tidak valid.');
+        }
+    }
+
+    protected function successMessage(string $purpose): string
+    {
+        return $purpose === self::PURPOSE_PIN
+            ? 'PIN transaksi berhasil diperbarui. Gunakan PIN baru saat bertransaksi.'
+            : 'Password berhasil diperbarui. Silakan masuk menggunakan password baru Anda.';
     }
 
     protected function entityName(string $accountType): string

@@ -97,6 +97,22 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  Future<String?> requestPinResetOtp({required String studentNumber}) async {
+    return _authService.requestPinResetOtp(studentNumber: studentNumber);
+  }
+
+  Future<void> resetPinWithOtp({
+    required String studentNumber,
+    required String otp,
+    required String pin,
+  }) async {
+    await _authService.resetPinWithOtp(
+      studentNumber: studentNumber,
+      otp: otp,
+      pin: pin,
+    );
+  }
+
   /// Mengganti PIN transaksi lewat server. Sesi aplikasi tidak terpengaruh
   /// karena PIN bukan kredensial login.
   Future<void> changePin({

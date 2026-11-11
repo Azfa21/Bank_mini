@@ -7,6 +7,7 @@ import '../core/api/api_exception.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text.dart';
 import '../providers/auth_provider.dart';
+import '../router/app_router.dart';
 import '../widgets/alert_card.dart';
 import '../widgets/ledger_card.dart';
 import '../widgets/page_header.dart';
@@ -135,6 +136,15 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
                             helper:
                                 'Salah 3 kali berturut-turut mengunci '
                                 'transaksi selama 15 menit.',
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _submitting
+                                  ? null
+                                  : () => context.go(AppRouter.forgotPin),
+                              child: const Text('Lupa PIN saat ini?'),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           _PinField(

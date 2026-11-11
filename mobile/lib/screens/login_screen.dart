@@ -125,7 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               TextButton(
                                 onPressed: submitting
                                     ? null
-                                    : () => context.go(AppRouter.forgotPassword),
+                                    : () =>
+                                          context.go(AppRouter.forgotPassword),
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(0, 32),
@@ -148,7 +149,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                                 child: Text(
-                                  _obscurePassword ? 'Tampilkan' : 'Sembunyikan',
+                                  _obscurePassword
+                                      ? 'Tampilkan'
+                                      : 'Sembunyikan',
                                 ),
                               ),
                             ),
@@ -162,6 +165,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               return null;
                             },
                             onFieldSubmitted: (_) => _submit(),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: submitting
+                                  ? null
+                                  : () => context.go(AppRouter.forgotPin),
+                              child: const Text('Lupa PIN transaksi?'),
+                            ),
                           ),
                           const SizedBox(height: 24),
                           FilledButton(
@@ -207,9 +219,7 @@ class _BrandBlock extends StatelessWidget {
         Container(
           width: 48,
           height: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
           clipBehavior: Clip.antiAlias,
           child: SvgPicture.asset(
             'assets/images/bank-mini-logo.svg',

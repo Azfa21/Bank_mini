@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RequestPinResetOtpRequest;
 use App\Http\Requests\Auth\RequestResetOtpRequest;
+use App\Http\Requests\Auth\ResetPinCredentialRequest;
 use App\Http\Requests\Auth\ResetCredentialRequest;
 use App\Services\CredentialRecoveryService;
 use Illuminate\Http\JsonResponse;
@@ -96,6 +98,36 @@ class ForgotPasswordController extends Controller
         }
 
         return redirect()->route('login')->with('success', $result['message']);
+    }
+
+    public function requestPinOtp(RequestPinResetOtpRequest $request): JsonResponse
+    {
+        $result = $this->recovery->requestOtp(
+            CredentialRecoveryService::TYPE_NASABAH,
+            $request->validated('identifier'),
+            CredentialRecoveryService::PURPOSE_PIN,
+        );
+
+        return response()->json([
+            'success' => $result['ok'],
+            'message' => $result['message'],
+            'email' => $result['email'],
+        ], $result['status']);
+    }
+
+    public function resetPin(ResetPinCredentialRequest $request): JsonResponse
+    {
+        $result = $this->recovery->verifyAndResetPin(
+            $request->validated('identifier'),
+            $request->validated('otp'),
+            $request->validated('pin'),
+        );
+
+        return response()->json([
+            'success' => $result['ok'],
+            'message' => $result['message'],
+            'email' => $result['email'],
+        ], $result['status']);
     }
 
     private function rejectSaverRecoveryOutsideMobile(Request $request, string $accountType): JsonResponse|RedirectResponse|null

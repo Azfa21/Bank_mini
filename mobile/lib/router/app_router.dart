@@ -5,6 +5,7 @@ import '../screens/card_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/change_pin_screen.dart';
 import '../screens/forgot_password_screen.dart';
+import '../screens/forgot_pin_screen.dart';
 import '../screens/home_shell.dart';
 import '../screens/login_screen.dart';
 import '../screens/mutasi_screen.dart';
@@ -21,6 +22,7 @@ class AppRouter {
   static const String splash = '/splash';
   static const String login = '/login';
   static const String forgotPassword = '/forgot-password';
+  static const String forgotPin = '/forgot-pin';
   static const String changePin = '/change-pin';
   static const String home = '/home';
   static const String statement = '/statement';
@@ -32,7 +34,10 @@ class AppRouter {
     redirect: (context, state) {
       final location = state.matchedLocation;
       final atSplash = location == splash;
-      final atAuth = location == login || location == forgotPassword;
+      final atAuth =
+          location == login ||
+          location == forgotPassword ||
+          location == forgotPin;
 
       switch (_auth.status) {
         case AuthStatus.unknown:
@@ -40,7 +45,7 @@ class AppRouter {
         case AuthStatus.unauthenticated:
           return atAuth ? null : login;
         case AuthStatus.authenticated:
-          if (atSplash || atAuth) {
+          if (atSplash || location == login || location == forgotPassword) {
             return home;
           }
           return null;
@@ -52,6 +57,10 @@ class AppRouter {
       GoRoute(
         path: forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: forgotPin,
+        builder: (context, state) => const ForgotPinScreen(),
       ),
       GoRoute(
         path: changePin,

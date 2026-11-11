@@ -106,6 +106,35 @@ class AuthService {
     );
   }
 
+  Future<String?> requestPinResetOtp({required String studentNumber}) async {
+    final response = await _api.postJson(
+      '/mobile/forgot-pin/request-otp',
+      data: {'identifier': studentNumber},
+    );
+
+    final email = response['email'];
+    if (email is String && email.isNotEmpty) {
+      return email;
+    }
+    return null;
+  }
+
+  Future<void> resetPinWithOtp({
+    required String studentNumber,
+    required String otp,
+    required String pin,
+  }) async {
+    await _api.postJson(
+      '/mobile/forgot-pin/reset',
+      data: {
+        'identifier': studentNumber,
+        'otp': otp,
+        'pin': pin,
+        'pin_confirmation': pin,
+      },
+    );
+  }
+
   Future<void> changePin({
     required String currentPin,
     required String newPin,

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kode Verifikasi Reset Password</title>
+    <title>Kode Verifikasi Reset {{ $purpose === 'pin' ? 'PIN' : 'Password' }}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f5f4;font-family:Arial,Helvetica,sans-serif;color:#1c1917;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f4;padding:24px 12px;">
@@ -19,7 +19,7 @@
                         <td style="padding:28px;">
                             <p style="margin:0 0 12px;font-size:15px;">Halo, {{ $recipientName }}.</p>
                             <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#44403c;">
-                                Kami menerima permintaan reset password untuk akun Anda. Masukkan kode verifikasi berikut pada halaman pemulihan kredensial:
+                                Kami menerima permintaan reset {{ $purpose === 'pin' ? 'PIN transaksi' : 'password' }} untuk akun Anda. Masukkan kode verifikasi berikut pada halaman pemulihan:
                             </p>
                             <p style="margin:0 0 20px;text-align:center;">
                                 <span style="display:inline-block;padding:14px 24px;background-color:#f0fdf4;border:1px dashed #166534;border-radius:12px;font-size:30px;font-weight:bold;letter-spacing:8px;color:#166534;">{{ $code }}</span>
@@ -29,7 +29,7 @@
                                 Jangan bagikan kode ini kepada siapa pun, termasuk petugas bank.
                             </p>
                             <p style="margin:0;font-size:13px;line-height:1.6;color:#57534e;">
-                                Jika Anda tidak merasa meminta reset password, abaikan email ini. Password Anda tidak akan berubah.
+                                Jika Anda tidak merasa meminta reset {{ $purpose === 'pin' ? 'PIN transaksi' : 'password' }}, abaikan email ini. {{ $purpose === 'pin' ? 'PIN' : 'Password' }} Anda tidak akan berubah.
                             </p>
                         </td>
                     </tr>

@@ -35,6 +35,8 @@ Route::prefix('mobile')->group(function () {
     Route::post('/login', [MobileAuthController::class, 'login'])->middleware('throttle:login')->name('api.mobile.login');
     Route::post('/forgot-password/request-otp', [ForgotPasswordController::class, 'requestOtp'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-password.request');
     Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetCredential'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-password.reset');
+    Route::post('/forgot-pin/request-otp', [ForgotPasswordController::class, 'requestPinOtp'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-pin.request');
+    Route::post('/forgot-pin/reset', [ForgotPasswordController::class, 'resetPin'])->middleware('throttle:forgot-password')->name('api.mobile.forgot-pin.reset');
 
     Route::middleware('mobile.auth')->group(function () {
         Route::post('/logout', [MobileAuthController::class, 'logout'])->name('api.mobile.logout');
