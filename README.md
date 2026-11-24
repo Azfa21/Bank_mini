@@ -106,12 +106,6 @@ Letakkan berkas APK di `public/unduhan/bank-mini-nasabah.apk`, atau isi
 `BANKMINI_APK_URL` di `.env` dengan URL unduhan eksternal. Bila keduanya kosong,
 halaman menampilkan keterangan bahwa APK dapat diminta ke petugas loket, bukan tombol mati.
 
-### Perintah Artisan Khusus Bank Mini
-```bash
-# Menyiapkan arsip satu angkatan siswa untuk kelulusan (ada konfirmasi; --dry-run hanya melihat rencana)
-php artisan bankmini:graduate --year=<Tahun> [--dry-run] [--operator=<username>]
-```
-
 ## Membersihkan Data Testing (Peluncuran)
 ```bash
 # Hapus permanen seluruh data hasil testing: member, penabung, rekening, transaksi, jurnal,
